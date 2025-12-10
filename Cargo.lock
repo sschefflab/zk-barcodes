@@ -123,7 +123,6 @@ checksum = "9330f8b2ff13f34540b44e946ef35111825727b38d33286ef986142615121801"
 [[package]]
 name = "circ"
 version = "0.1.0"
-source = "git+https://github.com/sschefflab/circ#e801f040c3d9a69c4dad355f4c62327ca5b8b1c0"
 dependencies = [
  "circ_fields",
  "circ_hc",
@@ -147,7 +146,6 @@ dependencies = [
 [[package]]
 name = "circ_fields"
 version = "0.1.0"
-source = "git+https://github.com/sschefflab/circ#e801f040c3d9a69c4dad355f4c62327ca5b8b1c0"
 dependencies = [
  "datasize",
  "ff",
@@ -164,7 +162,6 @@ dependencies = [
 [[package]]
 name = "circ_hc"
 version = "0.1.0"
-source = "git+https://github.com/sschefflab/circ#e801f040c3d9a69c4dad355f4c62327ca5b8b1c0"
 dependencies = [
  "fxhash",
  "log",
@@ -174,7 +171,6 @@ dependencies = [
 [[package]]
 name = "circ_opt"
 version = "0.1.0"
-source = "git+https://github.com/sschefflab/circ#e801f040c3d9a69c4dad355f4c62327ca5b8b1c0"
 dependencies = [
  "clap",
 ]
@@ -182,7 +178,6 @@ dependencies = [
 [[package]]
 name = "circ_waksman"
 version = "0.1.0"
-source = "git+https://github.com/sschefflab/circ#e801f040c3d9a69c4dad355f4c62327ca5b8b1c0"
 dependencies = [
  "fxhash",
 ]
