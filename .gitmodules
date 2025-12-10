@@ -1,4 +1,4 @@
 [submodule "external/circ"]
 	path = external/circ
-	url = https://github.com/sschefflab/circ.git
+	url = git@github.com:sschefflab/circ.git
 	branch = r1cs-printer
