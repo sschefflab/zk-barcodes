@@ -1,5 +1,8 @@
-def main(private field a, field b) {
-    assert(a * a == b);
-    return;
+from "./binarize" import binarize;
+
+const u32 N = 4;
+
+def main(private field[N] image, private bool[N] bin_image) -> () {
+    return(binarize(image, bin_image));
 }
 

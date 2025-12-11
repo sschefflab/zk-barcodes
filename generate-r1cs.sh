@@ -2,6 +2,8 @@
 
 mkdir -p zokrates/bin
 
+export RSMT2_CVC4_CMD=cvc5
+
 cd external/circ
 ./driver.py -F zok zokc r1cs spartan smt
 
