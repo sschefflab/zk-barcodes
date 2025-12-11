@@ -1,0 +1,27 @@
+from "../external/circ/third_party/ZoKratesCurly/zokrates_stdlib/stdlib/EMBED.zok" import value_in_array;
+from "./const_range_check" import RANGE_NEG8_8_INCL as table;
+
+// def assert_transitions<N>(bool[N] bin_image, bool[N] transition_indc) -> () {
+//     for u32 i in 0..(N-1) {
+//         assert(bin_image[i] - bin_image[i+1] + 2*transition_indc[i]*bin_image[i+1] - transition_indc[i] == 0);
+//     }
+// }
+
+//def assert_pixel_counts<N,D>
+
+def compute_word(field[8] blocks, field[8] normalized_blocks) -> field {
+    field mut sum_pixels = 0;
+
+    for u32 i in 0..8 {
+        sum_pixels = sum_pixels + blocks[i];
+    }
+
+    field mut word = 0;
+    for u32 i in 0..8 {
+        field r = blocks[i] * sum_pixels - 17 * normalized_blocks[i];
+        assert(value_in_array(r, table));
+        word = word + normalized_blocks[i] * 10**(7-i);
+    }
+
+    return(word);
+}
