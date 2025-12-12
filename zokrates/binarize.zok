@@ -1,4 +1,4 @@
-from "../external/circ/third_party/ZoKratesCurly/zokrates_stdlib/stdlib/EMBED.zok" import value_in_array;
+from "EMBED" import value_in_array;
 from "./const_range_check" import RANGE_0_128 as table;
 
 def binarize<N>(field[N] image, bool[N] bin_image) -> () {

@@ -9,12 +9,11 @@ cd external/circ
 
 ./driver.py -b
 
-cd ../..
-./external/circ/target/release/examples/circ zokrates/main.zok --language zsharp-curly r1cs \
+./target/release/examples/circ ../../zokrates/main.zok --language zsharp-curly r1cs \
     --action spartan-setup \
-    --prover-key zokrates/bin/P \
-    --verifier-key zokrates/bin/V
+    --prover-key ../../zokrates/bin/P \
+    --verifier-key ../../zokrates/bin/V
 
-./external/circ/target/release/examples/r1cs_inspect zokrates/bin/P > zokrates/bin/r1cs
+./target/release/examples/r1cs_inspect ../../zokrates/bin/P > ../../zokrates/bin/r1cs
 
 
