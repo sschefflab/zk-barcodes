@@ -12,3 +12,10 @@ def binarize<N>(field[N] image, bool[N] bin_image) -> () {
         assert(value_in_array(to_lookup, table));
     }
 }
+
+// test main function
+const u32 N = 4;
+
+def main(private field[N] image, private bool[N] bin_image) -> () {
+    return(binarize(image, bin_image));
+}

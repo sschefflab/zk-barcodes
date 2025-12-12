@@ -1,12 +1,7 @@
 from "./binarize" import binarize;
 from "./make_words.zok" import compute_word;
 
-const u32 N = 4;
-
-// def main(private field[N] image, private bool[N] bin_image) -> () {
-//     return(binarize(image, bin_image));
-// }
-
-def main(private field[8] blocks, private field[8] normalized_blocks) -> field {
-    return(compute_word(blocks, normalized_blocks));
+//TODO: fill in with the real main function when we have more pieces
+def main(private field a, private field b) {
+    assert(a == b * b);
 }

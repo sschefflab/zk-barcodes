@@ -25,3 +25,8 @@ def compute_word(field[8] blocks, field[8] normalized_blocks) -> field {
 
     return(word);
 }
+
+// test function
+def main(private field[8] blocks, private field[8] normalized_blocks) -> field {
+    return(compute_word(blocks, normalized_blocks));
+}

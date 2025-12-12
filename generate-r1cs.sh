@@ -1,5 +1,14 @@
 #!/bin/bash
 
+# Usage: ./generate-r1cs.sh [zokrates_file.zok]
+# If no file is specified, defaults to main.zok
+
+# Get the input file from argument or default to main.zok
+INPUT_FILE="${1:-main.zok}"
+
+# Extract the basename without extension for output files
+BASENAME=$(basename "$INPUT_FILE" .zok)
+
 mkdir -p zokrates/bin
 
 export RSMT2_CVC4_CMD=cvc5
@@ -9,11 +18,11 @@ cd external/circ
 
 ./driver.py -b
 
-./target/release/examples/circ ../../zokrates/main.zok --language zsharp-curly r1cs \
+./target/release/examples/circ "../../zokrates/$INPUT_FILE" --language zsharp-curly r1cs \
     --action spartan-setup \
-    --prover-key ../../zokrates/bin/P \
-    --verifier-key ../../zokrates/bin/V
+    --prover-key "../../zokrates/bin/${BASENAME}_P" \
+    --verifier-key "../../zokrates/bin/${BASENAME}_V"
 
-./target/release/examples/r1cs_inspect ../../zokrates/bin/P > ../../zokrates/bin/r1cs
+./target/release/examples/r1cs_inspect "../../zokrates/bin/${BASENAME}_P" > "../../zokrates/bin/${BASENAME}_r1cs"
 
 
