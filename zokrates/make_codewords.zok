@@ -1,0 +1,31 @@
+from "EMBED" import reverse_lookup;
+from "./const_bs_lookup.zok" import indexes, values;
+
+def check_dummies<W>(field[W] words, field[W] words_with_dummies) -> bool {
+    bool mut correct = true;
+    
+    for u32 i in 0..W {
+        bool word_correct = (words[i] == words_with_dummies[i] || words_with_dummies[i] == 0);
+        correct = correct && word_correct;
+    }
+
+    return(correct);
+}
+
+def compute_codewords<W>(field[W] words, field[W] words_with_dummies) -> field[W] {
+    assert(check_dummies(words, words_with_dummies));
+
+    field[W] mut codewords = [0; W];
+    for u32 i in 0..W {
+        field pos = reverse_lookup(indexes, words_with_dummies[i]);
+        codewords[i] = values[pos];
+    }
+    return(codewords);
+}
+
+// test function
+const u32 W = 2;
+
+def main(field[W] words, field[W] words_with_dummies) -> field[W] {
+    return(compute_codewords(words, words_with_dummies));
+}

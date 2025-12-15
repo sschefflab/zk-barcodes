@@ -1,0 +1,6 @@
+const field START_IDX = 8111113;
+const field STOP_IDX = 71131112;
+
+// TODO: put the actual table values in here
+const field[2790] indexes = [0; 2790];
+const field[2790] values = [0; 2790];
