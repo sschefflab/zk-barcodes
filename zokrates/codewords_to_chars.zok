@@ -1,0 +1,22 @@
+from "EMBED" import value_in_array;
+
+def check_char_split(field codeworld, field c1, field c2) -> bool {
+    return(codeword == 30*c1 + c2);
+}
+
+def codewords_to_chars<W>(field[W] corrected_codewords, field[2*W] base30_chars) -> u8[2*W] {
+    bool mut correct_char_split = true;
+    field mut this_table = 0;
+    field mut next_table = 0;
+
+    for i in 0..W {
+        field codeword = corrected_codewords[i];
+        field c1 = base30_chars[2*i];
+        field c2 = base30_chars[2*i+1];
+        correct_char_split = correct_char_split && check_char_split(codeword, c1, c2);
+
+        // TODO - fill in table lookup
+    }
+
+    assert(correct_char_split);
+}
