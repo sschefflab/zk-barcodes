@@ -1,0 +1,66 @@
+from "EMBED" import value_in_array;
+from "./const_range_check.zok" import RANGE_0_3, RANGE_EC_LEVEL, RANGE_NUM_ROWS, RANGE_NUM_COLS;
+
+struct BarcodeStats {
+     field ec_level;
+     field num_rows;
+     field num_cols;
+}
+
+// TODO: this is somehow a zillion constraints - fix
+def check_barcode_stats(
+    field l0,
+    field l3,
+    field l6,
+    BarcodeStats stats,
+    // Witness variables for quotients and remainders
+    field q0,
+    field qr,
+    field q3,
+    field r3,
+    field q6 
+) -> () {
+    // Constrain: l0 = 30 * q0 + qr, where 0 <= qr < 30
+    assert(l0 == 30 * q0 + qr);
+    assert(qr < 30);
+
+    // Constrain: l3 = 30 * q3 + r3, where 0 <= r3 < 30
+    assert(l3 == 30 * q3 + r3);
+    assert(r3 < 30);
+
+    // Constrain: l6 = 30 * q6 + (stats.num_cols - 1)
+    // This ensures l6 % 30 == stats.num_cols - 1
+    // num_cols is checked to be appropriately bounded below
+    assert(l6 == 30 * q6 + stats.num_cols - 1);
+
+    field dr = r3 - 3 * stats.ec_level;
+    assert(stats.num_rows - 1 == 3 * qr + dr);
+
+    // TODO: should any of these be table lookups instead?
+    assert(dr >= 0);
+    assert(dr <= 2);
+
+    assert(stats.ec_level >= 0);
+    assert(stats.ec_level <= 8);
+
+    assert(stats.num_rows >= 3);
+    assert(stats.num_rows <= 90);
+
+    assert(stats.num_cols >= 1);
+    assert(stats.num_cols <= 30);
+}
+
+def main(
+    field l0,
+    field l3,
+    field l6,
+    BarcodeStats stats,
+    // Witness variables for quotients and remainders
+    field q0,  // quotient of l0 / 30
+    field qr,  // remainder of l0 / 30 (the value we care about)
+    field q3,  // quotient of l3 / 30
+    field r3,  // remainder of l3 / 30
+    field q6   // quotient of l6 / 30
+) -> () {
+    return(check_barcode_stats(l0, l3, l6, stats, q0, qr, q3, r3, q6));
+}
