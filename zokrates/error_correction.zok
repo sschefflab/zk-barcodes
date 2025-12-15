@@ -50,17 +50,17 @@ def check_barcode_stats(
     assert(stats.num_cols <= 30);
 }
 
+// test function
 def main(
     field l0,
     field l3,
     field l6,
     BarcodeStats stats,
-    // Witness variables for quotients and remainders
-    field q0,  // quotient of l0 / 30
-    field qr,  // remainder of l0 / 30 (the value we care about)
-    field q3,  // quotient of l3 / 30
-    field r3,  // remainder of l3 / 30
-    field q6   // quotient of l6 / 30
+    field q0,
+    field qr,
+    field q3,
+    field r3,
+    field q6 
 ) -> () {
     return(check_barcode_stats(l0, l3, l6, stats, q0, qr, q3, r3, q6));
 }
