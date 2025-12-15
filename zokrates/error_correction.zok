@@ -1,4 +1,5 @@
 from "EMBED" import value_in_array;
+// TODO: these are currently not being used. Either use them or delete them.
 from "./const_range_check.zok" import RANGE_0_3, RANGE_EC_LEVEL, RANGE_NUM_ROWS, RANGE_NUM_COLS;
 
 struct BarcodeStats {
@@ -48,6 +49,19 @@ def check_barcode_stats(
 
     assert(stats.num_cols >= 1);
     assert(stats.num_cols <= 30);
+}
+
+// TODO: write some function to check error correction
+
+def check_barcode_size<W>(field[W] corrected_codewords, field num_rows, field num_cols) -> bool {
+    field mut num_nonzero = 0;
+
+    for u32 i in 0..W {
+        field to_add = (corrected_codewords[i] == 0) ? 1 : 0;
+        num_nonzero = num_nonzero + to_add;
+    }
+
+    return(num_nonzero <= num_rows * num_cols);
 }
 
 // test function
