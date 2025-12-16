@@ -1,6 +1,5 @@
-from "EMBED" import value_in_array;
-// TODO: these are currently not being used. Either use them or delete them.
-from "./const_range_check.zok" import RANGE_0_3, RANGE_EC_LEVEL, RANGE_NUM_ROWS, RANGE_NUM_COLS;
+from "EMBED" import value_in_array, u32_to_field;
+from "./const_range_check.zok" import RANGE_0_3, RANGE_0_30, RANGE_EC_LEVEL, RANGE_NUM_ROWS, RANGE_NUM_COLS;
 
 struct BarcodeStats {
      field ec_level;
@@ -8,7 +7,14 @@ struct BarcodeStats {
      field num_cols;
 }
 
-// TODO: this is somehow a zillion constraints - fix
+def check_division_algorithm<Q>(field y, field x, field q, field r, field[Q] range_check_table) -> bool {
+    bool div_alg = (y == q * x + r);
+    field Q_field = u32_to_field(Q);
+    assert(Q_field == q);
+    assert(value_in_array(r, range_check_table));
+    return(div_alg);
+}
+
 def check_barcode_stats(
     field l0,
     field l3,
@@ -16,39 +22,23 @@ def check_barcode_stats(
     BarcodeStats stats,
     // Witness variables for quotients and remainders
     field q0,
-    field qr,
+    field r0,
     field q3,
     field r3,
     field q6 
 ) -> () {
-    // Constrain: l0 = 30 * q0 + qr, where 0 <= qr < 30
-    assert(l0 == 30 * q0 + qr);
-    assert(qr < 30);
+    // table lookups end up being way cheaper in constraints than ZoKrates comparisons
 
-    // Constrain: l3 = 30 * q3 + r3, where 0 <= r3 < 30
-    assert(l3 == 30 * q3 + r3);
-    assert(r3 < 30);
-
-    // Constrain: l6 = 30 * q6 + (stats.num_cols - 1)
-    // This ensures l6 % 30 == stats.num_cols - 1
-    // num_cols is checked to be appropriately bounded below
-    assert(l6 == 30 * q6 + stats.num_cols - 1);
-
+    assert(check_division_algorithm(l0, q0, 30, r0, RANGE_0_30));
+    assert(check_division_algorithm(l3, q3, 30, r3, RANGE_0_30));
+    assert(check_division_algorithm(l6, q6, 30, stats.num_cols - 1, RANGE_0_30));
+ 
     field dr = r3 - 3 * stats.ec_level;
-    assert(stats.num_rows - 1 == 3 * qr + dr);
+    assert(check_division_algorithm(stats.num_rows - 1, r0, 3, dr, RANGE_0_3));
 
-    // TODO: should any of these be table lookups instead?
-    assert(dr >= 0);
-    assert(dr <= 2);
-
-    assert(stats.ec_level >= 0);
-    assert(stats.ec_level <= 8);
-
-    assert(stats.num_rows >= 3);
-    assert(stats.num_rows <= 90);
-
-    assert(stats.num_cols >= 1);
-    assert(stats.num_cols <= 30);
+    assert(value_in_array(stats.ec_level, RANGE_EC_LEVEL));
+    assert(value_in_array(stats.num_rows, RANGE_NUM_ROWS));
+    assert(value_in_array(stats.num_cols, RANGE_NUM_COLS));
 }
 
 // TODO: write some function to check error correction
@@ -69,7 +59,7 @@ def main(
     field l0,
     field l3,
     field l6,
-    BarcodeStats stats,
+    private BarcodeStats stats,
     field q0,
     field qr,
     field q3,
