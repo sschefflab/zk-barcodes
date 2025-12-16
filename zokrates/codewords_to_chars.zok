@@ -34,7 +34,7 @@ def codewords_to_chars<W>(field[W] corrected_codewords, field[2*W] base30_chars)
 }
 
 // test function
-const u32 W = 16;
+const u32 W = 2;
 
 def main(field[W] corrected_codewords, field[2*W] base30_chars) -> u8[2*W] {
     return(codewords_to_chars(corrected_codewords, base30_chars));

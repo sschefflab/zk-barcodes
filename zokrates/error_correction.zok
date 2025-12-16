@@ -7,6 +7,19 @@ struct BarcodeStats {
      field num_cols;
 }
 
+struct RowIndicatorVars {
+    field l0;
+    field l3;
+    field l6;
+
+    field q0;
+    field q3;
+    field q6;
+
+    field r0;
+    field r3;
+}
+
 def check_division_algorithm<Q>(field y, field x, field q, field r, field[Q] range_check_table) -> bool {
     bool div_alg = (y == q * x + r);
     field Q_field = u32_to_field(Q);
@@ -16,25 +29,17 @@ def check_division_algorithm<Q>(field y, field x, field q, field r, field[Q] ran
 }
 
 def check_barcode_stats(
-    field l0,
-    field l3,
-    field l6,
-    BarcodeStats stats,
-    // Witness variables for quotients and remainders
-    field q0,
-    field r0,
-    field q3,
-    field r3,
-    field q6 
+    RowIndicatorVars row_indc,
+    BarcodeStats stats
 ) -> bool {
     // table lookups end up being way cheaper in constraints than ZoKrates comparisons
 
-    bool div_alg0 = check_division_algorithm(l0, q0, 30, r0, RANGE_0_30);
-    bool div_alg3 = check_division_algorithm(l3, q3, 30, r3, RANGE_0_30);
-    bool div_alg6 = check_division_algorithm(l6, q6, 30, stats.num_cols - 1, RANGE_0_30);
+    bool div_alg0 = check_division_algorithm(row_indc.l0, row_indc.q0, 30, row_indc.r0, RANGE_0_30);
+    bool div_alg3 = check_division_algorithm(row_indc.l3, row_indc.q3, 30, row_indc.r3, RANGE_0_30);
+    bool div_alg6 = check_division_algorithm(row_indc.l6, row_indc.q6, 30, stats.num_cols - 1, RANGE_0_30);
  
-    field dr = r3 - 3 * stats.ec_level;
-    bool div_alg_r = check_division_algorithm(stats.num_rows - 1, r0, 3, dr, RANGE_0_3);
+    field dr = row_indc.r3 - 3 * stats.ec_level;
+    bool div_alg_r = check_division_algorithm(stats.num_rows - 1, row_indc.r0, 3, dr, RANGE_0_3);
 
     assert(value_in_array(stats.ec_level, RANGE_EC_LEVEL));
     assert(value_in_array(stats.num_rows, RANGE_NUM_ROWS));
@@ -93,19 +98,12 @@ def check_barcode_size<W>(field[W] corrected_codewords, field num_rows, field nu
 const u32 W = 16;
 
 def main(
-    field l0,
-    field l3,
-    field l6,
+    RowIndicatorVars row_indc,
     private BarcodeStats stats,
-    field q0,
-    field qr,
-    field q3,
-    field r3,
-    field q6,
     field[W] codewords,
     field[W] corrected_codewords
 ) -> () {
-    bool ok_stats = check_barcode_stats(l0, l3, l6, stats, q0, qr, q3, r3, q6);
+    bool ok_stats = check_barcode_stats(row_indc, stats);
     bool ok_ec = check_error_correction(codewords, corrected_codewords, stats.ec_level);
     bool ok_barcode_size = check_barcode_size(corrected_codewords, stats.num_rows, stats.num_cols);
     assert(ok_stats && ok_ec && ok_barcode_size);
