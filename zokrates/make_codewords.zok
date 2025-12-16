@@ -1,5 +1,4 @@
-from "EMBED" import reverse_lookup;
-from "./const_codeword_lookup.zok" import indexes, values;
+from "./codeword_lookup.zok" import lookup_codeword;
 
 def check_dummies<W>(field[W] words, field[W] words_with_dummies) -> bool {
     bool mut correct = true;
@@ -17,8 +16,7 @@ def compute_codewords<W>(field[W] words, field[W] words_with_dummies) -> field[W
 
     field[W] mut codewords = [0; W];
     for u32 i in 0..W {
-        field pos = reverse_lookup(indexes, words_with_dummies[i]);
-        codewords[i] = values[pos];
+        codewords[i] = lookup_codeword(words_with_dummies[i]);
     }
     return(codewords);
 }

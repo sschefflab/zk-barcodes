@@ -54,7 +54,6 @@ def eval_polynomial<P>(field[P] coeffs, field eval_point) -> field {
     return(result);
 }
 
-// TODO: write some function to check error correction
 def check_error_correction<W>(field[W] codewords, field[W] corrected_codewords, field ec_level) -> bool {
     // TODO: all of this should be mod 929
     field mut t = 0;
