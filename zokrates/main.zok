@@ -1,7 +1,23 @@
 from "./binarize" import binarize;
-from "./make_words.zok" import compute_word;
+from "./make_words.zok" import compute_words;
+from "./make_codewords.zok" import compute_codewords;
 
-//TODO: fill in with the real main function when we have more pieces
-def main(private field a, private field b) {
-    assert(a == b * b);
+//TODO: fill in with more reasonable constants
+const u32 N = 32;
+const u32 D = 16;
+const u32 W = 2;
+
+def main(private field[N] image,
+         private bool[N] bin_image,
+         private bool[N] transitions,
+         private field[D] counts,
+         private field[W][8] normalized_blocks,
+         private field[W] words_with_dummies
+) -> ()
+{
+    assert(binarize(image, bin_image)); // this function always returns true, but it does asserts inside
+
+    field[W] words = compute_words(bin_image, transitions, counts, normalized_blocks);
+    field[W] codewords = compute_codewords(words, words_with_dummies);
+    
 }

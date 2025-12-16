@@ -1,7 +1,7 @@
 from "EMBED" import value_in_array;
 from "./const_range_check" import RANGE_0_128 as table;
 
-def binarize<N>(field[N] image, bool[N] bin_image) -> () {
+def binarize<N>(field[N] image, bool[N] bin_image) -> bool {
     for u32 i in 0..N {
         field to_lookup =
             if bin_image[i] {
@@ -11,11 +11,13 @@ def binarize<N>(field[N] image, bool[N] bin_image) -> () {
             };
         assert(value_in_array(to_lookup, table));
     }
+
+    return true;
 }
 
 // test main function
 const u32 N = 4;
 
 def main(private field[N] image, private bool[N] bin_image) -> () {
-    return(binarize(image, bin_image));
+    assert(binarize(image, bin_image));
 }
