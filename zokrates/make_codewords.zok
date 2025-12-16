@@ -1,5 +1,5 @@
 from "EMBED" import reverse_lookup;
-from "./const_bs_lookup.zok" import indexes, values;
+from "./const_codeword_lookup.zok" import indexes, values;
 
 def check_dummies<W>(field[W] words, field[W] words_with_dummies) -> bool {
     bool mut correct = true;
