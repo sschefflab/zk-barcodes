@@ -2810,6 +2810,7 @@ const field[2790] ALL_PATTERNS = [
 def lookup_codeword(field idx) -> field {
     u32 pos = field_to_u32(reverse_lookup(ALL_PATTERNS, idx));
     field codeword =
+        // TODO: there may be a more efficient way to do this than comparison and modulus
         if (pos < 2987) {
            u32_to_field(pos % 929)
         } else {
