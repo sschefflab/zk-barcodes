@@ -1,22 +1,41 @@
 from "EMBED" import value_in_array;
+from "./char_lookup.zok" import get_text_char;
 
-def check_char_split(field codeworld, field c1, field c2) -> bool {
+def check_char_split(field codeword, field c1, field c2) -> bool {
     return(codeword == 30*c1 + c2);
 }
 
+// TODO: this is somehow a zillion constraints - fix
 def codewords_to_chars<W>(field[W] corrected_codewords, field[2*W] base30_chars) -> u8[2*W] {
     bool mut correct_char_split = true;
     field mut this_table = 0;
     field mut next_table = 0;
+    u8[2*W] mut chars = [0; 2*W];
 
-    for i in 0..W {
+    for u32 i in 0..W {
         field codeword = corrected_codewords[i];
         field c1 = base30_chars[2*i];
         field c2 = base30_chars[2*i+1];
         correct_char_split = correct_char_split && check_char_split(codeword, c1, c2);
 
-        // TODO - fill in table lookup
+        (u8, field, field) c1_result = get_text_char(c1, this_table, next_table);
+        chars[2*i] = c1_result.0;
+        this_table = c1_result.1;
+        next_table = c1_result.2;
+
+        (u8, field, field) c2_result = get_text_char(c2, this_table, next_table);
+        chars[2*i+1] = c2_result.0;
+        this_table = c2_result.1;
+        next_table = c2_result.2;
     }
 
     assert(correct_char_split);
+    return(chars);
+}
+
+// test function
+const u32 W = 16;
+
+def main(field[W] corrected_codewords, field[2*W] base30_chars) -> u8[2*W] {
+    return(codewords_to_chars(corrected_codewords, base30_chars));
 }
