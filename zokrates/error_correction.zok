@@ -1,5 +1,5 @@
-from "EMBED" import value_in_array, u32_to_field;
-from "./const_range_check.zok" import RANGE_0_3, RANGE_0_30, RANGE_EC_LEVEL, RANGE_NUM_ROWS, RANGE_NUM_COLS;
+from "EMBED" import value_in_array, u32_to_field, reverse_lookup;
+from "./const_range_check.zok" import RANGE_0_3, RANGE_0_30, RANGE_EC_LEVEL, RANGE_NUM_ROWS, RANGE_NUM_COLS, POWERS_OF_TWO;
 
 struct BarcodeStats {
      field ec_level;
@@ -26,22 +26,58 @@ def check_barcode_stats(
     field q3,
     field r3,
     field q6 
-) -> () {
+) -> bool {
     // table lookups end up being way cheaper in constraints than ZoKrates comparisons
 
-    assert(check_division_algorithm(l0, q0, 30, r0, RANGE_0_30));
-    assert(check_division_algorithm(l3, q3, 30, r3, RANGE_0_30));
-    assert(check_division_algorithm(l6, q6, 30, stats.num_cols - 1, RANGE_0_30));
+    bool div_alg0 = check_division_algorithm(l0, q0, 30, r0, RANGE_0_30);
+    bool div_alg3 = check_division_algorithm(l3, q3, 30, r3, RANGE_0_30);
+    bool div_alg6 = check_division_algorithm(l6, q6, 30, stats.num_cols - 1, RANGE_0_30);
  
     field dr = r3 - 3 * stats.ec_level;
-    assert(check_division_algorithm(stats.num_rows - 1, r0, 3, dr, RANGE_0_3));
+    bool div_alg_r = check_division_algorithm(stats.num_rows - 1, r0, 3, dr, RANGE_0_3);
 
     assert(value_in_array(stats.ec_level, RANGE_EC_LEVEL));
     assert(value_in_array(stats.num_rows, RANGE_NUM_ROWS));
     assert(value_in_array(stats.num_cols, RANGE_NUM_COLS));
+    return(div_alg0 && div_alg3 && div_alg6 && div_alg_r);
+}
+
+// coefficients should go least significant to most significant
+def eval_polynomial<P>(field[P] coeffs, field eval_point) -> field {
+    //TODO: this needs to happen mod 929
+    field mut result = 0;
+    
+    for u32 i in 0..P {
+        result = result + coeffs[i]*(eval_point**i);
+    }
+
+    return(result);
 }
 
 // TODO: write some function to check error correction
+def check_error_correction<W>(field[W] codewords, field[W] corrected_codewords, field ec_level) -> bool {
+    // TODO: all of this should be mod 929
+    field mut t = 0;
+    for u32 i in 0..W {
+        field error = codewords[i] - corrected_codewords[i];
+        field to_add = (error == 0) ? 0 : 1;
+        t = t + to_add;
+    }
+
+    field power_of_two = reverse_lookup(POWERS_OF_TWO, ec_level+1);
+    bool sufficiently_sparse = (power_of_two - 2*t - 4 >= 0);
+
+    bool mut zero_syndromes = true;
+    // possible error correction levels are [0,8]. Need i's in range [0, 2**_level+1)]
+    for u32 i in 0..512 {
+        field i_field = u32_to_field(i);
+        field eval_point = 3**i;
+        field result = eval_polynomial(corrected_codewords, eval_point);
+        zero_syndromes = zero_syndromes && (i_field > power_of_two || result == 0);
+    }
+
+    return(sufficiently_sparse && zero_syndromes);
+}
 
 def check_barcode_size<W>(field[W] corrected_codewords, field num_rows, field num_cols) -> bool {
     field mut num_nonzero = 0;
@@ -55,6 +91,8 @@ def check_barcode_size<W>(field[W] corrected_codewords, field num_rows, field nu
 }
 
 // test function
+const u32 W = 16;
+
 def main(
     field l0,
     field l3,
@@ -64,7 +102,12 @@ def main(
     field qr,
     field q3,
     field r3,
-    field q6 
+    field q6,
+    field[W] codewords,
+    field[W] corrected_codewords
 ) -> () {
-    return(check_barcode_stats(l0, l3, l6, stats, q0, qr, q3, r3, q6));
+    bool ok_stats = check_barcode_stats(l0, l3, l6, stats, q0, qr, q3, r3, q6);
+    bool ok_ec = check_error_correction(codewords, corrected_codewords, stats.ec_level);
+    bool ok_barcode_size = check_barcode_size(corrected_codewords, stats.num_rows, stats.num_cols);
+    assert(ok_stats && ok_ec && ok_barcode_size);
 }
