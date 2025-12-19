@@ -14,7 +14,7 @@ So, for the whole circuit:
 ./generate-r1cs.sh
 ```
 
-For just binarize.zok:
+And for example, for just binarize.zok:
 ```
 ./generate-r1cs.sh binarize.zok
 ```
