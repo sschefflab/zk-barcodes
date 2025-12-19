@@ -19,4 +19,4 @@ And for example, for just binarize.zok:
 ./generate-r1cs.sh binarize.zok
 ```
 
-The script will create the zokrates/bin directory if it does not already exist. Inside, it will create P, V, and r1cs files. <filename>_P and <filename>_V are binary files used with Spartan to actually prove and verify. <filename>_r1cs is a human-readable file containing the R1CS system.
+The script will create the zokrates/bin directory if it does not already exist. Inside, it will create P, V, and r1cs files. \*_P and \*_V are binary files used with Spartan to actually prove and verify. \*_r1cs is a human-readable file containing the R1CS system.
