@@ -1,5 +1,5 @@
 from "EMBED" import value_in_array, u32_to_field, unpack;
-from "./const_range_check.zok" import RANGE_0_3, RANGE_0_30, RANGE_EC_LEVEL, RANGE_NUM_ROWS, RANGE_NUM_COLS, POWERS_OF_TWO, POWERS_OF_TWO_U32, GF_929;
+from "./const_range_check.zok" import RANGE_0_3, RANGE_0_30, RANGE_EC_LEVEL, RANGE_NUM_ROWS, RANGE_NUM_COLS, POWERS_OF_TWO, GF_929;
 
 struct BarcodeStats {
      field ec_level;
@@ -165,7 +165,11 @@ def check_barcode_size<W>(field[W] corrected_codewords, field num_rows, field nu
         num_nonzero = num_nonzero + to_add;
     }
 
-    return(num_nonzero <= num_rows * num_cols);
+    field v = num_rows * num_cols - num_nonzero;
+    // 12 bits is sufficient here because num_rows * num_cols <= 90*30 < 4096
+    bool[12] bits = unpack(v);
+
+    return(check_bit_decomp(v, bits));
 }
 
 // test function
@@ -182,5 +186,5 @@ def main(
     bool ok_ec = check_error_correction(codewords, corrected_codewords, stats.ec_level, poly_witness);
     bool ok_barcode_size = check_barcode_size(corrected_codewords, stats.num_rows, stats.num_cols);
     assert(ok_stats && ok_ec && ok_barcode_size);
-    //assert(ok_ec);
+    // assert(ok_barcode_size);
 }
