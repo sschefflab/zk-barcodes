@@ -30,6 +30,7 @@ def main(u32[SHA_OUTPUT_SIZE] image_digest,
 ) -> u8[2*W]
 {
     // TODO: replace with whatever we end up using for the digest
+    // This SHA256 stuff adds 57,508 constraints when uncommented.
     // Verify that image_u32 correctly represents image
     for u32 i in 0..N {
         u32 block = i / SHA_BLOCK_SIZE;
@@ -43,13 +44,14 @@ def main(u32[SHA_OUTPUT_SIZE] image_digest,
 
     assert(binarize(image, bin_image)); // this function always returns true, but it does asserts inside
 
-    field[W] words = compute_words(bin_image, transitions, counts, normalized_blocks);
-    field[W] codewords = compute_codewords(words, words_with_dummies);
+    field[W] words = compute_words(bin_image, transitions, counts, normalized_blocks); // 6.6k constraints
+    field[W] codewords = compute_codewords(words, words_with_dummies); // 11k constraints
 
+    // about 13k constraints
     assert(check_barcode_stats(row_indc, stats));
     assert(check_error_correction(codewords, corrected_codewords, stats.ec_level, poly_witness));
     assert(check_barcode_size(corrected_codewords, stats.num_rows, stats.num_cols));
 
-    u8[2*W] chars = codewords_to_chars(corrected_codewords, base30_chars);
+    u8[2*W] chars = codewords_to_chars(corrected_codewords, base30_chars); // 3.5k constraints
     return(chars);
 }

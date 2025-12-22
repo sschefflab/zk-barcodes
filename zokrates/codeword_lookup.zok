@@ -2811,6 +2811,7 @@ const field[2790] PATTERNS = [
 const field[2790] CODEWORDS = [ ...GF_929, ...GF_929, ...GF_929, 0, 0, 0];
 
 def lookup_codeword(field idx) -> field {
+    // TODO: this reverse lookup is using a ton of constraints - fix
     field pos = reverse_lookup(PATTERNS, idx);
     field codeword = CODEWORDS[pos];
     return(codeword);            
