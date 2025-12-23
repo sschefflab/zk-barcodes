@@ -4,7 +4,6 @@ import "utils/casts/field_to_u8";
 // PDF417 Text Compaction Mode - Flattened Interpretation Table
 // Contains 4 sub-modes x 30 values each = 120 total entries
 // Order: Alpha (0-29), Lower (30-59), Mixed (60-89), Punctuation (90-119)
-// Switch codes are marked as 0 with TODO comments
 
 const field[120] TEXT_MODE_TABLE = [
     // Alpha sub-mode (0-29)
@@ -210,6 +209,7 @@ const field[120] NEXT_NEXT_MODE_TABLE = [
 // returns: ascii char, next sub_mode, next-next sub_mode
 def get_text_char(field base30_val, field sub_mode, field next_sub_mode) -> (u8, field, field) {
     field index = sub_mode * 30 + base30_val;
+    // TODO: these table lookups are going to be a lot of constraints since the index is private/dynamic. This should change to use value_in_array.
     u8 ascii = field_to_u8(TEXT_MODE_TABLE[index]);
     field proposed_next_submode = NEXT_MODE_TABLE[index];
     field proposed_next_next_submode = NEXT_NEXT_MODE_TABLE[index];
