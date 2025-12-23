@@ -11,19 +11,19 @@ def check_dummies<W>(field[W] words, field[W] words_with_dummies) -> bool {
     return(correct);
 }
 
-def compute_codewords<W>(field[W] words, field[W] words_with_dummies) -> field[W] {
-    assert(check_dummies(words, words_with_dummies));
+def check_codewords<W>(field[W] words, field[W] words_with_dummies, field[W] codewords) -> bool {
+    bool dummies_ok = check_dummies(words, words_with_dummies);
 
-    field[W] mut codewords = [0; W];
     for u32 i in 0..W {
-        codewords[i] = lookup_codeword(words_with_dummies[i]);
+        bool is_true = lookup_codeword(words_with_dummies[i], codewords[i]);
     }
-    return(codewords);
+
+    return(dummies_ok);
 }
 
 // test function
 const u32 W = 2;
 
-def main(field[W] words, field[W] words_with_dummies) -> field[W] {
-    return(compute_codewords(words, words_with_dummies));
+def main(field[W] words, private field[W] words_with_dummies, private field[W] codewords) -> bool {
+    return(check_codewords(words, words_with_dummies, codewords));
 }
