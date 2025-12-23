@@ -2812,6 +2812,7 @@ const field[2790] CODEWORDS = [ ...GF_929, ...GF_929, ...GF_929, 0, 0, 0];
 
 def lookup_codeword(field idx) -> field {
     // TODO: this reverse lookup is using a ton of constraints - fix
+    // // It's not reverse_lookup specifically - it's the fact that we are doing a lookup with a dynamic index that must be kept private. value_in_array would be better.
     field pos = reverse_lookup(PATTERNS, idx);
     field codeword = CODEWORDS[pos];
     return(codeword);            
