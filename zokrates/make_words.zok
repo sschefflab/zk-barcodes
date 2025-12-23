@@ -28,6 +28,7 @@ def correct_pixel_counts<N,D>(bool[N] bin_image, bool[N] transitions, field[D] c
 
     for u32 i in 0..D {
         pointer = pointer + counts[i];
+        // TODO - this dynamic index by pointer might create a lot of constraints when the image is bigger - check
         correct = correct && (bin_image[pointer] != bin_image[pointer + 1]);
         field to_add = (counts[i] == 0) ? 0 : 1;
         nonzero_counts = nonzero_counts + to_add;
