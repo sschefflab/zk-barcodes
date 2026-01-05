@@ -1,41 +1,62 @@
 from "EMBED" import value_in_array;
-from "./char_lookup.zok" import get_text_char;
+from "./char_lookup.zok" import TableState, check_table_state;
 
 def check_char_split(field codeword, field c1, field c2) -> bool {
     return(codeword == 30*c1 + c2);
 }
 
-// TODO: this is somehow a zillion constraints - fix
-def codewords_to_chars<W>(field[W] corrected_codewords, field[2*W] base30_chars) -> u8[2*W] {
+def codewords_to_chars<W>(field[W] corrected_codewords, TableState[2*W] table_states) -> field[2*W] {
     bool mut correct_char_split = true;
-    field mut this_table = 0;
-    field mut next_table = 0;
-    u8[2*W] mut chars = [0; 2*W];
+    bool mut correct_state_transition = true;
+
+    assert(table_states[0].this_table == 0);
+    
+    TableState mut prev_table_state =  TableState { base30_val: 0, char: 0, this_table: 0, next_table: 0, next_next_table: 0 };
+
+    field[2*W] mut chars = [0; 2*W];
 
     for u32 i in 0..W {
         field codeword = corrected_codewords[i];
-        field c1 = base30_chars[2*i];
-        field c2 = base30_chars[2*i+1];
-        correct_char_split = correct_char_split && check_char_split(codeword, c1, c2);
+        TableState state1 = table_states[2*i];
+        TableState state2 = table_states[2*i+1];
+        correct_char_split = correct_char_split && check_char_split(codeword, state1.base30_val, state2.base30_val);
 
-        (u8, field, field) c1_result = get_text_char(c1, this_table, next_table);
-        chars[2*i] = c1_result.0;
-        this_table = c1_result.1;
-        next_table = c1_result.2;
+        bool dummy1 = check_table_state(state1);
+        chars[2*i] = state1.char;
+        bool dummy2 = check_table_state(state2);
+        chars[2*i+1] = state2.char;
 
-        (u8, field, field) c2_result = get_text_char(c2, this_table, next_table);
-        chars[2*i+1] = c2_result.0;
-        this_table = c2_result.1;
-        next_table = c2_result.2;
+
+        // check consistency of state1 with the previous state
+        correct_state_transition = correct_state_transition && (prev_table_state.next_table == state1.this_table);
+        correct_state_transition =
+            if (state1.char == 0) {
+                correct_state_transition   
+            } else {
+                // this continuity only matters if the character is not a switch code
+                correct_state_transition && (prev_table_state.next_next_table == state1.next_table)
+            };
+
+
+        // check consistency of state2 with state1
+        correct_state_transition = correct_state_transition && (state1.next_table == state2.this_table);
+        correct_state_transition =
+            if (state2.char == 0) {
+                correct_state_transition   
+            } else {
+                correct_state_transition && (state1.next_next_table == state2.next_table)
+            };
+        
     }
 
     assert(correct_char_split);
+    assert(correct_state_transition);
     return(chars);
 }
 
 // test function
 const u32 W = 2;
 
-def main(field[W] corrected_codewords, field[2*W] base30_chars) -> u8[2*W] {
-    return(codewords_to_chars(corrected_codewords, base30_chars));
+def main(field[W] corrected_codewords, private TableState[2*W] states) -> field[2*W] {
+    return(codewords_to_chars(corrected_codewords, states));
 }

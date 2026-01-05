@@ -1,228 +1,41 @@
-from "EMBED" import reverse_lookup;
+from "EMBED" import value_in_array;
+from "./const_range_check.zok" import RANGE_0_128, RANGE_0_4, RANGE_0_30;
 
 // PDF417 Text Compaction Mode - Flattened Interpretation Table
 // Contains 4 sub-modes x 30 values each = 120 total entries
 // Order: Alpha (0-29), Lower (30-59), Mixed (60-89), Punctuation (90-119)
+// Encoded as (next_next_table*2^16 + next_table*2^14 + this_table*2^12 + char*2^5 + base30_val)
+// see char_array.py for generation code
+const field[120] ENCODED_STATE_MACHINE = [2080, 2113, 2146, 2179, 2212, 2245, 2278, 2311, 2344, 2377, 2410, 2443, 2476, 2509, 2542, 2575, 2608, 2641, 2674, 2707, 2740, 2773, 2806, 2839, 2872, 2905, 1050, 81947, 163868, 49181, 89120, 89153, 89186, 89219, 89252, 89285, 89318, 89351, 89384, 89417, 89450, 89483, 89516, 89549, 89582, 89615, 89648, 89681, 89714, 89747, 89780, 89813, 89846, 89879, 89912, 89945, 87066, 69659, 167964, 118813, 173568, 173601, 173634, 173667, 173700, 173733, 173766, 173799, 173832, 173865, 173258, 172459, 172332, 173453, 173902, 173167, 173488, 173521, 173202, 173555, 173428, 173237, 173398, 174007, 175064, 253977, 173082, 90139, 8220, 188445, 259936, 259969, 260034, 260099, 260964, 260997, 261030, 261095, 261128, 262089, 259114, 258475, 258348, 259469, 259918, 258383, 259504, 259537, 259218, 259571, 259156, 262037, 259414, 259351, 259384, 260089, 262010, 262075, 259324, 12317];
 
-const u8[120] TEXT_MODE_TABLE = [
-    // Alpha sub-mode (0-29)
-    65,  // 0: A
-    66,  // 1: B
-    67,  // 2: C
-    68,  // 3: D
-    69,  // 4: E
-    70,  // 5: F
-    71,  // 6: G
-    72,  // 7: H
-    73,  // 8: I
-    74,  // 9: J
-    75,  // 10: K
-    76,  // 11: L
-    77,  // 12: M
-    78,  // 13: N
-    79,  // 14: O
-    80,  // 15: P
-    81,  // 16: Q
-    82,  // 17: R
-    83,  // 18: S
-    84,  // 19: T
-    85,  // 20: U
-    86,  // 21: V
-    87,  // 22: W
-    88,  // 23: X
-    89,  // 24: Y
-    90,  // 25: Z
-    32,  // 26: space
-    0,   // 27: ll (latch to lower)
-    0,   // 28: ml (latch to mixed)
-    0,   // 29: ps (shift to punctuation)
+struct TableState {
+    field base30_val;
+    field char;
 
-    // Lower sub-mode (30-59)
-    97,  // 30 (0): a
-    98,  // 31 (1): b
-    99,  // 32 (2): c
-    100, // 33 (3): d
-    101, // 34 (4): e
-    102, // 35 (5): f
-    103, // 36 (6): g
-    104, // 37 (7): h
-    105, // 38 (8): i
-    106, // 39 (9): j
-    107, // 40 (10): k
-    108, // 41 (11): l
-    109, // 42 (12): m
-    110, // 43 (13): n
-    111, // 44 (14): o
-    112, // 45 (15): p
-    113, // 46 (16): q
-    114, // 47 (17): r
-    115, // 48 (18): s
-    116, // 49 (19): t
-    117, // 50 (20): u
-    118, // 51 (21): v
-    119, // 52 (22): w
-    120, // 53 (23): x
-    121, // 54 (24): y
-    122, // 55 (25): z
-    32,  // 56 (26): space
-    0,   // 57 (27): as (shift to alpha)
-    0,   // 58 (28): ml (latch to mixed)
-    0,   // 59 (29): ps (shift to punctuation)
+    field this_table;
+    field next_table;
+    field next_next_table;
+}
 
-    // Mixed sub-mode (60-89)
-    48,  // 60 (0): 0
-    49,  // 61 (1): 1
-    50,  // 62 (2): 2
-    51,  // 63 (3): 3
-    52,  // 64 (4): 4
-    53,  // 65 (5): 5
-    54,  // 66 (6): 6
-    55,  // 67 (7): 7
-    56,  // 68 (8): 8
-    57,  // 69 (9): 9
-    38,  // 70 (10): &
-    13,  // 71 (11): CR (carriage return)
-    9,   // 72 (12): HT (horizontal tab)
-    44,  // 73 (13): ,
-    58,  // 74 (14): :
-    35,  // 75 (15): #
-    45,  // 76 (16): -
-    46,  // 77 (17): .
-    36,  // 78 (18): $
-    47,  // 79 (19): /
-    43,  // 80 (20): +
-    37,  // 81 (21): %
-    42,  // 82 (22): *
-    61,  // 83 (23): =
-    94,  // 84 (24): ^
-    0,   // 85 (25): pl (latch to punctuation)
-    32,  // 86 (26): space
-    0,   // 87 (27): ll (latch to lower)
-    0,   // 88 (28): al (latch to alpha)
-    0,   // 89 (29): ps (shift to punctuation)
+def encode_table_state(TableState table_state) -> field {
+    return(table_state.next_next_table * 2**16 + table_state.next_table * 2**14 + table_state.this_table * 2**12 + table_state.char * 2**5 + table_state.base30_val);
+}
 
-    // Punctuation sub-mode (90-119)
-    59,  // 90 (0): ;
-    60,  // 91 (1): <
-    62,  // 92 (2): >
-    64,  // 93 (3): @
-    91,  // 94 (4): [
-    92,  // 95 (5): \
-    93,  // 96 (6): ]
-    95,  // 97 (7): _
-    96,  // 98 (8): ` (grave accent/backtick)
-    126, // 99 (9): ~
-    33,  // 100 (10): !
-    13,  // 101 (11): CR (carriage return)
-    9,   // 102 (12): HT (horizontal tab)
-    44,  // 103 (13): ,
-    58,  // 104 (14): :
-    10,  // 105 (15): LF (line feed)
-    45,  // 106 (16): -
-    46,  // 107 (17): .
-    36,  // 108 (18): $
-    47,  // 109 (19): /
-    34,  // 110 (20): " (double quote)
-    124, // 111 (21): |
-    42,  // 112 (22): *
-    40,  // 113 (23): (
-    41,  // 114 (24): )
-    63,  // 115 (25): ?
-    123, // 116 (26): {
-    125, // 117 (27): }
-    39,  // 118 (28): ' (apostrophe/single quote)
-    0    // 119 (29): al (latch to alpha)
-];
+// the bool returned here doesn't actually check anything. The asserts inside the function are doing all the work.
+def check_table_state(TableState table_state) -> bool {
+    field encoded_state = encode_table_state(table_state);
+    assert(value_in_array(encoded_state, ENCODED_STATE_MACHINE));
 
-const field[120] NEXT_MODE_TABLE = [
-    // Alpha sub-mode (0-29, current mode = 0)
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // 0-9: regular chars, stay in alpha
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // 10-19: regular chars, stay in alpha
-    0, 0, 0, 0, 0, 0, 0,            // 20-26: regular chars, stay in alpha
-    1,                              // 27: ll (latch to lower)
-    2,                              // 28: ml (latch to mixed)
-    3,                              // 29: ps (shift to punctuation)
+    assert(value_in_array(table_state.base30_val, RANGE_0_30));
+    assert(value_in_array(table_state.char, RANGE_0_128));
+    assert(value_in_array(table_state.this_table, RANGE_0_4));
+    assert(value_in_array(table_state.next_table, RANGE_0_4));
+    assert(value_in_array(table_state.next_next_table, RANGE_0_4));
 
-    // Lower sub-mode (30-59, current mode = 1)
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  // 30-39: regular chars, stay in lower
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  // 40-49: regular chars, stay in lower
-    1, 1, 1, 1, 1, 1, 1,            // 50-56: regular chars, stay in lower
-    0,                              // 57: as (shift to alpha)
-    2,                              // 58: ml (latch to mixed)
-    3,                              // 59: ps (shift to punctuation)
-
-    // Mixed sub-mode (60-89, current mode = 2)
-    2, 2, 2, 2, 2, 2, 2, 2, 2, 2,  // 60-69: regular chars, stay in mixed
-    2, 2, 2, 2, 2, 2, 2, 2, 2, 2,  // 70-79: regular chars, stay in mixed
-    2, 2, 2, 2, 2,                  // 80-84: regular chars, stay in mixed
-    3,                              // 85: pl (latch to punctuation)
-    2,                              // 86: space, stay in mixed
-    1,                              // 87: ll (latch to lower)
-    0,                              // 88: al (latch to alpha)
-    3,                              // 89: ps (shift to punctuation)
-
-    // Punctuation sub-mode (90-119, current mode = 3)
-    3, 3, 3, 3, 3, 3, 3, 3, 3, 3,  // 90-99: regular chars, stay in punctuation
-    3, 3, 3, 3, 3, 3, 3, 3, 3, 3,  // 100-109: regular chars, stay in punctuation
-    3, 3, 3, 3, 3, 3, 3, 3, 3,      // 110-118: regular chars, stay in punctuation
-    0                               // 119: al (latch to alpha)
-];
-
-const field[120] NEXT_NEXT_MODE_TABLE = [
-    // Alpha sub-mode (0-29, current mode = 0)
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // 0-9: regular chars, stay in alpha
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // 10-19: regular chars, stay in alpha
-    0, 0, 0, 0, 0, 0, 0,            // 20-26: regular chars, stay in alpha
-    1,                              // 27: ll (latch to lower, permanent)
-    2,                              // 28: ml (latch to mixed, permanent)
-    0,                              // 29: ps (shift to punctuation, return to alpha)
-
-    // Lower sub-mode (30-59, current mode = 1)
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  // 30-39: regular chars, stay in lower
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  // 40-49: regular chars, stay in lower
-    1, 1, 1, 1, 1, 1, 1,            // 50-56: regular chars, stay in lower
-    1,                              // 57: as (shift to alpha, return to lower)
-    2,                              // 58: ml (latch to mixed, permanent)
-    1,                              // 59: ps (shift to punctuation, return to lower)
-
-    // Mixed sub-mode (60-89, current mode = 2)
-    2, 2, 2, 2, 2, 2, 2, 2, 2, 2,  // 60-69: regular chars, stay in mixed
-    2, 2, 2, 2, 2, 2, 2, 2, 2, 2,  // 70-79: regular chars, stay in mixed
-    2, 2, 2, 2, 2,                  // 80-84: regular chars, stay in mixed
-    3,                              // 85: pl (latch to punctuation, permanent)
-    2,                              // 86: space, stay in mixed
-    1,                              // 87: ll (latch to lower, permanent)
-    0,                              // 88: al (latch to alpha, permanent)
-    2,                              // 89: ps (shift to punctuation, return to mixed)
-
-    // Punctuation sub-mode (90-119, current mode = 3)
-    3, 3, 3, 3, 3, 3, 3, 3, 3, 3,  // 90-99: regular chars, stay in punctuation
-    3, 3, 3, 3, 3, 3, 3, 3, 3, 3,  // 100-109: regular chars, stay in punctuation
-    3, 3, 3, 3, 3, 3, 3, 3, 3,      // 110-118: regular chars, stay in punctuation
-    0                               // 119: al (latch to alpha, permanent)
-];
-
-// Helper function to access table by sub-mode and value
-// sub_mode: 0=Alpha, 1=Lower, 2=Mixed, 3=Punctuation
-// value: 0-29
-// returns: ascii char, next sub_mode, next-next sub_mode
-def get_text_char(field base30_val, field sub_mode, field next_sub_mode) -> (u8, field, field) {
-    field index = sub_mode * 30 + base30_val;
-    // TODO: these table lookups are going to be a lot of constraints since the index is private/dynamic. This should change to use value_in_array.
-    u8 ascii =(TEXT_MODE_TABLE[index]);
-    field proposed_next_submode = NEXT_MODE_TABLE[index];
-    field proposed_next_next_submode = NEXT_NEXT_MODE_TABLE[index];
-    (u8, field, field) result =
-        if (ascii == 0) {
-             (ascii, proposed_next_submode, proposed_next_next_submode)
-        } else {
-            // don't want to overwrite the passed-in next_sub_mode in this case
-            (ascii, next_sub_mode, next_sub_mode)
-        };
-    return(result);
+    return true;
 }
 
 // test main function
-def main(field base30_val, field sub_mode, field next_sub_mode) -> (u8, field, field) {
-    return(get_text_char(base30_val, sub_mode, next_sub_mode));
+def main(private TableState table_state) {
+    assert(check_table_state(table_state));
 }

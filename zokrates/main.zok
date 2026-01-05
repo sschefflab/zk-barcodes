@@ -2,6 +2,7 @@ from "./binarize.zok" import binarize;
 from "./make_words.zok" import compute_words;
 from "./make_codewords.zok" import check_codewords;
 from "./error_correction.zok" import BarcodeStats, RowIndicatorVars, PolynomialWitness, check_barcode_stats, check_barcode_size, check_error_correction;
+from "./char_lookup.zok" import TableState;
 from "./codewords_to_chars.zok" import codewords_to_chars;
 from "hashes/sha256/sha256" import main as sha256;
 from "EMBED" import u32_to_field;
@@ -27,8 +28,8 @@ def main(u32[SHA_OUTPUT_SIZE] image_digest,
          private PolynomialWitness<W>[512] poly_witness,
          private BarcodeStats stats,
          private RowIndicatorVars row_indc,
-         private field[2*W] base30_chars
-) -> u8[2*W]
+         private TableState[2*W] char_table_states
+) -> field[2*W]
 {
     // TODO: replace with whatever we end up using for the digest
     // This SHA256 stuff adds 57,508 constraints when uncommented.
@@ -53,6 +54,6 @@ def main(u32[SHA_OUTPUT_SIZE] image_digest,
     assert(check_error_correction(codewords, corrected_codewords, stats.ec_level, poly_witness));
     assert(check_barcode_size(corrected_codewords, stats.num_rows, stats.num_cols));
 
-    u8[2*W] chars = codewords_to_chars(corrected_codewords, base30_chars); // 3.5k constraints
+    field[2*W] chars = codewords_to_chars(corrected_codewords, char_table_states); // 340 constraints
     return(chars);
 }
