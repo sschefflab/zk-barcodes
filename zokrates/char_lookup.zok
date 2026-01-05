@@ -1,5 +1,4 @@
 from "EMBED" import reverse_lookup;
-import "utils/casts/field_to_u8";
 
 // PDF417 Text Compaction Mode - Flattened Interpretation Table
 // Contains 4 sub-modes x 30 values each = 120 total entries
