@@ -1,10 +1,11 @@
 from "./codeword_lookup.zok" import lookup_codeword;
 
+// approx 3W constraints
 def check_dummies<W>(field[W] words, field[W] words_with_dummies) -> bool {
     bool mut correct = true;
     
     for u32 i in 0..W {
-        bool word_correct = (words[i] == words_with_dummies[i] || words_with_dummies[i] == 0);
+        bool word_correct = (words[i] * (words[i] - words_with_dummies[i]) == 0);
         correct = correct && word_correct;
     }
 
