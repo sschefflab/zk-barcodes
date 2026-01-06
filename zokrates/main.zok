@@ -46,7 +46,7 @@ def main(u32[SHA_OUTPUT_SIZE] image_digest,
 
     assert(binarize(image, bin_image)); // this function always returns true, but it does asserts inside
 
-    field[W] words = compute_words(bin_image, transitions, counts, normalized_blocks); // 6.6k constraints
+    field[W] words = compute_words(bin_image, transitions, counts, normalized_blocks); // 3.4k constraints
     assert(check_codewords(words, words_with_dummies, codewords)); // 3.7k constraints
 
     // about 13k constraints

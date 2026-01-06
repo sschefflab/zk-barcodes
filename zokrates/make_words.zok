@@ -5,6 +5,7 @@ def bool_to_field(bool b) -> field {
     return(b ? 1 : 0);
 }
 
+// roughly 3N constraints
 def correct_transitions<N>(bool[N] bin_image, bool[N] transitions) -> bool {
     bool mut correct = true;
     for u32 i in 0..(N-1) {
@@ -26,9 +27,10 @@ def correct_pixel_counts<N,D>(bool[N] bin_image, bool[N] transitions, field[D] c
     field mut nonzero_counts = 0;
     bool mut correct = true;
 
+    // TODO - this loop is a zillion constraints and dominating the count
     for u32 i in 0..D {
         pointer = pointer + counts[i];
-        // TODO - this dynamic index by pointer might create a lot of constraints when the image is bigger - check
+        // TODO - this dynamic index by pointer creates a lot of constraints
         correct = correct && (bin_image[pointer] != bin_image[pointer + 1]);
         field to_add = (counts[i] == 0) ? 0 : 1;
         nonzero_counts = nonzero_counts + to_add;
@@ -71,10 +73,16 @@ def compute_words<N,D,W>(bool[N] bin_image, bool[N] transitions, field[D] counts
 }
 
 // test function
-const u32 N = 64;
+const u32 N = 32;
 const u32 D = 16;
 const u32 W = 2;
 
 def main(private bool[N] bin_image, private bool[N] transitions, private field[D] counts, private field[W][8] normalized_blocks) -> field[W] {
     return(compute_words(bin_image, transitions, counts, normalized_blocks));
 }
+
+// TODO - remove this when done testing
+// def main(private bool[N] bin_image, private bool[N] transitions, private field[D] counts) {
+//     //assert(correct_transitions(bin_image, transitions));
+//     assert(correct_pixel_counts(bin_image, transitions, counts));
+// }
