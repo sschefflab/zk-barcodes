@@ -17,3 +17,7 @@ target
 /target
 
 zokrates/bin
+
+# Python stuff
+python-scripts/venv/
+python-scripts/__pycache__/
