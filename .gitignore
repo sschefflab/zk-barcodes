@@ -21,3 +21,7 @@ zokrates/bin
 # Python stuff
 python-scripts/venv/
 python-scripts/__pycache__/
+python-scripts/*.png
+
+# MacOS
+.DS_Store
