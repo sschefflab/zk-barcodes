@@ -2,3 +2,6 @@
 	path = external/circ
 	url = git@github.com:sschefflab/circ.git
 	branch = r1cs-printer
+[submodule "external/rxing"]
+	path = external/rxing
+	url = git@github.com:sschefflab/rxing.git
