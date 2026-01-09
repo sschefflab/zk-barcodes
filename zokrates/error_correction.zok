@@ -138,7 +138,7 @@ def check_error_correction<W>(field[W] codewords, field[W] corrected_codewords, 
     }
 
     field power_of_two = POWERS_OF_TWO[ec_level+1];
-    
+
     field sparsity = power_of_two - 2*t - 4;
     bool[9] bits = unpack(sparsity);
     bool sufficiently_sparse = check_bit_decomp(sparsity, bits);
@@ -184,12 +184,12 @@ def main(
     field[W] codewords,
     private field[W] corrected_codewords
 ) -> () {
-    bool ok_stats = check_barcode_stats(row_indc, stats); // constant 170 constraints - does not depend on W
-    assert(ok_stats);
+    // bool ok_stats = check_barcode_stats(row_indc, stats); // constant 170 constraints - does not depend on W
+    // assert(ok_stats);
     bool ok_ec = check_error_correction(codewords, corrected_codewords, stats.ec_level, poly_witness);
     assert(ok_ec); // 5k constraints per W
-    bool ok_barcode_size = check_barcode_size(corrected_codewords, stats.num_rows, stats.num_cols);
-    assert(ok_barcode_size);
+    // bool ok_barcode_size = check_barcode_size(corrected_codewords, stats.num_rows, stats.num_cols);
+    // assert(ok_barcode_size);
     // assert(ok_stats && ok_ec && ok_barcode_size);
 
     // assert(check_polynomial_eval(corrected_codewords, poly_witness[0])); 

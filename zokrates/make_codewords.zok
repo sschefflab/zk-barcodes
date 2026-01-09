@@ -25,6 +25,11 @@ def check_codewords<W>(field[W] words, field[W] words_with_dummies, field[W] cod
 // test function
 const u32 W = 2;
 
-def main(field[W] words, private field[W] words_with_dummies, private field[W] codewords) -> bool {
+def main(field[W] words, private field[W] words_with_dummies, private field[W] codewords) {
     return(check_codewords(words, words_with_dummies, codewords));
+    // for u32 i in 0..W {
+    //     bool is_true = lookup_codeword(words_with_dummies[i], codewords[i]);
+    // }
+
+    // assert(true);
 }

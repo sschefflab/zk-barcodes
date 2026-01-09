@@ -16,7 +16,7 @@ def binarize<N>(field[N] image, bool[N] bin_image) -> bool {
 }
 
 // test main function
-const u32 N = 4;
+const u32 N = 32;
 
 def main(private field[N] image, private bool[N] bin_image) -> () {
     assert(binarize(image, bin_image));

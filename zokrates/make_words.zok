@@ -82,7 +82,14 @@ def main(private bool[N] bin_image, private bool[N] transitions, private field[D
 }
 
 // TODO - remove this when done testing
-// def main(private bool[N] bin_image, private bool[N] transitions, private field[D] counts) {
-//     //assert(correct_transitions(bin_image, transitions));
-//     assert(correct_pixel_counts(bin_image, transitions, counts));
+// def main(private bool[N] bin_image, private bool[N] transitions) {
+//     assert(correct_transitions(bin_image, transitions));
+//     // assert(correct_pixel_counts(bin_image, transitions, counts));
+//     // field[W] mut words = [0; W];
+
+//     // for u32 i in 0..W {
+//     //     words[i] = compute_word(blocks[i], normalized_blocks[i]);
+//     // }
+
+//     // return(words);
 // }
