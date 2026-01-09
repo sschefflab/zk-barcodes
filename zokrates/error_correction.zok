@@ -53,8 +53,6 @@ def check_barcode_stats(
 // all arrays should be from lowest degree to highest degree
 // P-1 is the degree of the polynomial
 struct PolynomialWitness<P> {
-    field[P] coeffs;
-    
     field eval_point;
 
     field[P] powers; // eval point raised to the ith power mod 929
@@ -68,14 +66,14 @@ struct PolynomialWitness<P> {
 }
 
 // some relatively large base and then approximately 2P constraints per call
-def check_polynomial_eval<P>(PolynomialWitness<P> witness) -> bool {
+def check_polynomial_eval<P>(field[P] coeffs, PolynomialWitness<P> witness) -> bool {
     bool mut correct = true;
     field mut sum_pre_mod = 0;
     assert(witness.powers[0] == 1);
     assert(witness.powers_quotients[0] == 0);
 
     for u32 i in 0..(P-1) {
-        field term_pre_mod = witness.coeffs[i] * witness.powers[i];
+        field term_pre_mod = coeffs[i] * witness.powers[i];
         correct = correct && check_division_algorithm(term_pre_mod, witness.terms_quotients[i], 929, witness.terms[i], GF_929);
         sum_pre_mod = sum_pre_mod + witness.terms[i];
         
@@ -83,7 +81,7 @@ def check_polynomial_eval<P>(PolynomialWitness<P> witness) -> bool {
         correct = correct && check_division_algorithm(power_pre_mod, witness.powers_quotients[i+1], 929, witness.powers[i+1], GF_929);
     }
 
-    field term_pre_mod = witness.coeffs[P-1] * witness.powers[P - 1];
+    field term_pre_mod = coeffs[P-1] * witness.powers[P - 1];
     correct = correct && check_division_algorithm(term_pre_mod, witness.terms_quotients[P-1], 929, witness.terms[P-1], GF_929);
     sum_pre_mod = sum_pre_mod + witness.terms[P - 1];
 
@@ -149,7 +147,7 @@ def check_error_correction<W>(field[W] codewords, field[W] corrected_codewords, 
     // possible error correction levels are [0,8]. Need i's in range [0, 2**ec_level+1)]
     for u32 i in 0..512 {
         bool correct_eval_point = poly_witness[i].eval_point == EVAL_POINTS[i];
-        bool correct_eval = correct_eval_point && check_polynomial_eval(poly_witness[i]); // dominated by this - 2W constraints per call
+        bool correct_eval = correct_eval_point && check_polynomial_eval(corrected_codewords, poly_witness[i]); // dominated by this - 2W constraints per call
         bool zero_syndrome = correct_eval && (poly_witness[i].result == 0);
 
         field i_f = u32_to_field(i);
@@ -177,24 +175,24 @@ def check_barcode_size<W>(field[W] corrected_codewords, field num_rows, field nu
 }
 
 // test function
-const u32 W = 4;
+const u32 W = 2;
 
 def main(
     RowIndicatorVars row_indc,
     private BarcodeStats stats,
     private PolynomialWitness<W>[512] poly_witness,
     field[W] codewords,
-    field[W] corrected_codewords
+    private field[W] corrected_codewords
 ) -> () {
-    // bool ok_stats = check_barcode_stats(row_indc, stats); // constant 170 constraints - does not depend on W
-    // assert(ok_stats);
-    // bool ok_ec = check_error_correction(codewords, corrected_codewords, stats.ec_level, poly_witness);
-    // assert(ok_ec); // 5k constraints per W
-    // bool ok_barcode_size = check_barcode_size(corrected_codewords, stats.num_rows, stats.num_cols);
-    // assert(ok_barcode_size);
+    bool ok_stats = check_barcode_stats(row_indc, stats); // constant 170 constraints - does not depend on W
+    assert(ok_stats);
+    bool ok_ec = check_error_correction(codewords, corrected_codewords, stats.ec_level, poly_witness);
+    assert(ok_ec); // 5k constraints per W
+    bool ok_barcode_size = check_barcode_size(corrected_codewords, stats.num_rows, stats.num_cols);
+    assert(ok_barcode_size);
     // assert(ok_stats && ok_ec && ok_barcode_size);
 
-    assert(check_polynomial_eval(poly_witness[0])); 
-    assert(check_polynomial_eval(poly_witness[1]));
-    assert(check_polynomial_eval(poly_witness[2]));
+    // assert(check_polynomial_eval(corrected_codewords, poly_witness[0])); 
+    //assert(check_polynomial_eval(corrected_codewords, poly_witness[1]));
+    //assert(check_polynomial_eval(corrected_codewords, poly_witness[2]));
 }
