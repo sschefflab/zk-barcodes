@@ -17,6 +17,7 @@ target
 /target
 
 zokrates/bin
+*.json
 
 # Python stuff
 python-scripts/venv/

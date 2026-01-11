@@ -5,9 +5,9 @@ def binarize<N>(field[N] image, bool[N] bin_image) -> bool {
     for u32 i in 0..N {
         field to_lookup =
             if bin_image[i] {
-                image[i] - 128
-            } else {
                 image[i]
+            } else {
+                image[i] - 128
             };
         assert(value_in_array(to_lookup, table));
     }
@@ -16,7 +16,7 @@ def binarize<N>(field[N] image, bool[N] bin_image) -> bool {
 }
 
 // test main function
-const u32 N = 32;
+const u32 N = 22680;
 
 def main(private field[N] image, private bool[N] bin_image) -> () {
     assert(binarize(image, bin_image));
