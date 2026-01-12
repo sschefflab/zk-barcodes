@@ -25,5 +25,3 @@ cd external/circ
     --verifier-key "../../zokrates/bin/${BASENAME}_V" \
 
 ./target/release/examples/r1cs_inspect "../../zokrates/bin/${BASENAME}_P" > "../../zokrates/bin/${BASENAME}_r1cs"
-
-
