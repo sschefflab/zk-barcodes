@@ -1,5 +1,5 @@
 from "EMBED" import value_in_array, u32_to_field, unpack;
-from "./const_range_check.zok" import RANGE_0_3, RANGE_0_30, RANGE_EC_LEVEL, RANGE_NUM_ROWS, RANGE_NUM_COLS, POWERS_OF_TWO, GF_929;
+from "./const_range_check.zok" import RANGE_0_3, RANGE_0_30, RANGE_EC_LEVEL, RANGE_NUM_ROWS, RANGE_NUM_COLS, POWERS_OF_TWO, GF_929, POWERS_OF_3_MOD_929;
 
 struct BarcodeStats {
      field ec_level;
@@ -20,6 +20,7 @@ struct RowIndicatorVars {
     field r3;
 }
 
+// TODO - add a bound on q as well to prevent overflows
 def check_division_algorithm<Q>(field y, field x, field q, field r, field[Q] range_check_table) -> bool {
     bool div_alg = (y == q * x + r);
     field Q_field = u32_to_field(Q);
@@ -50,45 +51,12 @@ def check_barcode_stats(
 }
 
 // data for checking evaluation of a polynomial modulo 929
-// all arrays should be from lowest degree to highest degree
 // P-1 is the degree of the polynomial
 struct PolynomialWitness<P> {
-    field eval_point;
-
-    field[P] powers; // eval point raised to the ith power mod 929
-    field[P] powers_quotients; // the integer division value when computing mod 929 for powers
-
-    field[P] terms; // coeffs[i] * powers[i] mod 929
-    field[P] terms_quotients; // the integer division value when computing mod 929 for terms
-
     field result; // the sum of all the terms mod 929
     field result_quotient; // the integer division value when computing mod 929 for the sum
 }
 
-// some relatively large base and then approximately 2P constraints per call
-def check_polynomial_eval<P>(field[P] coeffs, PolynomialWitness<P> witness) -> bool {
-    bool mut correct = true;
-    field mut sum_pre_mod = 0;
-    assert(witness.powers[0] == 1);
-    assert(witness.powers_quotients[0] == 0);
-
-    for u32 i in 0..(P-1) {
-        field term_pre_mod = coeffs[i] * witness.powers[i];
-        correct = correct && check_division_algorithm(term_pre_mod, witness.terms_quotients[i], 929, witness.terms[i], GF_929);
-        sum_pre_mod = sum_pre_mod + witness.terms[i];
-        
-        field power_pre_mod = witness.powers[i] * witness.eval_point;
-        correct = correct && check_division_algorithm(power_pre_mod, witness.powers_quotients[i+1], 929, witness.powers[i+1], GF_929);
-    }
-
-    field term_pre_mod = coeffs[P-1] * witness.powers[P - 1];
-    correct = correct && check_division_algorithm(term_pre_mod, witness.terms_quotients[P-1], 929, witness.terms[P-1], GF_929);
-    sum_pre_mod = sum_pre_mod + witness.terms[P - 1];
-
-    correct = correct && check_division_algorithm(sum_pre_mod, witness.result_quotient, 929, witness.result, GF_929);
- 
-    return(correct);
-}
 
 // LSB to MSB
 def check_bit_decomp<B>(field v, bool[B] bits) -> bool {
@@ -125,14 +93,10 @@ def gt_9bit(field a, field b) -> bool {
     return result;
 }
 
-
-// 3**i % 929
-const field[512] EVAL_POINTS = [1, 3, 9, 27, 81, 243, 729, 329, 58, 174, 522, 637, 53, 159, 477, 502, 577, 802, 548, 715, 287, 861, 725, 317, 22, 66, 198, 594, 853, 701, 245, 735, 347, 112, 336, 79, 237, 711, 275, 825, 617, 922, 908, 866, 740, 362, 157, 471, 484, 523, 640, 62, 186, 558, 745, 377, 202, 606, 889, 809, 569, 778, 476, 499, 568, 775, 467, 472, 487, 532, 667, 143, 429, 358, 145, 435, 376, 199, 597, 862, 728, 326, 49, 147, 441, 394, 253, 759, 419, 328, 55, 165, 495, 556, 739, 359, 148, 444, 403, 280, 840, 662, 128, 384, 223, 669, 149, 447, 412, 307, 921, 905, 857, 713, 281, 843, 671, 155, 465, 466, 469, 478, 505, 586, 829, 629, 29, 87, 261, 783, 491, 544, 703, 251, 753, 401, 274, 822, 608, 895, 827, 623, 11, 33, 99, 297, 891, 815, 587, 832, 638, 56, 168, 504, 583, 820, 602, 877, 773, 461, 454, 433, 370, 181, 543, 700, 242, 726, 320, 31, 93, 279, 837, 653, 101, 303, 909, 869, 749, 389, 238, 714, 284, 852, 698, 236, 708, 266, 798, 536, 679, 179, 537, 682, 188, 564, 763, 431, 364, 163, 489, 538, 685, 197, 591, 844, 674, 164, 492, 547, 712, 278, 834, 644, 74, 222, 666, 140, 420, 331, 64, 192, 576, 799, 539, 688, 206, 618, 925, 917, 893, 821, 605, 886, 800, 542, 697, 233, 699, 239, 717, 293, 879, 779, 479, 508, 595, 856, 710, 272, 816, 590, 841, 665, 137, 411, 304, 912, 878, 776, 470, 481, 514, 613, 910, 872, 758, 416, 319, 28, 84, 252, 756, 410, 301, 903, 851, 695, 227, 681, 185, 555, 736, 350, 121, 363, 160, 480, 511, 604, 883, 791, 515, 616, 919, 899, 839, 659, 119, 357, 142, 426, 349, 118, 354, 133, 399, 268, 804, 554, 733, 341, 94, 282, 846, 680, 182, 546, 709, 269, 807, 563, 760, 422, 337, 82, 246, 738, 356, 139, 417, 322, 37, 111, 333, 70, 210, 630, 32, 96, 288, 864, 734, 344, 103, 309, 927, 923, 911, 875, 767, 443, 400, 271, 813, 581, 814, 584, 823, 611, 904, 854, 704, 254, 762, 428, 355, 136, 408, 295, 885, 797, 533, 670, 152, 456, 439, 388, 235, 705, 257, 771, 455, 436, 379, 208, 624, 14, 42, 126, 378, 205, 615, 916, 890, 812, 578, 805, 557, 742, 368, 175, 525, 646, 80, 240, 720, 302, 906, 860, 722, 308, 924, 914, 884, 794, 524, 643, 71, 213, 639, 59, 177, 531, 664, 134, 402, 277, 831, 635, 47, 141, 423, 340, 91, 273, 819, 599, 868, 746, 380, 211, 633, 41, 123, 369, 178, 534, 673, 161, 483, 520, 631, 35, 105, 315, 16, 48, 144, 432, 367, 172, 516, 619, 928, 926, 920, 902, 848, 686, 200, 600, 871, 755, 407, 292, 876, 770, 452, 427, 352, 127, 381, 214, 642, 68, 204, 612, 907, 863, 731, 335, 76, 228, 684, 194, 582, 817, 593, 850, 692, 218, 654, 104, 312, 7, 21, 63, 189, 567, 772, 458];
-
 def check_error_correction<W>(field[W] codewords, field[W] corrected_codewords, field ec_level, PolynomialWitness<W>[512] poly_witness) -> bool {
     field mut t = 0;
-    for u32 i in 0..W {
-        field error = codewords[i] - corrected_codewords[i];
+    for u32 k in 0..W {
+        field error = codewords[k] - corrected_codewords[k];
         field to_add = (error == 0) ? 0 : 1;
         t = t + to_add;
     }
@@ -144,15 +108,21 @@ def check_error_correction<W>(field[W] codewords, field[W] corrected_codewords, 
     bool sufficiently_sparse = check_bit_decomp(sparsity, bits);
 
     bool mut zero_syndromes = true;
-    // possible error correction levels are [0,8]. Need i's in range [0, 2**ec_level+1)]
+    // possible error correction levels are [0,8]. Need i's in range [0, 2**(ec_level+1)]
     for u32 i in 0..512 {
-        bool correct_eval_point = poly_witness[i].eval_point == EVAL_POINTS[i];
-        bool correct_eval = correct_eval_point && check_polynomial_eval(corrected_codewords, poly_witness[i]); // dominated by this - 2W constraints per call
+        // Inline polynomial evaluation at eval point 3^i mod 929
+        // powers[j] = (3^i)^j mod 929 = 3^(i*j) mod 929 = POWERS_OF_3[(i*j) % 928]
+        // Since i and j are compile-time constants (loop is unrolled), (i*j) % 928 is computed at compile time
+        field mut sum_pre_mod = 0;
+        for u32 j in 0..W {
+            sum_pre_mod = sum_pre_mod + corrected_codewords[j] * POWERS_OF_3_MOD_929[(i * j) % 928];
+        }
+
+        bool correct_eval = check_division_algorithm(sum_pre_mod, poly_witness[i].result_quotient, 929, poly_witness[i].result, GF_929);
         bool zero_syndrome = correct_eval && (poly_witness[i].result == 0);
 
         field i_f = u32_to_field(i);
-
-        zero_syndromes = zero_syndromes && (gt_9bit(i_f, power_of_two) || zero_syndrome); // then this - 50 constraints per call
+        zero_syndromes = zero_syndromes && (gt_9bit(i_f, power_of_two) || zero_syndrome);
     }
 
     return(sufficiently_sparse && zero_syndromes);
@@ -184,15 +154,11 @@ def main(
     field[W] codewords,
     private field[W] corrected_codewords
 ) -> () {
-    // bool ok_stats = check_barcode_stats(row_indc, stats); // constant 170 constraints - does not depend on W
-    // assert(ok_stats);
+    bool ok_stats = check_barcode_stats(row_indc, stats); // constant 170 constraints - does not depend on W
+    assert(ok_stats);
     bool ok_ec = check_error_correction(codewords, corrected_codewords, stats.ec_level, poly_witness);
-    assert(ok_ec); // 5k constraints per W
-    // bool ok_barcode_size = check_barcode_size(corrected_codewords, stats.num_rows, stats.num_cols);
-    // assert(ok_barcode_size);
+    assert(ok_ec);
+    bool ok_barcode_size = check_barcode_size(corrected_codewords, stats.num_rows, stats.num_cols);
+    assert(ok_barcode_size);
     // assert(ok_stats && ok_ec && ok_barcode_size);
-
-    // assert(check_polynomial_eval(corrected_codewords, poly_witness[0])); 
-    //assert(check_polynomial_eval(corrected_codewords, poly_witness[1]));
-    //assert(check_polynomial_eval(corrected_codewords, poly_witness[2]));
 }
