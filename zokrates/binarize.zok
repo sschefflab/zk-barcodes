@@ -1,23 +1,25 @@
 from "EMBED" import value_in_array;
 from "./const_range_check" import RANGE_0_128 as table;
 
-def binarize<N>(field[N] image, bool[N] bin_image) -> bool {
+def binarize<N>(field[N] image, field[N] bin_image) -> bool {
+    bool mut all_binary = true;
     for u32 i in 0..N {
+        all_binary = all_binary && (bin_image[i]*(1-bin_image[i]) == 0);
         field to_lookup =
-            if bin_image[i] {
-                image[i]
-            } else {
+            if (bin_image[i] == 0) {
                 image[i] - 128
+            } else {
+                image[i]
             };
         assert(value_in_array(to_lookup, table));
     }
 
-    return true;
+    return all_binary;
 }
 
 // test main function
-const u32 N = 22680;
+const u32 N = 32;
 
-def main(private field[N] image, private bool[N] bin_image) -> () {
+def main(private field[N] image, private field[N] bin_image) -> () {
     assert(binarize(image, bin_image));
 }
