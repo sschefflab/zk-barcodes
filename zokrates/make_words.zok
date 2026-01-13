@@ -76,7 +76,7 @@ def main(private field[N] bin_image, private field[N] transitions, private field
 }
 
 // TODO - remove this when done testing
-// def main(field[N] bin_image, field[N] transitions) {
+// def main(field[N] bin_image, field[N] transitions, field[D] counts) {
 //     assert(correct_transitions(bin_image, transitions));
 //     assert(correct_pixel_counts(bin_image, transitions, counts));
 //     field[W] mut words = [0; W];
