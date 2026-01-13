@@ -32,7 +32,6 @@ def check_bit_decomp<B>(field v, bool[B] bits) -> bool {
     return(sum == v);
 }
 
-// TODO - add a bound on q as well to prevent overflows
 def check_division_algorithm_inner<Q>(field y, field x, field q, field r, field[Q] range_check_table) -> bool {
     bool div_alg = (y == q * x + r);
     field Q_field = u32_to_field(Q);
@@ -41,6 +40,9 @@ def check_division_algorithm_inner<Q>(field y, field x, field q, field r, field[
     return(div_alg);
 }
 
+
+// These functions add bounds on q. This is not needed over the integers,
+// but needed here to make sure the prover can't cheat by overflowing the field modulus.
 def check_division_algorithm_quotient_range_check<Q,N>(field y, field x, field q, field r, field[Q] range_check_table, field[N] quotient_check_table) -> bool {
     assert(value_in_array(q, quotient_check_table));
     return(check_division_algorithm_inner(y, x, q, r, range_check_table));
@@ -124,9 +126,9 @@ def check_error_correction<W>(field[W] codewords, field[W] corrected_codewords, 
     bool mut zero_syndromes = true;
     // possible error correction levels are [0,8]. Need i's in range [0, 2**(ec_level+1)]
     for u32 i in 0..512 {
-        // Inline polynomial evaluation at eval point 3^i mod 929
-        // powers[j] = (3^i)^j mod 929 = 3^(i*j) mod 929 = POWERS_OF_3[(i*j) % 928]
-        // Since i and j are compile-time constants (loop is unrolled), (i*j) % 928 is computed at compile time
+        // Polynomial evaluation at eval point 3^i mod 929
+        // powers[j] = (3^i)^j mod 929 = 3^(i*j) mod 929 = POWERS_OF_3_MOD_929[(i*j) % 928]
+        // Since i and j are compile-time constants, (i*j) % 928 is computed at compile time
         field mut sum_pre_mod = 0;
         for u32 j in 0..W {
             sum_pre_mod = sum_pre_mod + corrected_codewords[j] * POWERS_OF_3_MOD_929[(i * j) % 928];

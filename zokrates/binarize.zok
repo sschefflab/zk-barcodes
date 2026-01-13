@@ -5,12 +5,7 @@ def binarize<N>(field[N] image, field[N] bin_image) -> bool {
     bool mut all_binary = true;
     for u32 i in 0..N {
         all_binary = all_binary && (bin_image[i]*(1-bin_image[i]) == 0);
-        field to_lookup =
-            if (bin_image[i] == 0) {
-                image[i] - 128
-            } else {
-                image[i]
-            };
+        field to_lookup = image[i] - 128 * (1 - bin_image[i]); // if bin_image = 0, lookup image[i] - 128. Else, lookup image[i]
         assert(value_in_array(to_lookup, table));
     }
 
