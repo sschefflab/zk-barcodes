@@ -1,7 +1,7 @@
 from "./binarize.zok" import binarize;
 from "./make_words.zok" import compute_words;
 from "./make_codewords.zok" import check_codewords;
-from "./error_correction.zok" import BarcodeStats, RowIndicatorVars, PolynomialWitness, check_barcode_stats, check_barcode_size, check_error_correction;
+from "./error_correction.zok" import BarcodeStats, RowIndicatorVars, PolynomialResult, check_barcode_stats, check_barcode_size, check_error_correction;
 from "./char_lookup.zok" import TableState;
 from "./codewords_to_chars.zok" import codewords_to_chars;
 from "hashes/sha256/sha256" import main as sha256;
@@ -25,7 +25,7 @@ def main(u32[SHA_OUTPUT_SIZE] image_digest,
          private field[W] words_with_dummies,
          private field[W] codewords,
          private field[W] corrected_codewords,
-         private PolynomialWitness<W>[512] poly_witness,
+         private PolynomialResult[512] poly_witness,
          private BarcodeStats stats,
          private RowIndicatorVars row_indc,
          private TableState[2*W] char_table_states
@@ -49,7 +49,7 @@ def main(u32[SHA_OUTPUT_SIZE] image_digest,
     field[W] words = compute_words(bin_image, transitions, counts, normalized_blocks); // 3.4k constraints
     assert(check_codewords(words, words_with_dummies, codewords)); // 3.7k constraints (mostly lookup table setup)
 
-    // about 6.3k constraints
+    // about 6.4k constraints
     assert(check_barcode_stats(row_indc, stats));
     assert(check_error_correction(codewords, corrected_codewords, stats.ec_level, poly_witness));
     assert(check_barcode_size(corrected_codewords, stats.num_rows, stats.num_cols));

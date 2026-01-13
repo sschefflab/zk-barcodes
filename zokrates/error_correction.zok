@@ -20,14 +20,38 @@ struct RowIndicatorVars {
     field r3;
 }
 
+// MSB to LSB
+def check_bit_decomp<B>(field v, bool[B] bits) -> bool {
+    field mut sum = 0;
+    
+    for u32 i in 0..B {
+        field field_bit = bits[i] ? 1 : 0;
+        sum = sum + 2**(B - i - 1)*field_bit;
+    }
+
+    return(sum == v);
+}
+
 // TODO - add a bound on q as well to prevent overflows
-def check_division_algorithm<Q>(field y, field x, field q, field r, field[Q] range_check_table) -> bool {
+def check_division_algorithm_inner<Q>(field y, field x, field q, field r, field[Q] range_check_table) -> bool {
     bool div_alg = (y == q * x + r);
     field Q_field = u32_to_field(Q);
     assert(Q_field == q);
     assert(value_in_array(r, range_check_table));
     return(div_alg);
 }
+
+def check_division_algorithm_quotient_range_check<Q,N>(field y, field x, field q, field r, field[Q] range_check_table, field[N] quotient_check_table) -> bool {
+    assert(value_in_array(q, quotient_check_table));
+    return(check_division_algorithm_inner(y, x, q, r, range_check_table));
+}
+
+def check_division_algorithm_quotient_bit_decomp<Q,B>(field y, field x, field q, field r, field[Q] range_check_table) -> bool {
+    bool[B] q_bits = unpack(q);
+    assert(check_bit_decomp(q, q_bits));
+    return(check_division_algorithm_inner(y, x, q, r, range_check_table));
+}
+
 
 // 170 constraints - comes from table setup
 // TODO - we can maybe make this smaller by getting rid of the lookup tables
@@ -37,12 +61,16 @@ def check_barcode_stats(
 ) -> bool {
     // table lookups end up being way cheaper in constraints than ZoKrates comparisons
 
-    bool div_alg0 = check_division_algorithm(row_indc.l0, row_indc.q0, 30, row_indc.r0, RANGE_0_30);
-    bool div_alg3 = check_division_algorithm(row_indc.l3, row_indc.q3, 30, row_indc.r3, RANGE_0_30);
-    bool div_alg6 = check_division_algorithm(row_indc.l6, row_indc.q6, 30, stats.num_cols - 1, RANGE_0_30);
+    // The value of the whole indicator must be in GF929, so the quotient is definitely in GF929.
+    // The point of that check is not overflowing the field modulus, so GF929 is a tight enough check.
+    // We are already using the GF929 table elsewhere, so it is more efficient to reuse that instead of constructing a new table,
+    // even if that gives us a tighter bound.
+    bool div_alg0 = check_division_algorithm_quotient_range_check(row_indc.l0, row_indc.q0, 30, row_indc.r0, RANGE_0_30, GF_929);
+    bool div_alg3 = check_division_algorithm_quotient_range_check(row_indc.l3, row_indc.q3, 30, row_indc.r3, RANGE_0_30, GF_929);
+    bool div_alg6 = check_division_algorithm_quotient_range_check(row_indc.l6, row_indc.q6, 30, stats.num_cols - 1, RANGE_0_30, GF_929);
  
     field dr = row_indc.r3 - 3 * stats.ec_level;
-    bool div_alg_r = check_division_algorithm(stats.num_rows - 1, row_indc.r0, 3, dr, RANGE_0_3);
+    bool div_alg_r = check_division_algorithm_quotient_range_check(stats.num_rows - 1, row_indc.r0, 3, dr, RANGE_0_3, GF_929);
 
     assert(value_in_array(stats.ec_level, RANGE_EC_LEVEL));
     assert(value_in_array(stats.num_rows, RANGE_NUM_ROWS));
@@ -51,24 +79,11 @@ def check_barcode_stats(
 }
 
 // data for checking evaluation of a polynomial modulo 929
-// P-1 is the degree of the polynomial
-struct PolynomialWitness<P> {
+struct PolynomialResult {
     field result; // the sum of all the terms mod 929
     field result_quotient; // the integer division value when computing mod 929 for the sum
 }
 
-
-// LSB to MSB
-def check_bit_decomp<B>(field v, bool[B] bits) -> bool {
-    field mut sum = 0;
-    
-    for u32 i in 0..B {
-        field field_bit = bits[i] ? 1 : 0;
-        sum = sum + (2**i)*field_bit;
-    }
-
-    return(sum == v);
-}
 
 def gt_9bit(field a, field b) -> bool {
     bool[9] a_bits = unpack(a);
@@ -78,9 +93,8 @@ def gt_9bit(field a, field b) -> bool {
     bool mut equal_so_far = true;
 
     for u32 i in 0..9 {
-        u32 bit_idx = 8 - i;  // Start from MSB
-        bool a_bit = a_bits[bit_idx];
-        bool b_bit = b_bits[bit_idx];
+        bool a_bit = a_bits[i];
+        bool b_bit = b_bits[i];
 
         // If still equal and a_bit > b_bit (a_bit is true, b_bit is false)
         bool a_greater = a_bit && !b_bit;
@@ -93,7 +107,7 @@ def gt_9bit(field a, field b) -> bool {
     return result;
 }
 
-def check_error_correction<W>(field[W] codewords, field[W] corrected_codewords, field ec_level, PolynomialWitness<W>[512] poly_witness) -> bool {
+def check_error_correction<W>(field[W] codewords, field[W] corrected_codewords, field ec_level, PolynomialResult[512] poly_witness) -> bool {
     field mut t = 0;
     for u32 k in 0..W {
         field error = codewords[k] - corrected_codewords[k];
@@ -118,7 +132,9 @@ def check_error_correction<W>(field[W] codewords, field[W] corrected_codewords, 
             sum_pre_mod = sum_pre_mod + corrected_codewords[j] * POWERS_OF_3_MOD_929[(i * j) % 928];
         }
 
-        bool correct_eval = check_division_algorithm(sum_pre_mod, poly_witness[i].result_quotient, 929, poly_witness[i].result, GF_929);
+        // 22 bits is sufficient here as the upper bound on the quotient should be 929*3071. (Upper bound on sum_pre_mod is 929*929*3071.)
+        // TODO: this could maybe be faster using lookup tables instead of bit decomp, but as-is the lookup table is too big
+        bool correct_eval = check_division_algorithm_quotient_bit_decomp::<929,22>(sum_pre_mod, poly_witness[i].result_quotient, 929, poly_witness[i].result, GF_929);
         bool zero_syndrome = correct_eval && (poly_witness[i].result == 0);
 
         field i_f = u32_to_field(i);
@@ -150,7 +166,7 @@ const u32 W = 2;
 def main(
     RowIndicatorVars row_indc,
     private BarcodeStats stats,
-    private PolynomialWitness<W>[512] poly_witness,
+    private PolynomialResult[512] poly_witness,
     field[W] codewords,
     private field[W] corrected_codewords
 ) -> () {
@@ -160,5 +176,4 @@ def main(
     assert(ok_ec);
     bool ok_barcode_size = check_barcode_size(corrected_codewords, stats.num_rows, stats.num_cols);
     assert(ok_barcode_size);
-    // assert(ok_stats && ok_ec && ok_barcode_size);
 }
