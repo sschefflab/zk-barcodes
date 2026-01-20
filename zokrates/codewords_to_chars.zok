@@ -1,14 +1,13 @@
 from "EMBED" import value_in_array;
-from "./char_lookup.zok" import TableState, check_table_state;
+from "./char_lookup.zok" import TableState, check_table_state, check_transition;
 
 def check_char_split(field codeword, field c1, field c2) -> bool {
+    // no need to range check c1 and c2 here because they get range checked as part of valid state checking
     return(codeword == 30*c1 + c2);
 }
 
 def codewords_to_chars<W>(field[W] corrected_codewords, TableState[2*W] table_states) -> field[2*W] {
     bool mut correct_char_split = true;
-    bool mut correct_state_transition = true;
-
     assert(table_states[0].this_table == 0);
     
     TableState mut prev_table_state =  TableState { base30_val: 0, char: 0, this_table: 0, next_table: 0, next_next_table: 0 };
@@ -25,32 +24,19 @@ def codewords_to_chars<W>(field[W] corrected_codewords, TableState[2*W] table_st
         chars[2*i] = state1.char;
         bool dummy2 = check_table_state(state2);
         chars[2*i+1] = state2.char;
-
-
+        
         // check consistency of state1 with the previous state
-        correct_state_transition = correct_state_transition && (prev_table_state.next_table == state1.this_table);
-        correct_state_transition =
-            if (state1.char == 0) {
-                correct_state_transition   
-            } else {
-                // this continuity only matters if the character is not a switch code
-                correct_state_transition && (prev_table_state.next_next_table == state1.next_table)
-            };
-
+        bool dummy3 = check_transition(prev_table_state, state1);
 
         // check consistency of state2 with state1
-        correct_state_transition = correct_state_transition && (state1.next_table == state2.this_table);
-        correct_state_transition =
-            if (state2.char == 0) {
-                correct_state_transition   
-            } else {
-                correct_state_transition && (state1.next_next_table == state2.next_table)
-            };
+        bool dummy4 = check_transition(state1, state2);
+
+        // set prev_table_state to state2 for the next loop
+        prev_table_state = state2;
         
     }
 
     assert(correct_char_split);
-    assert(correct_state_transition);
     return(chars);
 }
 
