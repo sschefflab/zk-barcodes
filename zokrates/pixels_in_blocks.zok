@@ -1,0 +1,83 @@
+from "EMBED" import value_in_array, reverse_lookup, unpack;
+
+/*
+/ 1. Set up table of len-L bitstrings to block sizes and number of blocks
+/ 2. For every L pixels - do lookup into table to get block lengths
+/ 3. Combine block lengths accordingly
+/ 4. Somehow break this into arrays??
+/ TODO: figure out how to get every 8 blocks into an array
+*/
+
+const u32 L = 10;
+
+// Assuming the largest image we handle is an HD image, this is the largest possible row size, and therefore the largest block size in pixels
+// TODO: can we make this generic over R?
+const u32 B = 1080;
+
+const u32 TABLE_LEN = 2**L;
+field[TABLE_LEN] PIXELS_AND_BLOCKS = [0; TABLE_LEN]; // TODO - fill this in
+
+// base-B values representing a series of blocks
+type Blocks = field;
+
+// a positive integer
+type NumBlocks = field;
+
+def pixels_to_binary<P>(field[P] pixels) -> field {
+    field mut result = 0;
+    for u32 i in 0..P {
+        result = result + 2**i*pixels[i];
+    }
+    return(result);
+}
+
+def encode(field[L] pixels, Blocks blocks, NumBlocks num_blocks) -> field {
+    // TODO - figure out an encoding that will work here
+}
+
+// always returns true, but does an assert inside
+def check_blocks_for_chunk(field[L] pixels, Blocks blocks, NumBlocks num_blocks) -> bool {
+    field encoding = encode(pixels, blocks, num_blocks);
+    assert(value_in_array(encoding, PIXELS_AND_BLOCKS);
+    return true;
+}
+
+def numblocks_is_odd(NumBlocks num_blocks) -> field {
+    // L will definitely be enough bits as the max value for num_blocks is L+1
+    // TODO: maybe this can be more efficient?
+    bool[L] nb_bits = unpack(num_blocks);
+    return(nb_bits[L-1] ? 1 : 0);
+}
+
+def combine_chunks(Blocks blocks1, NumBlocks num_blocks1, Blocks blocks2, NumBlocks num_blocks2) -> (Blocks, NumBlocks) {
+    NumBlocks nb_offset = num_blocks1 - numblocks_is_odd(num_blocks1)  - (1 - numblocks_is_odd(num_blocks2));
+    Blocks combined_block = num_blocks1 + num_blocks2*(B**nb_offset);
+    NumBlocks combined_nb = nb_offset + num_blocks2;
+    return((combined_block, combined_nb));
+}
+
+// TODO - check the size of blocks input
+def check_blocks<R>(field[R] pixels, field[R][8] blocks) {
+    u32 num_chunks = R/L + 1;
+    field[num_chunks][L] chunks = [ [0; L]; num_chunks];
+    for u32 i in 0..num_chunks {
+        for u32 j in 0..L {
+            chunks[i][j] = pixels[i*L + j];
+        }
+    }
+
+    field[R] mut all_blocks = [0; R];
+    field[R] mut all_nb = [0; R];
+    for u32 r in 0..R {
+         // TODO - figure out how to get the other witness data we need in here
+        bool always_true = check_blocks_for_chunk(chunks[r], blocks, num_blocks);
+        all_blocks[r] = blocks;
+        all_nb[r] = num_blocks;
+    }
+
+    for u32 s in 0..R {
+        // TODO - somehow figure out when to be done combining
+        (Blocks, NumBlocks) (new_blocks, new_nb) = combine_chunks(all_blocks[s], all_nb[s], all_blocks[s+1], all_nb[s+1]);
+
+    }
+}
