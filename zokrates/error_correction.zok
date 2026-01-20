@@ -44,13 +44,13 @@ def check_division_algorithm_inner<Q>(field y, field x, field q, field r, field[
 // These functions add bounds on q. This is not needed over the integers,
 // but needed here to make sure the prover can't cheat by overflowing the field modulus.
 def check_division_algorithm_quotient_range_check<Q,N>(field y, field x, field q, field r, field[Q] range_check_table, field[N] quotient_check_table) -> bool {
-    assert(value_in_array(q, quotient_check_table));
+    assert(value_in_array(x, quotient_check_table));
     return(check_division_algorithm_inner(y, x, q, r, range_check_table));
 }
 
 def check_division_algorithm_quotient_bit_decomp<Q,B>(field y, field x, field q, field r, field[Q] range_check_table) -> bool {
-    bool[B] q_bits = unpack(q);
-    assert(check_bit_decomp(q, q_bits));
+    bool[B] x_bits = unpack(x);
+    assert(check_bit_decomp(x, x_bits));
     return(check_division_algorithm_inner(y, x, q, r, range_check_table));
 }
 
@@ -85,7 +85,6 @@ struct PolynomialResult {
     field result; // the sum of all the terms mod 929
     field result_quotient; // the integer division value when computing mod 929 for the sum
 }
-
 
 def gt_9bit(field a, field b) -> bool {
     bool[9] a_bits = unpack(a);
@@ -138,12 +137,15 @@ def check_error_correction<W>(field[W] codewords, field[W] corrected_codewords, 
         // TODO: this could maybe be faster using lookup tables instead of bit decomp, but as-is the lookup table is too big
         bool correct_eval = check_division_algorithm_quotient_bit_decomp::<929,22>(sum_pre_mod, poly_witness[i].result_quotient, 929, poly_witness[i].result, GF_929);
         bool zero_syndrome = correct_eval && (poly_witness[i].result == 0);
+        zero_syndromes = zero_syndromes && zero_syndrome;
 
         field i_f = u32_to_field(i);
         zero_syndromes = zero_syndromes && (gt_9bit(i_f, power_of_two) || zero_syndrome);
+        
     }
 
-    return(sufficiently_sparse && zero_syndromes);
+    // return(sufficiently_sparse && zero_syndromes);
+    return(zero_syndromes);
 }
 
 // some small setup and then approximately 2W constraints
@@ -166,13 +168,13 @@ def check_barcode_size<W>(field[W] corrected_codewords, field num_rows, field nu
 const u32 W = 2;
 
 def main(
-    RowIndicatorVars row_indc,
+    private RowIndicatorVars row_indc,
     private BarcodeStats stats,
     private PolynomialResult[512] poly_witness,
     field[W] codewords,
-    private field[W] corrected_codewords
+    field[W] corrected_codewords
 ) -> () {
-    bool ok_stats = check_barcode_stats(row_indc, stats); // constant 170 constraints - does not depend on W
+    bool ok_stats = check_barcode_stats(row_indc, stats); // constant 1102 constraints - does not depend on W
     assert(ok_stats);
     bool ok_ec = check_error_correction(codewords, corrected_codewords, stats.ec_level, poly_witness);
     assert(ok_ec);
