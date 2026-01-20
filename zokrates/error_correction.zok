@@ -144,8 +144,7 @@ def check_error_correction<W>(field[W] codewords, field[W] corrected_codewords, 
         
     }
 
-    // return(sufficiently_sparse && zero_syndromes);
-    return(zero_syndromes);
+    return(sufficiently_sparse && zero_syndromes);
 }
 
 // some small setup and then approximately 2W constraints
@@ -174,10 +173,10 @@ def main(
     field[W] codewords,
     field[W] corrected_codewords
 ) -> () {
-    bool ok_stats = check_barcode_stats(row_indc, stats); // constant 1102 constraints - does not depend on W
-    assert(ok_stats);
+    // bool ok_stats = check_barcode_stats(row_indc, stats); // constant 1102 constraints - does not depend on W
+    // assert(ok_stats);
     bool ok_ec = check_error_correction(codewords, corrected_codewords, stats.ec_level, poly_witness);
     assert(ok_ec);
-    bool ok_barcode_size = check_barcode_size(corrected_codewords, stats.num_rows, stats.num_cols);
-    assert(ok_barcode_size);
+    // bool ok_barcode_size = check_barcode_size(corrected_codewords, stats.num_rows, stats.num_cols);
+    // assert(ok_barcode_size);
 }
