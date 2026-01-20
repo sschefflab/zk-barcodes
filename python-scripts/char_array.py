@@ -118,6 +118,67 @@ def generate_encoded_table():
 
     return encoded_values
 
+
+def get_state_components(index):
+    """Get all components of a state by its index (0-119)."""
+    base30_val = index % 30
+    this_table = index // 30
+    char = TEXT_MODE_TABLE[index]
+    next_table = NEXT_MODE_TABLE[index]
+    next_next_table = NEXT_NEXT_MODE_TABLE[index]
+    return base30_val, this_table, char, next_table, next_next_table
+
+
+def encode_state_tuple(encoded1, encoded2):
+    """Encode a tuple of two states as a single field element.
+
+    Matches the ZoKrates function:
+    encoded1 * 2**18 + encoded2
+    """
+    return (encoded1 << 18) + encoded2
+
+
+def is_valid_transition(state1_idx, state2_idx):
+    """Check if transitioning from state1 to state2 is valid.
+
+    Based on codewords_to_chars.zok logic:
+    - state1.next_table == state2.this_table (always required)
+    - If state2.char != 0: state1.next_next_table == state2.next_table
+    """
+    _, _, _, next_table1, next_next_table1 = get_state_components(state1_idx)
+    _, this_table2, char2, next_table2, _ = get_state_components(state2_idx)
+
+    # Condition 1: next_table of state1 must equal this_table of state2
+    if next_table1 != this_table2:
+        return False
+
+    # Condition 2: if state2.char != 0, then next_next_table1 == next_table2
+    if char2 != 0 and next_next_table1 != next_table2:
+        return False
+
+    return True
+
+
+def generate_valid_transitions():
+    """Generate all valid state transition tuples encoded as field elements."""
+    encoded_table = generate_encoded_table()
+    valid_transitions = []
+
+    for idx1 in range(120):
+        for idx2 in range(120):
+            if is_valid_transition(idx1, idx2):
+                encoded_tuple = encode_state_tuple(encoded_table[idx1], encoded_table[idx2])
+                valid_transitions.append(encoded_tuple)
+
+    return valid_transitions
+
+
 if __name__ == "__main__":
     encoded_table = generate_encoded_table()
+    print("ENCODED_STATE_MACHINE:")
     print(encoded_table)
+    print()
+
+    valid_transitions = generate_valid_transitions()
+    print(f"VALID_TRANSITIONS ({len(valid_transitions)} entries):")
+    print(valid_transitions)
