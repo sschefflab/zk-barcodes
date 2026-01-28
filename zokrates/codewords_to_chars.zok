@@ -1,15 +1,22 @@
 from "EMBED" import value_in_array, u32_to_field;
-from "./utils.zok" import gt_9bit;
+from "./const_range_check.zok" import POWERS_OF_TWO;
+from "./utils.zok" import gt_9bit, PAD_CODEWORD;
 from "./char_lookup.zok" import TableState, check_table_state, check_transition;
 
+// a dummy table state that is used before decoding actually begins
 const TableState ZERO_TABLE_STATE = TableState { base30_val: 0, char: 0, this_table: 0, next_table: 0, next_next_table: 0 };
+
+// a pad table state that may be present at the end of decoding
+const TableState PAD_TABLE_STATE = TableState { base30_val: 0, char: 32, this_table: 0, next_table: 0, next_next_table: 0 };
 
 def check_char_split(field codeword, field c1, field c2) -> bool {
     // no need to range check c1 and c2 here because they get range checked as part of valid state checking
     return(codeword == 30*c1 + c2);
 }
 
-def codewords_to_chars<W>(field[W] corrected_codewords, TableState[2*W] table_states, field ec_codewords) -> field[2*W] {
+def codewords_to_chars<W>(field[W] corrected_codewords, TableState[2*W] table_states, field ec_level) -> field[2*W] {
+    field ec_codewords = POWERS_OF_TWO[ec_level + 1];
+
     bool mut correct_char_split = true;
     assert(table_states[0].this_table == 0);
     
@@ -18,7 +25,8 @@ def codewords_to_chars<W>(field[W] corrected_codewords, TableState[2*W] table_st
     field[2*W] mut chars = [0; 2*W];
 
     for u32 i in 0..W {
-        field codeword = corrected_codewords[i];
+        u32 cw_idx = W - i;
+        field codeword = corrected_codewords[cw_idx];
         TableState state1 = table_states[2*i];
         TableState state2 = table_states[2*i+1];
 
@@ -40,7 +48,11 @@ def codewords_to_chars<W>(field[W] corrected_codewords, TableState[2*W] table_st
         // Don't try to decode error correction codewords or the symbol length descriptor (the first non-ec codeword)
         // The table states for ec codewords and SLD should be all zeros.
         bool check = if (gt_9bit(i_f, ec_codewords)) {
-            check_char_split(codeword, state1.base30_val, state2.base30_val)
+            if (codeword ==  PAD_CODEWORD) {
+                (state1 == PAD_TABLE_STATE) && (state2 == PAD_TABLE_STATE)
+            } else {
+                check_char_split(codeword, state1.base30_val, state2.base30_val)
+            }
         } else {
             (state1 == ZERO_TABLE_STATE) && (state2 == ZERO_TABLE_STATE)
         };

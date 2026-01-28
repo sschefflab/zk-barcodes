@@ -409,8 +409,16 @@ def encode_entry(base30_val, this_table, char, next_table, next_next_table):
     )
 
 
+# Special states
+# ZERO_TABLE_STATE: all zeros, used for EC codewords before decoding starts
+ZERO_STATE_ENCODED = encode_entry(0, 0, 0, 0, 0)  # = 0
+
+# PAD_TABLE_STATE: char=32 (space), used for pad codewords at the end
+PAD_STATE_ENCODED = encode_entry(0, 0, 32, 0, 0)  # = 1024
+
+
 def generate_encoded_table():
-    """Generate all 120 encoded entries."""
+    """Generate all 120 encoded entries plus special states."""
     encoded_values = []
 
     for index in range(120):
@@ -425,7 +433,9 @@ def generate_encoded_table():
         )
         encoded_values.append(encoded)
 
-    encoded_values.append(0)  # The zero state is allowed as a dummy state
+    # Special states
+    encoded_values.append(ZERO_STATE_ENCODED)  # Dummy state for EC codewords
+    encoded_values.append(PAD_STATE_ENCODED)   # Pad state for padding at end
     return encoded_values
 
 
@@ -474,6 +484,7 @@ def generate_valid_transitions():
     encoded_table = generate_encoded_table()
     valid_transitions = []
 
+    # Normal state transitions (indices 0-119)
     for idx1 in range(120):
         for idx2 in range(120):
             if is_valid_transition(idx1, idx2):
@@ -482,14 +493,23 @@ def generate_valid_transitions():
                 )
                 valid_transitions.append(encoded_tuple)
 
-    # Dummy state (encoded as 0) transitions:
+    # Dummy state (ZERO_STATE_ENCODED) transitions:
     # - dummy -> dummy is allowed (for EC codewords that stay in dummy state)
-    valid_transitions.append(0)
+    valid_transitions.append(encode_state_tuple(ZERO_STATE_ENCODED, ZERO_STATE_ENCODED))
 
     # - dummy -> any Alpha state is allowed (Alpha states are indices 0-29)
     #   This allows transitioning from EC codewords (dummy) to start of decoding
     for idx in range(30):
-        encoded_tuple = encode_state_tuple(0, encoded_table[idx])
+        encoded_tuple = encode_state_tuple(ZERO_STATE_ENCODED, encoded_table[idx])
+        valid_transitions.append(encoded_tuple)
+
+    # PAD state transitions:
+    # - PAD -> PAD is allowed (stay in pad state)
+    valid_transitions.append(encode_state_tuple(PAD_STATE_ENCODED, PAD_STATE_ENCODED))
+
+    # - any normal state -> PAD is allowed (transition into padding at end of data)
+    for idx in range(120):
+        encoded_tuple = encode_state_tuple(encoded_table[idx], PAD_STATE_ENCODED)
         valid_transitions.append(encoded_tuple)
 
     return valid_transitions

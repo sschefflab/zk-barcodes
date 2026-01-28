@@ -54,6 +54,6 @@ def main(u32[SHA_OUTPUT_SIZE] image_digest,
     assert(check_error_correction(codewords, corrected_codewords, stats.ec_level, poly_witness));
     assert(check_barcode_size(corrected_codewords, stats.num_rows, stats.num_cols));
 
-    field[2*W] chars = codewords_to_chars(corrected_codewords, char_table_states); // 340 constraints
+    field[2*W] chars = codewords_to_chars(corrected_codewords, char_table_states,stats.ec_level); // 340 constraints
     return(chars);
 }

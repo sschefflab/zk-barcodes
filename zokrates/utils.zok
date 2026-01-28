@@ -1,5 +1,12 @@
 from "EMBED" import unpack;
 
+// 919 is "reserved in the pdf417 spec and currently has no use.
+// We can use it as a valid field element that has no meaning.
+const field DUMMY_CODEWORD = 919;
+
+// 900 is a pad codeword and should not be interpreted as a character
+const field PAD_CODEWORD = 900;
+
 def gt_9bit(field a, field b) -> bool {
     bool[9] a_bits = unpack(a);
     bool[9] b_bits = unpack(b);
