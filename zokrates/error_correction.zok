@@ -1,4 +1,5 @@
 from "EMBED" import value_in_array, u32_to_field, unpack;
+from "./utils.zok" import gt_9bit;
 from "./const_range_check.zok" import RANGE_0_3, RANGE_0_30, RANGE_EC_LEVEL, RANGE_NUM_ROWS, RANGE_NUM_COLS, POWERS_OF_TWO, GF_929, POWERS_OF_3_MOD_929;
 
 struct BarcodeStats {
@@ -84,28 +85,6 @@ def check_barcode_stats(
 struct PolynomialResult {
     field result; // the sum of all the terms mod 929
     field result_quotient; // the integer division value when computing mod 929 for the sum
-}
-
-def gt_9bit(field a, field b) -> bool {
-    bool[9] a_bits = unpack(a);
-    bool[9] b_bits = unpack(b);
-
-    bool mut result = false;
-    bool mut equal_so_far = true;
-
-    for u32 i in 0..9 {
-        bool a_bit = a_bits[i];
-        bool b_bit = b_bits[i];
-
-        // If still equal and a_bit > b_bit (a_bit is true, b_bit is false)
-        bool a_greater = a_bit && !b_bit;
-        result = result || (equal_so_far && a_greater);
-
-        // Update equal_so_far: remains true only if bits are equal
-        equal_so_far = equal_so_far && (a_bit == b_bit);
-    }
-
-    return result;
 }
 
 def check_error_correction<W>(field[W] codewords, field[W] corrected_codewords, field ec_level, PolynomialResult[512] poly_witness) -> bool {

@@ -18,89 +18,396 @@ Where:
 # Order: Alpha (0-29), Lower (30-59), Mixed (60-89), Punctuation (90-119)
 TEXT_MODE_TABLE = [
     # Alpha sub-mode (0-29)
-    65, 66, 67, 68, 69, 70, 71, 72, 73, 74,  # A-J
-    75, 76, 77, 78, 79, 80, 81, 82, 83, 84,  # K-T
-    85, 86, 87, 88, 89, 90,                   # U-Z
-    32,                                        # space
-    0, 0, 0,                                   # ll, ml, ps
-
+    65,
+    66,
+    67,
+    68,
+    69,
+    70,
+    71,
+    72,
+    73,
+    74,  # A-J
+    75,
+    76,
+    77,
+    78,
+    79,
+    80,
+    81,
+    82,
+    83,
+    84,  # K-T
+    85,
+    86,
+    87,
+    88,
+    89,
+    90,  # U-Z
+    32,  # space
+    0,
+    0,
+    0,  # ll, ml, ps
     # Lower sub-mode (30-59)
-    97, 98, 99, 100, 101, 102, 103, 104, 105, 106,  # a-j
-    107, 108, 109, 110, 111, 112, 113, 114, 115, 116,  # k-t
-    117, 118, 119, 120, 121, 122,              # u-z
-    32,                                         # space
-    0, 0, 0,                                    # as, ml, ps
-
+    97,
+    98,
+    99,
+    100,
+    101,
+    102,
+    103,
+    104,
+    105,
+    106,  # a-j
+    107,
+    108,
+    109,
+    110,
+    111,
+    112,
+    113,
+    114,
+    115,
+    116,  # k-t
+    117,
+    118,
+    119,
+    120,
+    121,
+    122,  # u-z
+    32,  # space
+    0,
+    0,
+    0,  # as, ml, ps
     # Mixed sub-mode (60-89)
-    48, 49, 50, 51, 52, 53, 54, 55, 56, 57,   # 0-9
-    38, 13, 9, 44, 58, 35, 45, 46, 36, 47,    # &, CR, HT, etc.
-    43, 37, 42, 61, 94,                        # +, %, *, =, ^
-    0,                                          # pl
-    32,                                         # space
-    0, 0, 0,                                    # ll, al, ps
-
+    48,
+    49,
+    50,
+    51,
+    52,
+    53,
+    54,
+    55,
+    56,
+    57,  # 0-9
+    38,
+    13,
+    9,
+    44,
+    58,
+    35,
+    45,
+    46,
+    36,
+    47,  # &, CR, HT, etc.
+    43,
+    37,
+    42,
+    61,
+    94,  # +, %, *, =, ^
+    0,  # pl
+    32,  # space
+    0,
+    0,
+    0,  # ll, al, ps
     # Punctuation sub-mode (90-119)
-    59, 60, 62, 64, 91, 92, 93, 95, 96, 126,  # ;, <, >, @, [, \, ], _, `, ~
-    33, 13, 9, 44, 58, 10, 45, 46, 36, 47,    # !, CR, HT, ,, :, LF, etc.
-    34, 124, 42, 40, 41, 63, 123, 125, 39,    # ", |, *, (, ), ?, {, }, '
-    0                                           # al
+    59,
+    60,
+    62,
+    64,
+    91,
+    92,
+    93,
+    95,
+    96,
+    126,  # ;, <, >, @, [, \, ], _, `, ~
+    33,
+    13,
+    9,
+    44,
+    58,
+    10,
+    45,
+    46,
+    36,
+    47,  # !, CR, HT, ,, :, LF, etc.
+    34,
+    124,
+    42,
+    40,
+    41,
+    63,
+    123,
+    125,
+    39,  # ", |, *, (, ), ?, {, }, '
+    0,  # al
 ]
 
 NEXT_MODE_TABLE = [
     # Alpha sub-mode (0-29, current mode = 0)
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0,
-    1, 2, 3,
-
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    2,
+    3,
     # Lower sub-mode (30-59, current mode = 1)
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-    1, 1, 1, 1, 1, 1, 1,
-    0, 2, 3,
-
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    0,
+    2,
+    3,
     # Mixed sub-mode (60-89, current mode = 2)
-    2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-    2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-    2, 2, 2, 2, 2,
-    3, 2, 1, 0, 3,
-
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    3,
+    2,
+    1,
+    0,
+    3,
     # Punctuation sub-mode (90-119, current mode = 3)
-    3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
-    3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
-    3, 3, 3, 3, 3, 3, 3, 3, 3,
-    0
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    0,
 ]
 
 NEXT_NEXT_MODE_TABLE = [
     # Alpha sub-mode (0-29, current mode = 0)
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0,
-    1, 2, 0,
-
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    2,
+    0,
     # Lower sub-mode (30-59, current mode = 1)
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-    1, 1, 1, 1, 1, 1, 1,
-    1, 2, 1,
-
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    2,
+    1,
     # Mixed sub-mode (60-89, current mode = 2)
-    2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-    2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-    2, 2, 2, 2, 2,
-    3, 2, 1, 0, 2,
-
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    3,
+    2,
+    1,
+    0,
+    2,
     # Punctuation sub-mode (90-119, current mode = 3)
-    3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
-    3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
-    3, 3, 3, 3, 3, 3, 3, 3, 3,
-    0
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    0,
 ]
+
 
 def encode_entry(base30_val, this_table, char, next_table, next_next_table):
     """Encode a character lookup entry."""
-    return (next_next_table << 16) + (next_table << 14) + (this_table << 12) + (char << 5) + base30_val
+    return (
+        (next_next_table << 16)
+        + (next_table << 14)
+        + (this_table << 12)
+        + (char << 5)
+        + base30_val
+    )
+
 
 def generate_encoded_table():
     """Generate all 120 encoded entries."""
@@ -113,9 +420,12 @@ def generate_encoded_table():
         next_table = NEXT_MODE_TABLE[index]
         next_next_table = NEXT_NEXT_MODE_TABLE[index]
 
-        encoded = encode_entry(base30_val, this_table, char, next_table, next_next_table)
+        encoded = encode_entry(
+            base30_val, this_table, char, next_table, next_next_table
+        )
         encoded_values.append(encoded)
 
+    encoded_values.append(0)  # The zero state is allowed as a dummy state
     return encoded_values
 
 
@@ -167,8 +477,20 @@ def generate_valid_transitions():
     for idx1 in range(120):
         for idx2 in range(120):
             if is_valid_transition(idx1, idx2):
-                encoded_tuple = encode_state_tuple(encoded_table[idx1], encoded_table[idx2])
+                encoded_tuple = encode_state_tuple(
+                    encoded_table[idx1], encoded_table[idx2]
+                )
                 valid_transitions.append(encoded_tuple)
+
+    # Dummy state (encoded as 0) transitions:
+    # - dummy -> dummy is allowed (for EC codewords that stay in dummy state)
+    valid_transitions.append(0)
+
+    # - dummy -> any Alpha state is allowed (Alpha states are indices 0-29)
+    #   This allows transitioning from EC codewords (dummy) to start of decoding
+    for idx in range(30):
+        encoded_tuple = encode_state_tuple(0, encoded_table[idx])
+        valid_transitions.append(encoded_tuple)
 
     return valid_transitions
 

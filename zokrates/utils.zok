@@ -1,0 +1,23 @@
+from "EMBED" import unpack;
+
+def gt_9bit(field a, field b) -> bool {
+    bool[9] a_bits = unpack(a);
+    bool[9] b_bits = unpack(b);
+
+    bool mut result = false;
+    bool mut equal_so_far = true;
+
+    for u32 i in 0..9 {
+        bool a_bit = a_bits[i];
+        bool b_bit = b_bits[i];
+
+        // If still equal and a_bit > b_bit (a_bit is true, b_bit is false)
+        bool a_greater = a_bit && !b_bit;
+        result = result || (equal_so_far && a_greater);
+
+        // Update equal_so_far: remains true only if bits are equal
+        equal_so_far = equal_so_far && (a_bit == b_bit);
+    }
+
+    return result;
+}

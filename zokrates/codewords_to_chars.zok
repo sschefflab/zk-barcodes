@@ -1,16 +1,19 @@
-from "EMBED" import value_in_array;
+from "EMBED" import value_in_array, u32_to_field;
+from "./utils.zok" import gt_9bit;
 from "./char_lookup.zok" import TableState, check_table_state, check_transition;
+
+const TableState ZERO_TABLE_STATE = TableState { base30_val: 0, char: 0, this_table: 0, next_table: 0, next_next_table: 0 };
 
 def check_char_split(field codeword, field c1, field c2) -> bool {
     // no need to range check c1 and c2 here because they get range checked as part of valid state checking
     return(codeword == 30*c1 + c2);
 }
 
-def codewords_to_chars<W>(field[W] corrected_codewords, TableState[2*W] table_states) -> field[2*W] {
+def codewords_to_chars<W>(field[W] corrected_codewords, TableState[2*W] table_states, field ec_codewords) -> field[2*W] {
     bool mut correct_char_split = true;
     assert(table_states[0].this_table == 0);
     
-    TableState mut prev_table_state =  TableState { base30_val: 0, char: 0, this_table: 0, next_table: 0, next_next_table: 0 };
+    TableState mut prev_table_state = ZERO_TABLE_STATE;
 
     field[2*W] mut chars = [0; 2*W];
 
@@ -18,22 +21,31 @@ def codewords_to_chars<W>(field[W] corrected_codewords, TableState[2*W] table_st
         field codeword = corrected_codewords[i];
         TableState state1 = table_states[2*i];
         TableState state2 = table_states[2*i+1];
-        correct_char_split = correct_char_split && check_char_split(codeword, state1.base30_val, state2.base30_val);
 
         bool dummy1 = check_table_state(state1);
         chars[2*i] = state1.char;
         bool dummy2 = check_table_state(state2);
         chars[2*i+1] = state2.char;
-        
+
         // check consistency of state1 with the previous state
         bool dummy3 = check_transition(prev_table_state, state1);
 
         // check consistency of state2 with state1
         bool dummy4 = check_transition(state1, state2);
 
-        // set prev_table_state to state2 for the next loop
+        // set prev_table_state to state2 for the next
         prev_table_state = state2;
-        
+
+        field i_f = u32_to_field(i);
+        // Don't try to decode error correction codewords.
+        // The table states for ec codewords should be all zeros.
+        bool check = if (gt_9bit(i_f, ec_codewords - 1)) {
+            check_char_split(codeword, state1.base30_val, state2.base30_val)
+        } else {
+            (state1 == ZERO_TABLE_STATE) && (state2 == ZERO_TABLE_STATE)
+        };
+
+        correct_char_split = correct_char_split && check;
     }
 
     assert(correct_char_split);
@@ -43,6 +55,6 @@ def codewords_to_chars<W>(field[W] corrected_codewords, TableState[2*W] table_st
 // test function
 const u32 W = 2;
 
-def main(field[W] corrected_codewords, private TableState[2*W] states) -> field[2*W] {
-    return(codewords_to_chars(corrected_codewords, states));
+def main(field[W] corrected_codewords, private TableState[2*W] states, private field ec_codewords) -> field[2*W] {
+    return(codewords_to_chars(corrected_codewords, states, ec_codewords));
 }
