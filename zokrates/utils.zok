@@ -2,6 +2,7 @@ from "EMBED" import unpack;
 
 // 919 is "reserved in the pdf417 spec and currently has no use.
 // We can use it as a valid field element that has no meaning.
+// Row indicators can also never take this value - they are always on the range [0, 899]
 const field DUMMY_CODEWORD = 919;
 
 // 900 is a pad codeword and should not be interpreted as a character
