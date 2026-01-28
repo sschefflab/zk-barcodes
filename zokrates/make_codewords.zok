@@ -5,7 +5,7 @@ def check_dummies<W>(field[W] words, field[W] words_with_dummies) -> bool {
     bool mut correct = true;
     
     for u32 i in 0..W {
-        bool word_correct = (words[i] * (words[i] - words_with_dummies[i]) == 0);
+        bool word_correct = ((words[i] * (words[i] - words_with_dummies[i])) == 0);
         correct = correct && word_correct;
     }
 
@@ -26,7 +26,7 @@ def check_codewords<W>(field[W] words, field[W] words_with_dummies, field[W] cod
 const u32 W = 2;
 
 def main(field[W] words, private field[W] words_with_dummies, private field[W] codewords) {
-    return(check_codewords(words, words_with_dummies, codewords));
+    assert(check_codewords(words, words_with_dummies, codewords));
     // for u32 i in 0..W {
     //     bool is_true = lookup_codeword(words_with_dummies[i], codewords[i]);
     // }

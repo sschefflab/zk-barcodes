@@ -2803,8 +2803,7 @@ def make_encoded_pairs_array():
         if i < 2787:
             codeword = i % 929
         else:
-            # TODO: this can't be zero. It's needs to be -1 or some other garbage that can't be a real codeword
-            codeword = 0
+            codeword = 919
         encoded_pairs.append(pattern * 929 + codeword)
 
     return encoded_pairs
