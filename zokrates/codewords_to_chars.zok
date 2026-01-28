@@ -37,9 +37,9 @@ def codewords_to_chars<W>(field[W] corrected_codewords, TableState[2*W] table_st
         prev_table_state = state2;
 
         field i_f = u32_to_field(i);
-        // Don't try to decode error correction codewords.
-        // The table states for ec codewords should be all zeros.
-        bool check = if (gt_9bit(i_f, ec_codewords - 1)) {
+        // Don't try to decode error correction codewords or the symbol length descriptor (the first non-ec codeword)
+        // The table states for ec codewords and SLD should be all zeros.
+        bool check = if (gt_9bit(i_f, ec_codewords)) {
             check_char_split(codeword, state1.base30_val, state2.base30_val)
         } else {
             (state1 == ZERO_TABLE_STATE) && (state2 == ZERO_TABLE_STATE)
