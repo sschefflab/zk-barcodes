@@ -11,48 +11,69 @@ def check_dummies<CW>(field[CW] words, field[CW] words_with_dummies) -> bool {
     return(correct);
 }
 
-def check_codewords<R,CW, W>(field[R][CW] words, field[R][CW] words_with_dummies, field[R][CW] ext_codewords, field[W] codewords) -> bool {
+def check_codewords<R,CW, W>(field[R][CW] words, field[R][CW] words_with_dummies, field[R][CW] ext_codewords, field[W] codewords, field[R] left_row_inds) -> bool {
     bool mut dummies_ok = true;
     for u32 r in 0..R {
         dummies_ok = dummies_ok && check_dummies(words[r], words_with_dummies[r]);
     }
 
+    field[W] mut cw_and_dummies = [0; W];
+    field[R] mut row_inds_and_dummies = [0; R];
+    
     bool mut cw_ok = true;
     for u32 i in 0..R {
         for u32 j in 0..CW {
-            // there are five less codewords in each row in the flattened array
-            u32 cw_idx = (CW - 5) * i + (j - 2);
+            // There are five less codewords in each row in the flattened array
+            // This zokrates comparison is ok because j is a constant.
+            // TODO: verify this isn't adding a zillion constraints.
+            u32 cw_idx = if (j>2) {
+                (CW - 5) * i + (j - 2)
+            } else {
+                0
+            };
+            
             field ext_cw = ext_codewords[i][j];
             
             // this always returns true, but it does an assert inside
             bool lookup = lookup_codeword(words_with_dummies[i][j], ext_cw);
 
-            // TODO: this big nested if-else is really gross and probably a lot of constraitns. Try to get rid of this.
             bool acc = if (j == 0) {
                 (ext_cw == START || ext_cw == ZERO)
             } else {
-                if (j == 1) {
-                    true // this is a left row indicator - no constraints here yet
+                if (j == CW - 1) {
+                    ext_cw == ZERO // this should be garbage after the stop indicator
                 } else {
-                    if (j == CW - 1) {
-                        ext_cw == ZERO // this should be garbage after the stop indicator
+                    if (j == CW - 2) {
+                        (ext_cw == STOP || ext_cw == ZERO)
                     } else {
-                        if (j == CW - 2) {
-                            (ext_cw == STOP || ext_cw == ZERO)
-                        } else {
-                            if (j == CW - 3) {
-                                true // this is a right row indicator - no constraints here yet
-                            } else {
-                                ext_cw == codewords[cw_idx]
-                            }
-                        }
+                        true // row indicators, real codewords, or garbage - nothing to check yet
                     }
                 }
             };
 
             cw_ok = cw_ok && acc;
+
+            field to_add_row_ind = if (j == 1) {
+                ext_cw
+            } else {
+                0
+            };
+
+            row_inds_and_dummies[i] = row_inds_and_dummies[i] + to_add_row_ind;
+
+            // These operators are ok since we are operating on constant values
+            // TODO: confirm these aren't adding a ton of constraints
+            field to_add_cw = if (j >= 2 && j <= CW - 4) {
+               ext_cw
+            } else {
+                0
+            };
+
+            cw_and_dummies[cw_idx] = cw_and_dummies[cw_idx] + to_add_cw;
         }
     }
+
+    // TODO - add polynomial checks that cw_and_dummies relates to cw's and row_inds_and_dummies relates to left_row_inds
 
     return(dummies_ok && cw_ok);
 }
@@ -62,11 +83,6 @@ const u32 R = 2;
 const u32 CW = 6;
 const u32 W = 2;
 
-def main(field[R][CW] words, private field[R][CW] words_with_dummies, private field[R][CW] ext_codewords, private field[W] codewords) {
-    assert(check_codewords(words, words_with_dummies, ext_codewords, codewords));
-    // for u32 i in 0..W {
-    //     bool is_true = lookup_codeword(words_with_dummies[i], codewords[i]);
-    // }
-
-    // assert(true);
+def main(field[R][CW] words, private field[R][CW] words_with_dummies, private field[R][CW] ext_codewords, private field[W] codewords, private field[R] left_row_inds) {
+    assert(check_codewords(words, words_with_dummies, ext_codewords, codewords, left_row_inds));
 }

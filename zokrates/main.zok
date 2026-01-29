@@ -26,10 +26,11 @@ def main(u32[SHA_OUTPUT_SIZE] image_digest,
          private field[R][CW] words_with_dummies,
          private field[R][CW] ext_codewords,
          private field[W] codewords,
+         private field[R] left_row_inds,
+         private RowIndicatorVars row_indc,
          private field[W] corrected_codewords,
          private PolynomialResult[512] poly_witness,
          private BarcodeStats stats,
-         private RowIndicatorVars row_indc,
          private TableState[2*W] char_table_states
 ) -> field[2*W]
 {
@@ -49,13 +50,13 @@ def main(u32[SHA_OUTPUT_SIZE] image_digest,
     assert(binarize(image, bin_image));
 
     field[R][CW] words = compute_words(bin_image, transitions, counts, normalized_blocks); // 3.4k constraints
-    assert(check_codewords(words, words_with_dummies, ext_codewords, codewords)); // 3.8k constraints (mostly lookup table setup)
+    assert(check_codewords(words, words_with_dummies, ext_codewords, codewords, left_row_inds)); // 3.8k constraints (mostly lookup table setup)
 
     // about 6.4k constraints
-    assert(check_barcode_stats(row_indc, stats));
+    assert(check_barcode_stats(row_indc, stats, left_row_inds));
     assert(check_error_correction(codewords, corrected_codewords, stats.ec_level, poly_witness));
     assert(check_barcode_size(corrected_codewords, stats.num_rows, stats.num_cols));
 
-    field[2*W] chars = codewords_to_chars(corrected_codewords, char_table_states,stats.ec_level); // 340 constraints
+    field[2*W] chars = codewords_to_chars(corrected_codewords, char_table_states, stats.ec_level); // 340 constraints
     return(chars);
 }
