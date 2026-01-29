@@ -409,9 +409,12 @@ def encode_entry(base30_val, this_table, char, next_table, next_next_table):
     )
 
 
-# Special states (order in barcode: zeros | data | pads | ec)
+# Special states (order in barcode: zeros | SLD | data | pads | ec)
 # ZERO_TABLE_STATE: all zeros, used before decoding starts
 ZERO_STATE_ENCODED = encode_entry(0, 0, 0, 0, 0)  # = 0
+
+# SLD_TABLE_STATE: char=95, used for symbol length descriptor (first data codeword)
+SLD_STATE_ENCODED = encode_entry(0, 0, 95, 0, 0)  # = 3040
 
 # PAD_TABLE_STATE: char=32 (space), used for pad codewords between data and EC
 PAD_STATE_ENCODED = encode_entry(0, 0, 32, 0, 0)  # = 1024
@@ -437,7 +440,8 @@ def generate_encoded_table():
         encoded_values.append(encoded)
 
     # Special states
-    encoded_values.append(ZERO_STATE_ENCODED)  # Dummy state before data
+    encoded_values.append(ZERO_STATE_ENCODED)  # Dummy state before SLD
+    encoded_values.append(SLD_STATE_ENCODED)   # SLD state for symbol length descriptor
     encoded_values.append(PAD_STATE_ENCODED)   # Pad state between data and EC
     encoded_values.append(EC_STATE_ENCODED)    # EC state for error correction
     return encoded_values
@@ -498,14 +502,19 @@ def generate_valid_transitions():
                 valid_transitions.append(encoded_tuple)
 
     # Dummy state (ZERO_STATE_ENCODED) transitions:
-    # - dummy -> dummy is allowed (for EC codewords that stay in dummy state)
+    # - ZERO -> ZERO is allowed (stay in zero state)
     valid_transitions.append(encode_state_tuple(ZERO_STATE_ENCODED, ZERO_STATE_ENCODED))
 
-    # - dummy -> any Alpha state is allowed (Alpha states are indices 0-29)
-    #   This allows transitioning from EC codewords (dummy) to start of decoding
+    # - ZERO -> SLD is allowed (transition to symbol length descriptor)
+    valid_transitions.append(encode_state_tuple(ZERO_STATE_ENCODED, SLD_STATE_ENCODED))
+
+    # SLD state transitions:
+    # - SLD -> Alpha is allowed (transition from SLD to start of actual data)
+    #   Alpha states are indices 0-29
     for idx in range(30):
-        encoded_tuple = encode_state_tuple(ZERO_STATE_ENCODED, encoded_table[idx])
+        encoded_tuple = encode_state_tuple(SLD_STATE_ENCODED, encoded_table[idx])
         valid_transitions.append(encoded_tuple)
+    # Note: SLD -> SLD is NOT allowed (SLD is exactly one codeword)
 
     # PAD state transitions:
     # - PAD -> PAD is allowed (stay in pad state)
