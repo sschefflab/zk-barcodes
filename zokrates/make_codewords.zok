@@ -1,10 +1,9 @@
-from "./codeword_lookup.zok" import lookup_codeword;
+from "./codeword_lookup.zok" import lookup_codeword, START, STOP, ZERO;
 
-// approx 3W constraints
-def check_dummies<W>(field[W] words, field[W] words_with_dummies) -> bool {
+def check_dummies<CW>(field[CW] words, field[CW] words_with_dummies) -> bool {
     bool mut correct = true;
     
-    for u32 i in 0..W {
+    for u32 i in 0..CW {
         bool word_correct = ((words[i] * (words[i] - words_with_dummies[i])) == 0);
         correct = correct && word_correct;
     }
@@ -12,21 +11,59 @@ def check_dummies<W>(field[W] words, field[W] words_with_dummies) -> bool {
     return(correct);
 }
 
-def check_codewords<W>(field[W] words, field[W] words_with_dummies, field[W] codewords) -> bool {
-    bool dummies_ok = check_dummies(words, words_with_dummies);
-
-    for u32 i in 0..W {
-        bool is_true = lookup_codeword(words_with_dummies[i], codewords[i]);
+def check_codewords<R,CW, W>(field[R][CW] words, field[R][CW] words_with_dummies, field[R][CW] ext_codewords, field[W] codewords) -> bool {
+    bool mut dummies_ok = true;
+    for u32 r in 0..R {
+        dummies_ok = dummies_ok && check_dummies(words[r], words_with_dummies[r]);
     }
 
-    return(dummies_ok);
+    bool mut cw_ok = true;
+    for u32 i in 0..R {
+        for u32 j in 0..CW {
+            // there are five less codewords in each row in the flattened array
+            u32 cw_idx = (CW - 5) * i + (j - 2);
+            field ext_cw = ext_codewords[i][j];
+            
+            // this always returns true, but it does an assert inside
+            bool lookup = lookup_codeword(words_with_dummies[i][j], ext_cw);
+
+            // TODO: this big nested if-else is really gross and probably a lot of constraitns. Try to get rid of this.
+            bool acc = if (j == 0) {
+                (ext_cw == START || ext_cw == ZERO)
+            } else {
+                if (j == 1) {
+                    true // this is a left row indicator - no constraints here yet
+                } else {
+                    if (j == CW - 1) {
+                        ext_cw == ZERO // this should be garbage after the stop indicator
+                    } else {
+                        if (j == CW - 2) {
+                            (ext_cw == STOP || ext_cw == ZERO)
+                        } else {
+                            if (j == CW - 3) {
+                                true // this is a right row indicator - no constraints here yet
+                            } else {
+                                ext_cw == codewords[cw_idx]
+                            }
+                        }
+                    }
+                }
+            };
+
+            cw_ok = cw_ok && acc;
+        }
+    }
+
+    return(dummies_ok && cw_ok);
 }
 
 // test function
+const u32 R = 2;
+const u32 CW = 6;
 const u32 W = 2;
 
-def main(field[W] words, private field[W] words_with_dummies, private field[W] codewords) {
-    assert(check_codewords(words, words_with_dummies, codewords));
+def main(field[R][CW] words, private field[R][CW] words_with_dummies, private field[R][CW] ext_codewords, private field[W] codewords) {
+    assert(check_codewords(words, words_with_dummies, ext_codewords, codewords));
     // for u32 i in 0..W {
     //     bool is_true = lookup_codeword(words_with_dummies[i], codewords[i]);
     // }

@@ -2,9 +2,9 @@ from "EMBED" import value_in_array;
 from "./const_range_check.zok" import GF_929;
 
 // these three decode into the symbol 919, which is in GF(929) but not used in the pdf417 spec
-// const field START = 8111113;
-// const field STOP = 71131112;
-// const field ZERO = 0;
+const field START = 8111113;
+const field STOP = 71131112;
+const field ZERO = 0;
 
 // All bar-space patterns are represented as 8-digit numbers
 // Encoded pair is computed as pattern*929 + codeword

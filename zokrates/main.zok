@@ -8,9 +8,9 @@ from "hashes/sha256/sha256" import main as sha256;
 from "EMBED" import u32_to_field;
 
 //TODO: fill in with more reasonable constants
-const u32 R = 720; // number of rows
-const u32 C = 1080; // length of rows
-const u32 D = 16; // number of blocks
+const u32 R = 2; // number of rows
+const u32 CP = 48; // length of rows
+const u32 CW = C_P / 8;
 const u32 W = 2; // number of words
 const u32 SHA_OUTPUT_SIZE = 8; // SHA256 output size (8 words = 256 bits)
 const u32 SHA_BLOCK_SIZE = 16; // SHA256 words per block (512 bits / 32 bits)
@@ -18,11 +18,12 @@ const u32 SHA_NUM_BLOCKS = N / SHA_BLOCK_SIZE; // number of SHA256 blocks needed
 
 //TODO: we will need some more inputs for pixels-to-blocks code, but that is TBD
 def main(u32[SHA_OUTPUT_SIZE] image_digest,
-         private field[R][C] image,
+         private field[R][CP] image,
          private u32[SHA_NUM_BLOCKS][SHA_BLOCK_SIZE] image_u32,
-         private field[R][C] bin_image,
-         private field[W][8] normalized_blocks,
-         private field[W] words_with_dummies,
+         private field[R][CP] bin_image,
+         private field[R][CW][8] normalized_blocks,
+         private field[R][CW] words_with_dummies,
+         private field[R][CW] ext_codewords,
          private field[W] codewords,
          private field[W] corrected_codewords,
          private PolynomialResult[512] poly_witness,
@@ -46,8 +47,8 @@ def main(u32[SHA_OUTPUT_SIZE] image_digest,
 
     assert(binarize(image, bin_image));
 
-    field[W] words = compute_words(bin_image, transitions, counts, normalized_blocks); // 3.4k constraints
-    assert(check_codewords(words, words_with_dummies, codewords)); // 3.7k constraints (mostly lookup table setup)
+    field[R][CW] words = compute_words(bin_image, transitions, counts, normalized_blocks); // 3.4k constraints
+    assert(check_codewords(words, words_with_dummies, ext_codewords, codewords)); // 3.8k constraints (mostly lookup table setup)
 
     // about 6.4k constraints
     assert(check_barcode_stats(row_indc, stats));
