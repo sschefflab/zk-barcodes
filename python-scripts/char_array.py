@@ -409,12 +409,15 @@ def encode_entry(base30_val, this_table, char, next_table, next_next_table):
     )
 
 
-# Special states
-# ZERO_TABLE_STATE: all zeros, used for EC codewords before decoding starts
+# Special states (order in barcode: zeros | data | pads | ec)
+# ZERO_TABLE_STATE: all zeros, used before decoding starts
 ZERO_STATE_ENCODED = encode_entry(0, 0, 0, 0, 0)  # = 0
 
-# PAD_TABLE_STATE: char=32 (space), used for pad codewords at the end
+# PAD_TABLE_STATE: char=32 (space), used for pad codewords between data and EC
 PAD_STATE_ENCODED = encode_entry(0, 0, 32, 0, 0)  # = 1024
+
+# EC_TABLE_STATE: char=6, used for error correction codewords at the end
+EC_STATE_ENCODED = encode_entry(0, 0, 6, 0, 0)  # = 192
 
 
 def generate_encoded_table():
@@ -434,8 +437,9 @@ def generate_encoded_table():
         encoded_values.append(encoded)
 
     # Special states
-    encoded_values.append(ZERO_STATE_ENCODED)  # Dummy state for EC codewords
-    encoded_values.append(PAD_STATE_ENCODED)   # Pad state for padding at end
+    encoded_values.append(ZERO_STATE_ENCODED)  # Dummy state before data
+    encoded_values.append(PAD_STATE_ENCODED)   # Pad state between data and EC
+    encoded_values.append(EC_STATE_ENCODED)    # EC state for error correction
     return encoded_values
 
 
@@ -511,6 +515,13 @@ def generate_valid_transitions():
     for idx in range(120):
         encoded_tuple = encode_state_tuple(encoded_table[idx], PAD_STATE_ENCODED)
         valid_transitions.append(encoded_tuple)
+
+    # - PAD -> EC is allowed (transition from padding to error correction)
+    valid_transitions.append(encode_state_tuple(PAD_STATE_ENCODED, EC_STATE_ENCODED))
+
+    # EC state transitions:
+    # - EC -> EC is allowed (stay in EC state)
+    valid_transitions.append(encode_state_tuple(EC_STATE_ENCODED, EC_STATE_ENCODED))
 
     return valid_transitions
 

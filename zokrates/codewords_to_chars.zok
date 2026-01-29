@@ -6,8 +6,11 @@ from "./char_lookup.zok" import TableState, check_table_state, check_transition;
 // a dummy table state that is used before decoding actually begins
 const TableState ZERO_TABLE_STATE = TableState { base30_val: 0, char: 0, this_table: 0, next_table: 0, next_next_table: 0 };
 
-// a pad table state that may be present at the end of decoding
+// a pad table state that may be present between data and error correction codewords
 const TableState PAD_TABLE_STATE = TableState { base30_val: 0, char: 32, this_table: 0, next_table: 0, next_next_table: 0 };
+
+// a table state used for error correction codewords that shouldn't actually be decoded
+const TableState EC_TABLE_STATE = TableState { base30_val: 0, char: 6, this_table: 0, next_table: 0, next_next_table: 0 };
 
 def check_char_split(field codeword, field c1, field c2) -> bool {
     // no need to range check c1 and c2 here because they get range checked as part of valid state checking
@@ -44,17 +47,16 @@ def codewords_to_chars<W>(field[W] corrected_codewords, TableState[2*W] table_st
         // set prev_table_state to state2 for the next
         prev_table_state = state2;
 
-        field i_f = u32_to_field(i);
-        // Don't try to decode error correction codewords or the symbol length descriptor (the first non-ec codeword)
-        // The table states for ec codewords and SLD should be all zeros.
-        bool check = if (gt_9bit(i_f, ec_codewords)) {
+        field idx_f = u32_to_field(cw_idx);
+        // Don't try to decode error correction codewords, pads, or higher-degree terms that are zero
+        bool check = if (gt_9bit(ec_codewords, idx_f)) {
             if (codeword ==  PAD_CODEWORD) {
                 (state1 == PAD_TABLE_STATE) && (state2 == PAD_TABLE_STATE)
             } else {
                 check_char_split(codeword, state1.base30_val, state2.base30_val)
             }
         } else {
-            (state1 == ZERO_TABLE_STATE) && (state2 == ZERO_TABLE_STATE)
+            (state1 == EC_TABLE_STATE) && (state2 == EC_TABLE_STATE)
         };
 
         correct_char_split = correct_char_split && check;
