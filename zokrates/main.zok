@@ -8,9 +8,10 @@ from "hashes/sha256/sha256" import main as sha256;
 from "EMBED" import u32_to_field;
 
 //TODO: fill in with more reasonable constants
-const u32 R = 2; // number of rows
-const u32 CP = 48; // length of rows
-const u32 CW = C_P / 8;
+const u32 R = 2; // number of rows of pixels
+const u32 CP = 48; // length of rows in pixels
+const u32 N = R * CP;
+const u32 CW = 6; // length of rows in "words" (groups of 8 blocks)
 const u32 W = 2; // number of words
 const u32 SHA_OUTPUT_SIZE = 8; // SHA256 output size (8 words = 256 bits)
 const u32 SHA_BLOCK_SIZE = 16; // SHA256 words per block (512 bits / 32 bits)
