@@ -133,22 +133,6 @@ def check_error_correction<W>(field[W] codewords, field[W] corrected_codewords, 
     return(sufficiently_sparse && zero_syndromes);
 }
 
-// some small setup and then approximately 2W constraints
-def check_barcode_size<W>(field[W] corrected_codewords, field num_rows, field num_cols) -> bool {
-    field mut num_nonzero = 0;
-
-    for u32 i in 0..W {
-        field to_add = (corrected_codewords[i] == 0) ? 1 : 0;
-        num_nonzero = num_nonzero + to_add;
-    }
-
-    field v = num_rows * num_cols - num_nonzero;
-    // 12 bits is sufficient here because num_rows * num_cols <= 90*30 < 4096
-    bool[12] bits = unpack(v);
-
-    return(check_bit_decomp(v, bits));
-}
-
 // test function
 const u32 R = 3;
 const u32 W = 3;
@@ -165,6 +149,4 @@ def main(
     assert(ok_stats);
     // bool ok_ec = check_error_correction(codewords, corrected_codewords, stats.ec_level, poly_witness);
     // assert(ok_ec);
-    // bool ok_barcode_size = check_barcode_size(corrected_codewords, stats.num_rows, stats.num_cols);
-    // assert(ok_barcode_size);
 }

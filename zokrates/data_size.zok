@@ -1,0 +1,31 @@
+def check_num_cw<W>(field[W] corrected_codewords, field num_rows, field num_cols) -> bool {
+    field mut num_cw = 0;
+    field mut sld = 0;
+    bool mut found_sld = false;
+
+    for u32 i in 0..W {
+        u32 idx = W - i - 1;
+        field cw = corrected_codewords[idx];
+        bool nonzero_cw = cw != 0;
+        
+        field to_add_sld = (!found_sld && nonzero_cw) ? cw : 0;
+        sld = sld + to_add_sld;
+
+        found_sld = found_sld || nonzero_cw;
+        field to_add = found_sld ? 1 : 0;
+        num_cw = num_cw + to_add;        
+    }
+
+    field expected_cw = num_rows * num_cols;
+
+    return(num_cw == expected_cw && sld == expected_cw);
+}
+
+// test function
+const u32 W = 2;
+
+def main(field[W] corrected_codewords, field num_rows, field num_cols) {
+    assert(check_num_cw(corrected_codewords, num_rows, num_cols));
+}
+
+
