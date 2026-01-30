@@ -3,6 +3,9 @@ def check_num_cw<W>(field[W] corrected_codewords, field num_rows, field num_cols
     field mut sld = 0;
     bool mut found_sld = false;
 
+    // The SLD should be the first non-zero codeword, moving from higher-order to lower-order terms
+    // Store the SLD, and count how many codewords there are from the SLD onwards
+    // These two numbers should be consistent, and they should be consistent with the number of codewords specified by row indicators
     for u32 i in 0..W {
         u32 idx = W - i - 1;
         field cw = corrected_codewords[idx];
