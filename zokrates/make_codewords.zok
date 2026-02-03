@@ -1,4 +1,7 @@
+from "EMBED" import sample_challenge;
 from "./codeword_lookup.zok" import lookup_codeword, START, STOP, ZERO;
+
+const field DUMMY = 919;
 
 def check_dummies<CW>(field[CW] words, field[CW] words_with_dummies) -> bool {
     bool mut correct = true;
@@ -17,21 +20,16 @@ def check_codewords<R,CW, W>(field[R][CW] words, field[R][CW] words_with_dummies
         dummies_ok = dummies_ok && check_dummies(words[r], words_with_dummies[r]);
     }
 
-    field[W] mut cw_and_dummies = [0; W];
+    u32 N = R * CW;
+
+    field[N] mut cw_and_dummies = [DUMMY; N]; // start it off filled with dummies
     field[R] mut row_inds_and_dummies = [0; R];
     
     bool mut cw_ok = true;
     for u32 i in 0..R {
         for u32 j in 0..CW {
-            // There are five less codewords in each row in the flattened array
-            // This zokrates comparison is ok because j is a constant.
-            // TODO: verify this isn't adding a zillion constraints.
-            u32 cw_idx = if (j>2) {
-                (CW - 5) * i + (j - 2)
-            } else {
-                0
-            };
-            
+            u32 cw_idx = i * CW + j;
+
             field ext_cw = ext_codewords[i][j];
             
             // this always returns true, but it does an assert inside
@@ -73,9 +71,58 @@ def check_codewords<R,CW, W>(field[R][CW] words, field[R][CW] words_with_dummies
         }
     }
 
-    // TODO - add polynomial checks that cw_and_dummies relates to cw's and row_inds_and_dummies relates to left_row_inds
+    // randomized PIT test that cw_and_dummies is consistent with codewords
+    field beta = sample_challenge([...cw_and_dummies, ...codewords]);
 
-    return(dummies_ok && cw_ok);
+    // Compute polynomial for array that contains dummies
+    field mut result1 = 0;
+    field mut pow = 1;
+    for u32 i in 0..N {
+        u32 ind = N - i - 1; // this array is reversed from the codewords array
+        (field, field) acc = if (cw_and_dummies[ind] == DUMMY) {
+            (0, pow)
+        } else {
+            (cw_and_dummies[ind] * pow, pow * beta)
+        };
+        result1 = result1 + acc.0;
+        pow = acc.1;
+    }
+
+    // Compute polynomial for codeword array.
+    field mut result2 = 0;
+    pow = 1;
+    for u32 i in 0..W {
+        result2 = result2 + codewords[i] * pow;
+        pow = pow * beta;
+    }
+
+    bool codewords_consistent = result1 == result2;
+
+    // randomized PIT test that row_inds_and_dummies related to left_row_inds
+    field gamma = sample_challenge([...row_inds_and_dummies, ...left_row_inds]);
+    result1 = 0;
+    result2 = 0;
+    pow = 1;
+
+    for u32 i in 0..R {
+        (field, field) acc = if (row_inds_and_dummies[i] == DUMMY) {
+            (0, pow)
+        } else {
+            (row_inds_and_dummies[i] * pow, pow * gamma)
+        };
+        result1 = result1 + acc.0;
+        pow = acc.1;
+    }
+
+    pow = 1;
+    for u32 i in 0..R {
+        result2 = result2 + pow * left_row_inds[i];
+        pow = pow * gamma;
+    }
+
+    bool row_inds_consistent = result1 == result2;
+
+    return(dummies_ok && cw_ok && codewords_consistent && row_inds_consistent);
 }
 
 // test function
