@@ -441,9 +441,9 @@ def generate_encoded_table():
 
     # Special states
     encoded_values.append(ZERO_STATE_ENCODED)  # Dummy state before SLD
-    encoded_values.append(SLD_STATE_ENCODED)   # SLD state for symbol length descriptor
-    encoded_values.append(PAD_STATE_ENCODED)   # Pad state between data and EC
-    encoded_values.append(EC_STATE_ENCODED)    # EC state for error correction
+    encoded_values.append(SLD_STATE_ENCODED)  # SLD state for symbol length descriptor
+    encoded_values.append(PAD_STATE_ENCODED)  # Pad state between data and EC
+    encoded_values.append(EC_STATE_ENCODED)  # EC state for error correction
     return encoded_values
 
 
@@ -523,6 +523,12 @@ def generate_valid_transitions():
     # - any normal state -> PAD is allowed (transition into padding at end of data)
     for idx in range(120):
         encoded_tuple = encode_state_tuple(encoded_table[idx], PAD_STATE_ENCODED)
+        valid_transitions.append(encoded_tuple)
+
+    # - Alpha -> EC is allowed (data can end without padding)
+    #   Alpha states are indices 0-29
+    for idx in range(30):
+        encoded_tuple = encode_state_tuple(encoded_table[idx], EC_STATE_ENCODED)
         valid_transitions.append(encoded_tuple)
 
     # - PAD -> EC is allowed (transition from padding to error correction)
