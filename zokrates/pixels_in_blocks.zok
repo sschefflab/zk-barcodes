@@ -1,4 +1,4 @@
-from "EMBED" import value_in_array, value_in_array_tuple, unpack;
+from "EMBED" import value_in_array, value_in_array_tuple, sample_challenge;
 
 const u32 L = 10;
 
@@ -6,10 +6,10 @@ const u32 L = 10;
 // TODO: can we make this generic over R?
 const u32 B = 1080;
 
-const u32 TABLE_LEN = 2**L;
+const u32 TABLE_LEN = 1024; // 2^L
 const field[TABLE_LEN][6] PIXELS_AND_BLOCKS = [[0; 6]; TABLE_LEN]; // TODO - fill this in
 
-const field[L][2] POWERS_OF_B = [[0; 2]; L] // TODO - fill this in
+const field[L][2] POWERS_OF_B = [[0; 2]; L]; // TODO - fill this in
 
 // base-B values representing a series of blocks
 type Blocks = field;
@@ -46,12 +46,12 @@ def encode(Lookup lookup) -> field[6] {
 // always returns true, but does an assert inside
 def check_blocks_for_chunk(Lookup lookup) -> bool {
     field[6] lookup_enc = encode(lookup);
-    assert(value_in_array_tuple(lookup_enc, PIXELS_AND_BLOCKS);
+    assert(value_in_array_tuple(lookup_enc, PIXELS_AND_BLOCKS));
     return true;
 }
 
 // TODO - FINISH
-def check_blocks<R>(field[R] pixels, Lookup lookups[R/L + 1], field[B] blocks) -> bool {
+def check_blocks<R>(field[R] pixels, Lookup[R/L + 1] lookups, field[B] blocks) -> bool {
     bool correct_blocks = true;
 
     u32 num_chunks = R/L + 1;
@@ -66,45 +66,62 @@ def check_blocks<R>(field[R] pixels, Lookup lookups[R/L + 1], field[B] blocks) -
         correct_blocks = correct_blocks && (binary_chunk == lookups[i].binary_enc);        
     }
 
-    field[num_chunks] mut all_blocks = [0; R];
-    field[num_chunks] mut all_nb = [0; R];
+    field[num_chunks] mut block_chunks = [0; num_chunks];
+    field[num_chunks] mut all_nb = [0; num_chunks];
     field mut remainder = 0;
     field mut black_r = 0;
-    for u32 c in 0..num_chunks {
-        bool always_true = check_blocks_for_chunk(lookup[c]);
+    for u32 i in 0..num_chunks {
+        bool always_true = check_blocks_for_chunk(lookups[i]);
 
-        field a = lookup[c].remainder_is_black;
+        field a = lookups[i].remainder_is_black;
         field b = black_r;
-        field c = lookup[c].num_blocks_is_odd;
+        field c = lookups[i].num_blocks_is_odd;
         field offset = 1 - a - b - c + 2*a*b + 2*a*c + 2*b*c - 4*a*b*c;
-        field exp = lookup[c].num_blocks - offset;
+        field exp = lookups[i].num_blocks - offset;
 
-        assert(value_in_array_tuple([exp, lookup[c].power_of_B], POWERS_OF_B));
+        assert(value_in_array_tuple([exp, lookups[i].power_of_B], POWERS_OF_B));
 
-        all_blocks[c] = remainder*lookup[c].power_of_B + blocks;
-        all_nb[c] = lookup[c].num_blocks + 1 - offset;
+        block_chunks[i] = remainder*lookups[i].power_of_B + lookups[i].baseB_enc;
+        all_nb[i] = lookups[i].num_blocks + 1 - offset;
 
-        remainder = lookup[c].remainder;
-        black_r = lookup[c].remainder_is_black;
+        remainder = lookups[i].remainder;
+        black_r = lookups[i].remainder_is_black;
     }
 
-    // TODO: this should not be powers of B - figure out how to compute these polynomials separately
-    field[B] mut f = [0; B];
+    field beta = sample_challenge([...blocks, ...block_chunks, ...all_nb]);
+
+    field mut result1 = 0;
     field mut pow = 1;
     for u32 b in 0..B {
-        f[b] = blocks[b] * pow;
-        pow = pow * B;
+        result1 = result1 + blocks[b] * pow;
+        pow = pow * beta;
     }
+
+    field[L] mut powers_of_beta = [1; L];
+    for u32 i in 1..L {
+        powers_of_beta[i] = powers_of_beta[i - 1] * beta;
+    }
+
 
     field[B] mut g = [0; B];
-    pow = 1;
+    field mut result2 = 0;
     for u32 b in 0..B {
-        field[L] baseB_decomp = 0; // TODO - fill in with the actual base-B decomp
+        field[L] baseB_decomp = [0; L]; // TODO - fill in with the actual base-B decomp
+        field mut sum = 0;
 
         for u32 l in 0..L {
-            baseB_decomp[l]
+            sum = sum + (baseB_decomp[l] * powers_of_beta[l]);
         }
+
+        field to_add = if b > 1 {
+            // TODO - this is a dynamic index into the powers_of_beta array. So that's an extra L constraints here. L isn't that big, put perhaps we can do better
+            sum * powers_of_beta[all_nb[b - 1]]
+        } else {
+            sum
+        };
+
+        result2 = result2 + to_add;
     }
     
-
+    return(correct_blocks && (result1 == result2));
 }
