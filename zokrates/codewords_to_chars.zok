@@ -104,6 +104,6 @@ def codewords_to_chars<W>(field[W] corrected_codewords, TableState[2*W] table_st
 // test function
 const u32 W = 2;
 
-def main(field[W] corrected_codewords, private TableState[2*W] states, private field ec_codewords, field[2*W] chars) {
-    assert(codewords_to_chars(corrected_codewords, states, ec_codewords, chars));
+def main(field[W] corrected_codewords, private TableState[2*W] states, private field ec_level, field[2*W] chars) {
+    assert(codewords_to_chars(corrected_codewords, states, ec_level, chars));
 }
