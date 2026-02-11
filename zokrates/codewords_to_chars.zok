@@ -22,7 +22,7 @@ def check_char_split(field codeword, field c1, field c2) -> bool {
 
 // The input chars array should have no null characters. If that assumption does not hold, we will need to modify this code.
 def codewords_to_chars<W>(field[W] corrected_codewords, TableState[2*W] table_states, field ec_level, field[2*W] chars) -> bool {
-    field ec_codewords = POWERS_OF_TWO[ec_level + 1];
+    field ec_codewords = POWERS_OF_TWO[ec_level + 1]; // TODO: this gets computed multiple times - maybe we can unify this?
 
     bool mut correct_char_split = true;
     assert(table_states[0].this_table == 0);
