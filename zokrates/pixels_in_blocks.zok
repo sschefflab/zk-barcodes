@@ -50,6 +50,7 @@ def check_blocks_per_row<R>(field[R] pixels, BlockLookup[R/L] lookups, field[B] 
     bool correct_blocks = true;
 
     u32 num_chunks = R/L;
+    // TODO - apparently this is compiling to no constraints - what's going on here?
     for u32 i in 0..num_chunks {
         field[L] expanded_chunk = [0; L];
         
@@ -116,7 +117,7 @@ def check_blocks_per_row<R>(field[R] pixels, BlockLookup[R/L] lookups, field[B] 
             sum = sum + (baseB_decomp[l] * powers_of_beta[l]);
         }
 
-        field to_add = if b > 1 {
+        field to_add = if b > 0 {
             // TODO - this is a dynamic index into the powers_of_beta array. So that's an extra L constraints here. L isn't that big, put perhaps we can do better
             sum * powers_of_beta[all_nb[b - 1]]
         } else {
@@ -140,7 +141,7 @@ def check_blocks<R,C>(field[R][C] pixels, BlockLookup[R][C/L] lookups, field[R][
 
 // test function
 const u32 R = 3;
-const u32 C = 80;
+const u32 C = 10; // this value needs to be divisible by 10 (see comment above)
 
 def main(field[R][C] pixels, private BlockLookup[R][C/L] lookups, field[R][B] blocks, field[R][C/L][L] baseB_decomps) {
     assert(check_blocks(pixels, lookups, blocks, baseB_decomps));
