@@ -7,7 +7,7 @@ def check_dummies<CW>(field[CW] words, field[CW] words_with_dummies) -> bool {
     bool mut correct = true;
     
     for u32 i in 0..CW {
-        bool word_correct = ((words[i] * (words[i] - words_with_dummies[i])) == 0);
+        bool word_correct = ((words_with_dummies[i] * (words[i] - words_with_dummies[i])) == 0);
         correct = correct && word_correct;
     }
 
@@ -51,6 +51,7 @@ def check_codewords<R,CW, W>(field[R][CW] words, field[R][CW] words_with_dummies
 
             cw_ok = cw_ok && acc;
 
+            // only some columns are left row indicators - only modify the row indicators if so
             field to_add_row_ind = if (j == 1) {
                 ext_cw
             } else {
@@ -59,10 +60,11 @@ def check_codewords<R,CW, W>(field[R][CW] words, field[R][CW] words_with_dummies
 
             row_inds_and_dummies[i] = row_inds_and_dummies[i] + to_add_row_ind;
 
+            // only some columns are codewords - only modify codewords if so
             // These operators are ok since we are operating on constant values
             // TODO: confirm these aren't adding a ton of constraints
             field to_add_cw = if (j >= 2 && j <= CW - 4) {
-               ext_cw
+               ext_cw - DUMMY // subtract out the dummy codeword we filled everything with
             } else {
                 0
             };
