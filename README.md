@@ -1,13 +1,24 @@
 # zk-barcodes
 
-## Usage Notes
+## Requirements
 
-The generate_r1cs.sh script requires cvc5 to run. On Mac, install that with
+The generate_r1cs.sh script requires the following packages to run:
+- `cvc5`
+- `libssl-dev` (openssl on MacOS, usually already installed)
+
+On Mac:
 ```
 brew install --cask cvc5/cvc5/cvc5
 ```
 
-Then, the script can be used to generate constraints. To generate constraints for the main function, just run the script with no arguments. If you want to run it for a different file, provide the file as an argument.  No need to pass the full path - it assumes that circuit files will be in the zokrates/ directory.
+On Ubuntu:
+```
+apt-get install cvc5 libssl-dev
+```
+
+## Usage Notes
+
+The script can be used to generate constraints. To generate constraints for the main function, just run the script with no arguments. If you want to run it for a different file, provide the file as an argument.  No need to pass the full path - it assumes that circuit files will be in the zokrates/ directory.
 
 So, for the whole circuit:
 ```
