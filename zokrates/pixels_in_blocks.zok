@@ -50,7 +50,7 @@ def check_blocks_per_row<R>(field[R] pixels, BlockLookup[R/L] lookups, field[B] 
     bool correct_blocks = true;
 
     u32 num_chunks = R/L;
-    // TODO - apparently this is compiling to no constraints - what's going on here?
+    // TODO: why isn't this giving any constraints?
     for u32 i in 0..num_chunks {
         field[L] expanded_chunk = [0; L];
         
@@ -58,14 +58,18 @@ def check_blocks_per_row<R>(field[R] pixels, BlockLookup[R/L] lookups, field[B] 
             expanded_chunk[j] = pixels[i*L + j];
         }
 
-        field binary_chunk = pixels_to_binary(expanded_chunk);
+        field binary_chunk = pixels_to_binary(expanded_chunk); // this is no constraints because we already know the pixels are binary values
+        // Ensure that the binary encoding of pixels found in the lookups is consistent with the binary image
         correct_blocks = correct_blocks && (binary_chunk == lookups[i].binary_enc);        
     }
 
+    // Step 2 - Initialization
     field[num_chunks] mut block_chunks = [0; num_chunks];
     field[num_chunks] mut all_nb = [0; num_chunks];
     field mut remainder = 0;
     field mut black_r = 0;
+
+    // Step 3 - Process chunks
     for u32 i in 0..num_chunks {
         bool always_true = check_blocks_for_chunk(lookups[i]);
 
@@ -84,12 +88,13 @@ def check_blocks_per_row<R>(field[R] pixels, BlockLookup[R/L] lookups, field[B] 
         black_r = lookups[i].remainder_is_black;
     }
 
+    // Step 4 - show consistency
     field beta = sample_challenge([...blocks, ...block_chunks, ...all_nb]);
 
-    field mut result1 = 0;
+    field mut result_f = 0;
     field mut pow = 1;
     for u32 b in 0..B {
-        result1 = result1 + blocks[b] * pow;
+        result_f = result_f + blocks[b] * pow;
         pow = pow * beta;
     }
 
@@ -100,13 +105,14 @@ def check_blocks_per_row<R>(field[R] pixels, BlockLookup[R/L] lookups, field[B] 
 
 
     bool mut correct_baseb_decomp = true;
-    field mut result2 = 0;
+    field mut result_g = 0;
     for u32 b in 0..num_chunks {
         // check that the baseB_decomp is legit
         field[L] baseB_decomp = baseB_decomps[b];
         field mut baseB_sum = 0;
         field b_f = u32_to_field(B);
         for u32 l in 0..L {
+            // TODO: add range check on baseB_decomp[l]
             baseB_sum = baseB_sum + baseB_decomp[l] * b_f**l;
         }
         correct_baseb_decomp = correct_baseb_decomp && (baseB_sum == block_chunks[b]);
@@ -124,10 +130,10 @@ def check_blocks_per_row<R>(field[R] pixels, BlockLookup[R/L] lookups, field[B] 
             sum
         };
 
-        result2 = result2 + to_add;
+        result_g = result_g + to_add;
     }
     
-    return(correct_blocks && correct_baseb_decomp && (result1 == result2));
+    return(correct_blocks && correct_baseb_decomp && (result_f == result_g));
 }
 
 def check_blocks<R,C>(field[R][C] pixels, BlockLookup[R][C/L] lookups, field[R][B] blocks, field[R][C/L][L] baseB_decomps) -> bool {
