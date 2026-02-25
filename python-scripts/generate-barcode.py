@@ -222,8 +222,8 @@ Error Correction Levels:
         "-o",
         "--output",
         type=str,
-        default="pdf417_barcode.png",
-        help="Output filename (default: pdf417_barcode.png)",
+        default=None,
+        help="Output filename (default: pdf417_<rows>x<cols>_ec<ec>.png)",
     )
     parser.add_argument(
         "-s",
@@ -249,12 +249,17 @@ Error Correction Levels:
 
     args = parser.parse_args()
 
+    # Generate default output filename if not provided
+    output_filename = args.output
+    if output_filename is None:
+        output_filename = f"pdf417_{args.rows}x{args.cols}_ec{args.ec}.png"
+
     try:
         generate_pdf417_barcode(
             num_rows=args.rows,
             num_cols=args.cols,
             ec_level=args.ec,
-            output_filename=args.output,
+            output_filename=output_filename,
             scale=args.scale,
             padding=args.padding,
             text_style=args.text_style,
