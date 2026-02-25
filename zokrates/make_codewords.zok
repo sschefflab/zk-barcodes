@@ -1,7 +1,10 @@
 from "EMBED" import sample_challenge;
-from "./codeword_lookup.zok" import lookup_codeword, START, STOP, ZERO;
+from "./codeword_lookup.zok" import lookup_codeword, START, STOP, ZERO, VALID_WORDS;
+from "./not_in_table.zok" import disjoint_sets;
 
 const field DUMMY = 919;
+const field KNOWN_GARBAGE = 1;
+const u32 T = 2789; // the number of decodable words (bsbsbsbs patterns)
 
 def check_dummies<CW>(field[CW] words, field[CW] words_with_dummies) -> bool {
     bool mut correct = true;
@@ -14,7 +17,15 @@ def check_dummies<CW>(field[CW] words, field[CW] words_with_dummies) -> bool {
     return(correct);
 }
 
-def check_codewords<R,CW, W>(field[R][CW] words, field[R][CW] words_with_dummies, field[R][CW] ext_codewords, field[W] codewords, field[R] left_row_inds) -> bool {
+def check_codewords<R, CW, W>(
+    field[R][CW] words,
+    field[R][CW] words_with_dummies,
+    field[T] disjoint_set_poly_f,
+    field[R*CW] disjoint_set_poly_g,
+    field[R][CW] ext_codewords,
+    field[W] codewords,
+    field[R] left_row_inds
+) -> bool {
     bool mut dummies_ok = true;
     for u32 r in 0..R {
         dummies_ok = dummies_ok && check_dummies(words[r], words_with_dummies[r]);
@@ -24,6 +35,8 @@ def check_codewords<R,CW, W>(field[R][CW] words, field[R][CW] words_with_dummies
 
     field[N] mut cw_and_dummies = [DUMMY; N]; // start it off filled with dummies
     field[R] mut row_inds_and_dummies = [0; R];
+
+    field[N] mut garbage = [ KNOWN_GARBAGE; N ];
     
     bool mut cw_ok = true;
     for u32 i in 0..R {
@@ -31,9 +44,29 @@ def check_codewords<R,CW, W>(field[R][CW] words, field[R][CW] words_with_dummies
             u32 cw_idx = i * CW + j;
 
             field ext_cw = ext_codewords[i][j];
+
+            // put the garbage that is not equal to the thing right above it into the array to check later.
+            // Otherwise, leave the array at the known garbage that it is.
+            field curr_word = words[i][j];
+            field curr_word_or_dummy = words_with_dummies[i][j];
+            field to_add_to_garbage = if (curr_word_or_dummy == 0) {
+                if (i == 0) {
+                   curr_word - KNOWN_GARBAGE
+                } else {
+                    if (curr_word == words[i-1][j]) {
+                        0
+                    } else {
+                        curr_word - KNOWN_GARBAGE
+                    }
+                }
+            } else {
+                0
+            };
+
+            garbage[cw_idx] = garbage[cw_idx] + to_add_to_garbage;
             
             // this always returns true, but it does an assert inside
-            bool lookup = lookup_codeword(words_with_dummies[i][j], ext_cw);
+            bool lookup = lookup_codeword(curr_word_or_dummy, ext_cw);
 
             bool acc = if (j == 0) {
                 (ext_cw == START || ext_cw == ZERO)
@@ -72,6 +105,9 @@ def check_codewords<R,CW, W>(field[R][CW] words, field[R][CW] words_with_dummies
             cw_and_dummies[cw_idx] = cw_and_dummies[cw_idx] + to_add_cw;
         }
     }
+
+    // check that the garbage is in fact not in the decodable codewords
+    bool garbage_ok = disjoint_sets::<N,T>(garbage, VALID_WORDS, disjoint_set_poly_f, disjoint_set_poly_g);
 
     // randomized PIT test that cw_and_dummies is consistent with codewords
     field beta = sample_challenge([...cw_and_dummies, ...codewords]);
@@ -124,7 +160,7 @@ def check_codewords<R,CW, W>(field[R][CW] words, field[R][CW] words_with_dummies
 
     bool row_inds_consistent = result1 == result2;
 
-    return(dummies_ok && cw_ok && codewords_consistent && row_inds_consistent);
+    return(dummies_ok && cw_ok && garbage_ok && codewords_consistent && row_inds_consistent);
 }
 
 // test function
@@ -132,6 +168,14 @@ const u32 R = 2;
 const u32 CW = 6;
 const u32 W = 2;
 
-def main(field[R][CW] words, private field[R][CW] words_with_dummies, private field[R][CW] ext_codewords, private field[W] codewords, private field[R] left_row_inds) {
-    assert(check_codewords(words, words_with_dummies, ext_codewords, codewords, left_row_inds));
+def main(
+    field[R][CW] words,
+    private field[R][CW] words_with_dummies,
+    field[T] disjoint_set_poly_f,
+    field[R*CW] disjoint_set_poly_g,
+    private field[R][CW] ext_codewords,
+    private field[W] codewords,
+    private field[R] left_row_inds
+) {
+    assert(check_codewords(words, words_with_dummies, disjoint_set_poly_f, disjoint_set_poly_g, ext_codewords, codewords, left_row_inds));
 }

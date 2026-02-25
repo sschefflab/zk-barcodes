@@ -18,8 +18,14 @@ def eval_polynomial_with_coeffs<D, P>(field[D] coeffs, field[P] powers) -> field
     return(result);
 }
 
-// Assumes A >= T
 def disjoint_sets<A,T>(field[A] a, field[T] t, field[T] f, field[A] g) -> bool {
+    // should be fine since A and T are compile-time constants
+    u32 num_powers = if (A > T) {
+        A
+    } else {
+        T
+    };
+
     field beta = sample_challenge([...a, ...t, ...f, ...g]);
 
     // Compute a(beta) and t(beta)
@@ -27,8 +33,8 @@ def disjoint_sets<A,T>(field[A] a, field[T] t, field[T] f, field[A] g) -> bool {
     field t_beta = eval_polynomial_with_roots(t, beta);
 
     // Compute powers of beta
-    field[A] mut powers_of_beta = [1; A];
-    for u32 i in 1..A {
+    field[num_powers] mut powers_of_beta = [1; num_powers];
+    for u32 i in 1..num_powers {
         powers_of_beta[i] = powers_of_beta[i - 1] * beta;
     }
 
