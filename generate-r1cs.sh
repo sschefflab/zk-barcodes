@@ -9,8 +9,8 @@ ZOKRATES_DIR="zokrates"
 INPUT_FILE="${1:-${ZOKRATES_DIR}/main.zok}"
 
 # Check if the input file exists, error if not
-if [ ! -f "$INPUT_FILE" ]; then
-    echo "Error: Input file '$INPUT_FILE' not found"
+if [ ! -f "${ZOKRATES_DIR}/${INPUT_FILE}" ]; then
+    echo "Error: Input file '${ZOKRATES_DIR}/${INPUT_FILE}' not found"
     exit 1
 fi
 
