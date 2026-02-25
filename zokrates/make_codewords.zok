@@ -1,3 +1,7 @@
+// Go from words (bsbsbsbs patterns) to codewords
+// Ensure that decoding is done correctly with the lookup table and discarded words are appropriate
+// Checks data codewords and left row indicators
+
 from "EMBED" import sample_challenge;
 from "./codeword_lookup.zok" import lookup_codeword, START, STOP, ZERO, VALID_WORDS;
 from "./not_in_table.zok" import disjoint_sets;

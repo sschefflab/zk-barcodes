@@ -1,3 +1,5 @@
+// Check that the original image and the binarized image are consistent
+
 from "EMBED" import value_in_array;
 from "./const_range_check" import RANGE_0_128 as table;
 

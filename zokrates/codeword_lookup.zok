@@ -1,3 +1,5 @@
+// Lookup tables and helper functions for converting bsbsbsbs patterns to codewords
+
 from "EMBED" import value_in_array;
 from "./const_range_check.zok" import GF_929;
 

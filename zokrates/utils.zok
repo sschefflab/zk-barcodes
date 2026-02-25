@@ -1,3 +1,5 @@
+// Utility functions and common values used throughout the zokrates code.
+
 from "EMBED" import unpack;
 
 // 919 is "reserved in the pdf417 spec and currently has no use.

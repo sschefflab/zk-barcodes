@@ -1,3 +1,5 @@
+// Lookup tables and helper functions for character interpretation state machine.
+
 from "EMBED" import value_in_array;
 from "./const_range_check.zok" import RANGE_0_128, RANGE_0_4, RANGE_0_30;
 

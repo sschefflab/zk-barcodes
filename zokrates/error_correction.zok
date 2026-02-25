@@ -1,3 +1,7 @@
+// Check error correction
+// Check that the barcode's stats (num_rows, num_cols, and error correction level) are extracted from row indicators correctly.
+// Check that error correction is done correctly.
+
 from "EMBED" import value_in_array, u32_to_field, unpack;
 from "./utils.zok" import gt_9bit;
 from "./const_range_check.zok" import RANGE_0_3, RANGE_0_30, RANGE_EC_LEVEL, RANGE_NUM_ROWS, RANGE_NUM_COLS, POWERS_OF_TWO, GF_929, POWERS_OF_3_MOD_929;

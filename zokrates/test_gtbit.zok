@@ -1,3 +1,5 @@
+// TODO: remove this file when done testing.
+
 from "EMBED" import unpack;
 
 def bitwise_gt<B>(bool[B] a_bits, bool[B] b_bits) -> bool {
