@@ -1,3 +1,5 @@
+// Check that the barcode has the appropriate amount of data after error correction.
+
 from "./const_range_check.zok" import POWERS_OF_TWO;
 
 def check_num_cw<W>(field[W] corrected_codewords, field num_rows, field num_cols, field ec_level) -> bool {

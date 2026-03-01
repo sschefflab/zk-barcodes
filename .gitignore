@@ -19,6 +19,9 @@ target
 zokrates/bin
 *.json
 
+# Test witness info
+test-witness/
+
 # Python stuff
 python-scripts/venv/
 python-scripts/__pycache__/

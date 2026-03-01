@@ -1,13 +1,34 @@
 # zk-barcodes
 
-## Usage Notes
+## Requirements
 
-The generate_r1cs.sh script requires cvc5 to run. On Mac, install that with
+The generate_r1cs.sh script requires the following packages to run:
+- `cvc5`
+- `libssl-dev` (openssl on MacOS, usually already installed)
+
+On Mac:
 ```
 brew install --cask cvc5/cvc5/cvc5
 ```
 
-Then, the script can be used to generate constraints. To generate constraints for the main function, just run the script with no arguments. If you want to run it for a different file, provide the file as an argument.  No need to pass the full path - it assumes that circuit files will be in the zokrates/ directory.
+On Ubuntu:
+```
+apt-get install cvc5 libssl-dev
+```
+
+## Running test witness
+Install all requirements, then run:
+```
+./generate-test-witness.sh
+./generate-proof.sh test-witness/r3_c2_e1.json binarize.zok
+```
+Running generate-test-witness.sh should create a directory test-witness containing an example barcode, `test-witness/pdf417_r3_c2_e1.png` and the corresponding witness `witness_r3_c2_e1.json` and corresponding `.pin` and `.vin` files needed to run the proof.  Then, run `generate-proof.sh` on those files to generate a proof from that witness.
+
+NOTE: When we are out of testing, `binarize.zok` should be `main.zok`
+
+## Usage Notes
+
+The script can be used to generate constraints. To generate constraints for the main function, just run the script with no arguments. If you want to run it for a different file, provide the file as an argument.  No need to pass the full path - it assumes that circuit files will be in the zokrates/ directory.
 
 So, for the whole circuit:
 ```

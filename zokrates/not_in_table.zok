@@ -1,0 +1,54 @@
+from "EMBED" import sample_challenge;
+
+def eval_polynomial_with_roots<D>(field[D] roots, field p) -> field {
+    field mut result = 1;
+    for u32 i in 0..D {
+        result = result * (p - roots[i]);
+    }
+
+    return(result);
+}
+
+def eval_polynomial_with_coeffs<D, P>(field[D] coeffs, field[P] powers) -> field {
+    field mut result = 0;
+    for u32 i in 0..D {
+        result = result + powers[i]*coeffs[i];
+    }
+
+    return(result);
+}
+
+def disjoint_sets<A,T>(field[A] a, field[T] t, field[T] f, field[A] g) -> bool {
+    // should be fine since A and T are compile-time constants
+    u32 num_powers = if (A > T) {
+        A
+    } else {
+        T
+    };
+
+    field beta = sample_challenge([...a, ...t, ...f, ...g]);
+
+    // Compute a(beta) and t(beta)
+    field a_beta = eval_polynomial_with_roots(a, beta);
+    field t_beta = eval_polynomial_with_roots(t, beta);
+
+    // Compute powers of beta
+    field[num_powers] mut powers_of_beta = [1; num_powers];
+    for u32 i in 1..num_powers {
+        powers_of_beta[i] = powers_of_beta[i - 1] * beta;
+    }
+
+    // Compute f(beta) and g(beta)
+    field f_beta = eval_polynomial_with_coeffs(f, powers_of_beta);
+    field g_beta = eval_polynomial_with_coeffs(g, powers_of_beta);
+
+    return(1 == a_beta*f_beta + t_beta*g_beta);
+}
+
+// test function
+const u32 D_A = 4;
+const u32 D_T = 2;
+
+def main(private field[D_A] a, field[D_T] t, private field[D_T] f, private field[D_A] g) {
+    assert(disjoint_sets(a, t, f, g));
+}

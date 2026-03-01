@@ -1,3 +1,5 @@
+// Utility functions and common values used throughout the zokrates code.
+
 from "EMBED" import unpack;
 
 // The number of pixels to read from a row from the image at a time for lookup
