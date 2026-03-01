@@ -27,6 +27,7 @@ def compute_words_per_row<CW>(field[B] blocks, field[CW][8] normalized_blocks) -
         }
     }
 
+    // TODO: reconcile this. Since we haven't thrown out garbage yet, there may be garbage rows which have more blocks. If this isn't the case, then we can use a lower value for B, and we shouldn't have to do this check.
     bool extra_blocks_are_zero = true;
     for u32 i in CW*8..B {
         extra_blocks_are_zero = extra_blocks_are_zero && (blocks[i] == 0);
