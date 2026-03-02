@@ -1,4 +1,6 @@
+from "./utils.zok" import L, B;
 from "./binarize.zok" import binarize;
+from "./pixels_in_blocks.zok" import check_blocks, BlockLookup;
 from "./make_words.zok" import compute_words;
 from "./make_codewords.zok" import check_codewords;
 from "./error_correction.zok" import BarcodeStats, RowIndicatorVars, PolynomialResult, check_barcode_stats, check_error_correction;
@@ -9,11 +11,11 @@ from "hashes/sha256/sha256" import main as sha256;
 from "EMBED" import u32_to_field;
 
 //TODO: fill in with more reasonable constants
-const u32 R = 2; // number of rows of pixels
-const u32 CP = 48; // length of rows in pixels
-const u32 N = R * CP;
-const u32 CW = 6; // length of rows in "words" (groups of 8 blocks)
-const u32 W = 2; // number of words
+const u32 R = 3; // number of rows of pixels
+const u32 CP = 80; // length of rows in pixels
+const u32 N = R * CP; // total number of pixels
+const u32 CW = 10; // length of rows in "words" (groups of 8 blocks)
+const u32 W = 18; // total number of codewords
 const u32 SHA_OUTPUT_SIZE = 8; // SHA256 output size (8 words = 256 bits)
 const u32 SHA_BLOCK_SIZE = 16; // SHA256 words per block (512 bits / 32 bits)
 const u32 SHA_NUM_BLOCKS = N / SHA_BLOCK_SIZE; // number of SHA256 blocks needed
@@ -23,6 +25,9 @@ def main(u32[SHA_OUTPUT_SIZE] image_digest,
          private field[R][CP] image,
          private u32[SHA_NUM_BLOCKS][SHA_BLOCK_SIZE] image_u32,
          private field[R][CP] bin_image,
+         private BlockLookup[R][CP/L] block_lookups,
+         private field[R][CP/L][L] baseB_decomps,
+         private field[R][B] blocks,
          private field[R][CW][8] normalized_blocks,
          private field[R][CW] words_with_dummies,
          private field[R][CW] ext_codewords,
@@ -32,7 +37,8 @@ def main(u32[SHA_OUTPUT_SIZE] image_digest,
          private field[W] corrected_codewords,
          private PolynomialResult[512] poly_witness,
          private BarcodeStats stats,
-         private TableState[2*W] char_table_states
+         private TableState[2*W] char_table_states,
+         private field[2*W] chars
 ) -> field[2*W]
 {
     // TODO: replace with whatever we end up using for the digest
@@ -41,7 +47,9 @@ def main(u32[SHA_OUTPUT_SIZE] image_digest,
     for u32 i in 0..N {
         u32 block = i / SHA_BLOCK_SIZE;
         u32 word = i % SHA_BLOCK_SIZE;
-        assert(image[i] == u32_to_field(image_u32[block][word]));
+        u32 row = i / CP;
+        u32 col = i % CP;
+        assert(image[row][col] == u32_to_field(image_u32[block][word]));
     }
 
     // Compute SHA256 hash of the image and verify it matches the public digest
@@ -49,15 +57,15 @@ def main(u32[SHA_OUTPUT_SIZE] image_digest,
     assert(computed_digest == image_digest);
 
     assert(binarize(image, bin_image));
+    assert(check_blocks(bin_image, block_lookups, blocks, baseB_decomps));
 
-    field[R][CW] words = compute_words(bin_image, transitions, counts, normalized_blocks); // 3.4k constraints
-    assert(check_codewords(words, words_with_dummies, ext_codewords, codewords, left_row_inds)); // 3.8k constraints (mostly lookup table setup)
+    field[R][CW] words = compute_words(blocks, normalized_blocks);
+    assert(check_codewords(words, words_with_dummies, ext_codewords, codewords, left_row_inds));
 
     assert(check_barcode_stats(row_indc, stats, left_row_inds));
     assert(check_error_correction(codewords, corrected_codewords, stats.ec_level, poly_witness));
 
     assert(check_num_cw(corrected_codewords, stats.num_rows, stats.num_cols, stats.ec_level));
 
-    field[2*W] chars = codewords_to_chars(corrected_codewords, char_table_states, stats.ec_level); // 340 constraints
-    return(chars);
+    assert(codewords_to_chars(corrected_codewords, char_table_states, stats.ec_level, chars));
 }

@@ -1,42 +1,10 @@
 from "EMBED" import value_in_array;
+from "./utils.zok" import L, B;
 from "./const_range_check" import RANGE_NEG8_8_INCL as table;
 
-def correct_transitions<N>(field[N] bin_image, field[N] transitions) -> bool {
-    bool mut correct = true;
-    for u32 i in 0..(N-1) {
-        bool is_binary = (transitions[i]*(1-transitions[1]) == 0);
-        bool is_transition = (bin_image[i] - bin_image[i+1] + 2*transitions[i]*bin_image[i+1] - transitions[i] == 0);
-        correct = correct && is_transition && is_binary;
-    }
-    return(correct);
-}
-
-def correct_pixel_counts<N,D>(field[N] bin_image, field[N] transitions, field[D] counts) -> bool {
-    field mut num_blocks = 0;
-    for u32 i in 0..N {
-        num_blocks = num_blocks + transitions[i];
-    }
-
-    field mut pointer = 0;
-    field mut nonzero_counts = 0;
-    bool mut correct = true;
-
-    // TODO - this loop is a zillion constraints and dominating the count
-    for u32 i in 0..D {
-        pointer = pointer + counts[i];
-        // TODO - this dynamic index by pointer creates a lot of constraints
-        correct = correct && (bin_image[pointer] != bin_image[pointer + 1]);
-        field to_add = (counts[i] == 0) ? 0 : 1;
-        nonzero_counts = nonzero_counts + to_add;
-    }
-
-    correct = correct && (num_blocks == nonzero_counts);
-    return(correct);
-}
 
 def compute_word(field[8] blocks, field[8] normalized_blocks) -> field {
     field mut sum_pixels = 0;
-
     for u32 i in 0..8 {
         sum_pixels = sum_pixels + blocks[i];
     }
@@ -51,39 +19,41 @@ def compute_word(field[8] blocks, field[8] normalized_blocks) -> field {
     return(word);
 }
 
-def compute_words<N,D,W>(field[N] bin_image, field[N] transitions, field[D] counts, field[W][8] normalized_blocks) -> field[W] {
-    assert(W == D/8);
-    assert(correct_transitions(bin_image, transitions));
-    assert(correct_pixel_counts(bin_image, transitions, counts));
+def compute_words_per_row<CW>(field[B] blocks, field[CW][8] normalized_blocks) -> field[CW] {
+    field[CW][8] mut grouped_blocks = [[0; 8]; CW];
+    for u32 i in 0..CW {
+        for u32 j in 0..8 {
+            grouped_blocks[i][j] = blocks[CW*i + j];
+        }
+    }
 
-    field[W] mut words = [0; W];
+    // TODO: reconcile this. Since we haven't thrown out garbage yet, there may be garbage rows which have more blocks. If this isn't the case, then we can use a lower value for B, and we shouldn't have to do this check.
+    bool extra_blocks_are_zero = true;
+    for u32 i in CW*8..B {
+        extra_blocks_are_zero = extra_blocks_are_zero && (blocks[i] == 0);
+    }
+    assert(extra_blocks_are_zero);
 
-    for u32 i in 0..W {
-        field[8] blocks = counts[i..i+8];
-        words[i] = compute_word(blocks, normalized_blocks[i]);
+    field[CW] mut words = [0; CW];
+    for u32 i in 0..CW {
+        words[i] = compute_word(grouped_blocks[i], normalized_blocks[i]);
     }
 
     return(words);
 }
 
-// test function
-const u32 N = 32;
-const u32 D = 16;
-const u32 W = 2;
-
-def main(private field[N] bin_image, private field[N] transitions, private field[D] counts, private field[W][8] normalized_blocks) -> field[W] {
-    return(compute_words(bin_image, transitions, counts, normalized_blocks));
+def compute_words<R,CW>(field[R][B] blocks, field[R][CW][8] normalized_blocks) -> field[R][CW] {
+    field[R][CW] mut words = [[0; CW]; R];
+    for u32 r in 0..R {
+        words[r] = compute_words_per_row(blocks[r], normalized_blocks[r]);
+    }
+    return(words);
 }
 
-// TODO - remove this when done testing
-// def main(field[N] bin_image, field[N] transitions, field[D] counts) {
-//     assert(correct_transitions(bin_image, transitions));
-//     assert(correct_pixel_counts(bin_image, transitions, counts));
-//     field[W] mut words = [0; W];
+// test function
+const u32 R = 3;
+const u32 CW = 10;
 
-//     for u32 i in 0..W {
-//         words[i] = compute_word(blocks[i], normalized_blocks[i]);
-//     }
-
-//     return(words);
-// }
+def main(private field[R][B] blocks, private field[R][CW][8] normalized_blocks) -> field[R][CW] {
+    return(compute_words(blocks, normalized_blocks));
+}
