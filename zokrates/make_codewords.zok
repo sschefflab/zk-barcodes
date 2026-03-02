@@ -176,10 +176,10 @@ def main(
     field[R][CW] words,
     private field[R][CW] words_with_dummies,
     field[T] disjoint_set_poly_f,
-    field[R*CW] disjoint_set_poly_g,
+    private field[R*CW] disjoint_set_poly_g,
     private field[R][CW] ext_codewords,
     private field[W] codewords,
-    private field[R] left_row_inds
+    private field[R] left_row_inds // TODO: should this be 90 instead of R since the max number of rows is 90?
 ) {
     assert(check_codewords(words, words_with_dummies, disjoint_set_poly_f, disjoint_set_poly_g, ext_codewords, codewords, left_row_inds));
 }
