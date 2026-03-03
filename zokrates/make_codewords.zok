@@ -42,9 +42,9 @@ def check_codewords<R, RW, CW, W>(
 
     field[N] mut garbage = [ KNOWN_GARBAGE; N ];
 
-    // TODO: this assumes that every row has the max number of data words. Need to dynamically look for the stop symbol.
     bool mut cw_ok = true;
     for u32 i in 0..R {
+        bool mut found_stop = false;
         for u32 j in 0..CW {
             u32 cw_idx = i * CW + j;
 
@@ -76,18 +76,22 @@ def check_codewords<R, RW, CW, W>(
             bool acc = if (j == 0) {
                 (ext_cw == START || ext_cw == ZERO)
             } else {
-                if (j == CW - 1) {
-                    ext_cw == ZERO // this should be garbage after the stop indicator
+                if (found_stop) {
+                    ext_cw == ZERO // all codewords after STOP should be garbage
                 } else {
-                    if (j == CW - 2) {
-                        (ext_cw == STOP || ext_cw == ZERO)
-                    } else {
-                        true // row indicators, real codewords, or garbage - nothing to check yet
-                    }
+                    true
                 }
             };
 
             cw_ok = cw_ok && acc;
+
+            // set found_stop flag appropriately
+            bool acc_found_stop = if (ext_cw == STOP) {
+                true
+            } else {
+                false
+            };
+            found_stop = found_stop || acc_found_stop;
 
             // only some columns are left row indicators - only modify the row indicators if so
             field to_add_row_ind = if (j == 1) {
@@ -99,9 +103,8 @@ def check_codewords<R, RW, CW, W>(
             row_inds_and_dummies[i] = row_inds_and_dummies[i] + to_add_row_ind;
 
             // only some columns are codewords - only modify codewords if so
-            // These operators are ok since we are operating on constant values
             // TODO: confirm these aren't adding a ton of constraints
-            field to_add_cw = if (j >= 2 && j <= CW - 4) {
+            field to_add_cw = if (j >= 2 && !found_stop) {
                ext_cw - DUMMY // subtract out the dummy codeword we filled everything with
             } else {
                 0
