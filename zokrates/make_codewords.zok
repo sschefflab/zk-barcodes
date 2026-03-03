@@ -41,7 +41,8 @@ def check_codewords<R, RW, CW, W>(
     field[R] mut row_inds_and_dummies = [0; R];
 
     field[N] mut garbage = [ KNOWN_GARBAGE; N ];
-    
+
+    // TODO: this assumes that every row has the max number of data words. Need to dynamically look for the stop symbol.
     bool mut cw_ok = true;
     for u32 i in 0..R {
         for u32 j in 0..CW {
