@@ -21,14 +21,14 @@ def check_dummies<CW>(field[CW] words, field[CW] words_with_dummies) -> bool {
     return(correct);
 }
 
-def check_codewords<R, CW, W>(
+def check_codewords<R, RW, CW, W>(
     field[R][CW] words,
     field[R][CW] words_with_dummies,
     field[T] disjoint_set_poly_f,
     field[R*CW] disjoint_set_poly_g,
     field[R][CW] ext_codewords,
     field[W] codewords,
-    field[R] left_row_inds
+    field[RW] left_row_inds
 ) -> bool {
     bool mut dummies_ok = true;
     for u32 r in 0..R {
@@ -157,7 +157,7 @@ def check_codewords<R, CW, W>(
     }
 
     pow = 1;
-    for u32 i in 0..R {
+    for u32 i in 0..RW {
         result2 = result2 + pow * left_row_inds[i];
         pow = pow * gamma;
     }
@@ -168,9 +168,10 @@ def check_codewords<R, CW, W>(
 }
 
 // test function
-const u32 R = 2;
+const u32 R = 4;
 const u32 CW = 6; // should actually be B / 8
 const u32 W = 2;
+const u32 RW = 2; // the number of logical barcode rows. Should be 90.
 
 def main(
     field[R][CW] words,
@@ -179,7 +180,7 @@ def main(
     private field[R*CW] disjoint_set_poly_g,
     private field[R][CW] ext_codewords,
     private field[W] codewords,
-    private field[R] left_row_inds // TODO: should this be 90 instead of R since the max number of rows is 90?
+    private field[RW] left_row_inds
 ) {
     assert(check_codewords(words, words_with_dummies, disjoint_set_poly_f, disjoint_set_poly_g, ext_codewords, codewords, left_row_inds));
 }
