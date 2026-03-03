@@ -82,7 +82,7 @@ def check_barcode_stats<R>(
 
     assert(value_in_array(stats.ec_level, RANGE_EC_LEVEL));
     assert(value_in_array(stats.num_rows, RANGE_NUM_ROWS));
-    assert(value_in_array(stats.num_cols, RANGE_NUM_COLS));
+    // don't need to separately check RANGE_NUM_COLS - it is checked in div_alg6 above
 
 
     assert(row_indc.l0 == left_row_inds[0]);
@@ -106,6 +106,7 @@ def check_error_correction<W>(field[W] codewords, field[W] corrected_codewords, 
         t = t + to_add;
     }
 
+    // TODO: get rid of this dynamic array access by making POWERS_OF_TWO at len-2 table and taking in the correct power-of-two as an input
     field power_of_two = POWERS_OF_TWO[ec_level+1];
 
     field sparsity = power_of_two - 2*t - 4;
