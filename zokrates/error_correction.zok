@@ -124,13 +124,14 @@ def check_error_correction<W>(field[W] codewords, field[W] corrected_codewords, 
             sum_pre_mod = sum_pre_mod + corrected_codewords[j] * POWERS_OF_3_MOD_929[(i * j) % 928];
         }
 
-        // 22 bits is sufficient here as the upper bound on the quotient should be 929*3071. (Upper bound on sum_pre_mod is 929*929*3071.)
+        // 22 bits is sufficient here as the upper bound on the quotient should be 929*2700. (Upper bound on sum_pre_mod is 929*929*2700.)
         // TODO: this could maybe be faster using lookup tables instead of bit decomp, but as-is the lookup table is too big
         bool correct_eval = check_division_algorithm_quotient_bit_decomp::<929,22>(sum_pre_mod, poly_witness[i].result_quotient, 929, poly_witness[i].result, GF_929);
         bool zero_syndrome = correct_eval && (poly_witness[i].result == 0);
         zero_syndromes = zero_syndromes && zero_syndrome;
 
         field i_f = u32_to_field(i);
+        // TODO: should this be geq instead of gt?
         zero_syndromes = zero_syndromes && (gt_9bit(i_f, power_of_two) || zero_syndrome);
         
     }
