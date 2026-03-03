@@ -1,3 +1,5 @@
+// A test of set disjointness
+
 from "EMBED" import sample_challenge;
 
 def eval_polynomial_with_roots<D>(field[D] roots, field p) -> field {
