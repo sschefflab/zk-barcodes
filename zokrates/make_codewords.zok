@@ -169,7 +169,7 @@ def check_codewords<R, CW, W>(
 
 // test function
 const u32 R = 2;
-const u32 CW = 6;
+const u32 CW = 6; // should actually be B / 8
 const u32 W = 2;
 
 def main(

@@ -1,3 +1,6 @@
+// Compute "words" (bsbsbsbs units represented as one field element) from blocks.
+// Normalize blocks, and then combined the normalized blocks into one.
+
 from "EMBED" import value_in_array;
 from "./utils.zok" import L, B;
 from "./const_range_check" import RANGE_NEG8_8_INCL as table;
@@ -19,20 +22,14 @@ def compute_word(field[8] blocks, field[8] normalized_blocks) -> field {
     return(word);
 }
 
-def compute_words_per_row<CW>(field[B] blocks, field[CW][8] normalized_blocks) -> field[CW] {
+def compute_words_per_row(field[B] blocks, field[B/8][8] normalized_blocks) -> field[B/8] {
+    u32 CW = B / 8;
     field[CW][8] mut grouped_blocks = [[0; 8]; CW];
     for u32 i in 0..CW {
         for u32 j in 0..8 {
             grouped_blocks[i][j] = blocks[CW*i + j];
         }
     }
-
-    // TODO: reconcile this. Since we haven't thrown out garbage yet, there may be garbage rows which have more blocks. If this isn't the case, then we can use a lower value for B, and we shouldn't have to do this check.
-    bool extra_blocks_are_zero = true;
-    for u32 i in CW*8..B {
-        extra_blocks_are_zero = extra_blocks_are_zero && (blocks[i] == 0);
-    }
-    assert(extra_blocks_are_zero);
 
     field[CW] mut words = [0; CW];
     for u32 i in 0..CW {
@@ -42,7 +39,8 @@ def compute_words_per_row<CW>(field[B] blocks, field[CW][8] normalized_blocks) -
     return(words);
 }
 
-def compute_words<R,CW>(field[R][B] blocks, field[R][CW][8] normalized_blocks) -> field[R][CW] {
+def compute_words<R>(field[R][B] blocks, field[R][B/8][8] normalized_blocks) -> field[R][B/8] {
+    u32 CW = B / 8;
     field[R][CW] mut words = [[0; CW]; R];
     for u32 r in 0..R {
         words[r] = compute_words_per_row(blocks[r], normalized_blocks[r]);
@@ -52,8 +50,7 @@ def compute_words<R,CW>(field[R][B] blocks, field[R][CW][8] normalized_blocks) -
 
 // test function
 const u32 R = 3;
-const u32 CW = 10;
 
-def main(private field[R][B] blocks, private field[R][CW][8] normalized_blocks) -> field[R][CW] {
+def main(private field[R][B] blocks, private field[R][B/8][8] normalized_blocks) -> field[R][B/8] {
     return(compute_words(blocks, normalized_blocks));
 }
