@@ -44,6 +44,7 @@ def check_codewords<R, RW, CW, W>(
 
     bool mut cw_ok = true;
     for u32 i in 0..R {
+        bool mut no_start = false;
         bool mut found_stop = false;
         for u32 j in 0..CW {
             u32 cw_idx = i * CW + j;
@@ -73,11 +74,18 @@ def check_codewords<R, RW, CW, W>(
             // this always returns true, but it does an assert inside
             bool lookup = lookup_codeword(curr_word_or_dummy, ext_cw);
 
-            bool acc = if (j == 0) {
-                (ext_cw == START || ext_cw == ZERO)
+            bool acc_no_start = if (j == 0 && curr_word_or_dummy == ZERO) {
+                true
             } else {
-                if (found_stop) {
-                    ext_cw == ZERO // all codewords after STOP should be garbage
+                false
+            };
+            no_start = no_start || acc_no_start;
+
+            bool acc = if (j == 0) {
+                (curr_word_or_dummy == START || curr_word_or_dummy == ZERO)
+            } else {
+                if (no_start || found_stop) {
+                    curr_word_or_dummy == ZERO // all codewords after STOP should be garbage
                 } else {
                     true
                 }
@@ -86,7 +94,7 @@ def check_codewords<R, RW, CW, W>(
             cw_ok = cw_ok && acc;
 
             // set found_stop flag appropriately
-            bool acc_found_stop = if (ext_cw == STOP) {
+            bool acc_found_stop = if (curr_word_or_dummy == STOP) {
                 true
             } else {
                 false
@@ -103,7 +111,7 @@ def check_codewords<R, RW, CW, W>(
             row_inds_and_dummies[i] = row_inds_and_dummies[i] + to_add_row_ind;
 
             // only some columns are codewords - only modify codewords if so
-            // TODO: confirm these aren't adding a ton of constraints
+            // TODO: confirm this check isn't adding a ton of constraints
             field to_add_cw = if (j >= 2 && !found_stop) {
                ext_cw - DUMMY // subtract out the dummy codeword we filled everything with
             } else {
