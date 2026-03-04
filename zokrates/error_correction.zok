@@ -114,8 +114,8 @@ def check_error_correction<W>(field[W] codewords, field[W] corrected_codewords, 
     bool sufficiently_sparse = check_bit_decomp(sparsity, bits);
 
     bool mut zero_syndromes = true;
-    // possible error correction levels are [0,8]. Need i's in range [0, 2**(ec_level+1)]
-    for u32 i in 0..512 {
+    // possible error correction levels are [0,8]. Need i's in range [1, 2**(ec_level+1)]. Note the closed interval, hence the range to 513 instead of 512
+    for u32 i in 1..513 {
         // Polynomial evaluation at eval point 3^i mod 929
         // powers[j] = (3^i)^j mod 929 = 3^(i*j) mod 929 = POWERS_OF_3_MOD_929[(i*j) % 928]
         // Since i and j are compile-time constants, (i*j) % 928 is computed at compile time
@@ -131,7 +131,6 @@ def check_error_correction<W>(field[W] codewords, field[W] corrected_codewords, 
         zero_syndromes = zero_syndromes && zero_syndrome;
 
         field i_f = u32_to_field(i);
-        // TODO: should this be geq instead of gt?
         zero_syndromes = zero_syndromes && (gt_9bit(i_f, power_of_two) || zero_syndrome);
         
     }
