@@ -1,3 +1,5 @@
+// Measure the length of blocks in pixels
+
 from "./utils.zok" import L, B;
 from "EMBED" import value_in_array, value_in_array_tuple, sample_challenge, u32_to_field;
 
