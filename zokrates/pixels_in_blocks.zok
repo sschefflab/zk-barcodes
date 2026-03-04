@@ -93,6 +93,8 @@ def check_blocks_per_row<R>(field[R] pixels, BlockLookup[R/L] lookups, field[B] 
     // Step 4 - show consistency
     field beta = sample_challenge([...blocks, ...block_chunks, ...all_nb]);
 
+    // TODO: fix the fact that this is too many constraints
+    // all of this is happening PER ROW! So this is multiplied by the number of rows!
     field mut result_f = 0;
     field mut pow = 1;
     for u32 b in 0..B {
