@@ -27,7 +27,7 @@ def compute_words_per_row(field[B] blocks, field[B/8][8] normalized_blocks) -> f
     field[CW][8] mut grouped_blocks = [[0; 8]; CW];
     for u32 i in 0..CW {
         for u32 j in 0..8 {
-            grouped_blocks[i][j] = blocks[CW*i + j];
+            grouped_blocks[i][j] = blocks[8*i + j];
         }
     }
 
@@ -49,7 +49,7 @@ def compute_words<R>(field[R][B] blocks, field[R][B/8][8] normalized_blocks) -> 
 }
 
 // test function
-const u32 R = 3;
+const u32 R = 1;
 
 def main(private field[R][B] blocks, private field[R][B/8][8] normalized_blocks) -> field[R][B/8] {
     return(compute_words(blocks, normalized_blocks));
