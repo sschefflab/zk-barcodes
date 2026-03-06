@@ -23,9 +23,7 @@ def check_char_split(field codeword, field c1, field c2) -> bool {
 }
 
 // The input chars array should have no null characters. If that assumption does not hold, we will need to modify this code.
-def codewords_to_chars<W>(field[W] corrected_codewords, TableState[2*W] table_states, field ec_level, field[2*W] chars) -> bool {
-    field ec_codewords = POWERS_OF_TWO[ec_level + 1]; // TODO: this gets computed multiple times - maybe we can unify this?
-
+def codewords_to_chars<W>(field[W] corrected_codewords, TableState[2*W] table_states, field num_ec_codewords, field[2*W] chars) -> bool {
     bool mut correct_char_split = true;
     assert(table_states[0].this_table == 0);
     
@@ -55,7 +53,7 @@ def codewords_to_chars<W>(field[W] corrected_codewords, TableState[2*W] table_st
         field idx_f = u32_to_field(cw_idx);
         // Don't try to decode error correction codewords, pads, or higher-degree terms that are zero
         // TODO: perhaps there is a more efficient way to handle all of these edge cases than a bunch of if-elses. Perhaps more lookups?
-        (bool, field, field) decode = if (gt_9bit(ec_codewords, idx_f)) {
+        (bool, field, field) decode = if (gt_9bit(num_ec_codewords, idx_f)) {
             if (codeword ==  PAD_CODEWORD) {
                 ((state1 == PAD_TABLE_STATE) && (state2 == PAD_TABLE_STATE), 0, 0)
             } else {
@@ -106,6 +104,6 @@ def codewords_to_chars<W>(field[W] corrected_codewords, TableState[2*W] table_st
 // test function
 const u32 W = 2;
 
-def main(field[W] corrected_codewords, private TableState[2*W] states, private field ec_level, field[2*W] chars) {
-    assert(codewords_to_chars(corrected_codewords, states, ec_level, chars));
+def main(field[W] corrected_codewords, private TableState[2*W] states, private field num_ec_codewords, field[2*W] chars) {
+    assert(codewords_to_chars(corrected_codewords, states, num_ec_codewords, chars));
 }

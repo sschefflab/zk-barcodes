@@ -2,14 +2,16 @@
 // Check that the barcode's stats (num_rows, num_cols, and error correction level) are extracted from row indicators correctly.
 // Check that error correction is done correctly.
 
-from "EMBED" import value_in_array, u32_to_field, unpack;
+from "EMBED" import value_in_array, value_in_array_tuple, u32_to_field, unpack;
 from "./utils.zok" import gt_9bit;
 from "./const_range_check.zok" import RANGE_0_3, RANGE_0_30, RANGE_EC_LEVEL, RANGE_NUM_ROWS, RANGE_NUM_COLS, POWERS_OF_TWO, GF_929, POWERS_OF_3_MOD_929;
 
 struct BarcodeStats {
-     field ec_level;
      field num_rows;
      field num_cols;
+
+     field ec_level;
+     field num_ec_codewords;
 }
 
 // needs to be data from the first three left row indicators
@@ -85,10 +87,12 @@ def check_barcode_stats<R>(
     // don't need to separately check RANGE_NUM_COLS - it is checked in div_alg6 above
 
 
-    // TODO: these equality checks are not actually generating constraints for some reason
+    // these equality checks are not actually generating constraints - CirC is able to optimize them away with substitution
     assert(row_indc.l0 == left_row_inds[0]);
     assert(row_indc.l3 == left_row_inds[1]);
-    assert(row_indc.l6 == left_row_inds[2]);    
+    assert(row_indc.l6 == left_row_inds[2]);
+
+    assert(value_in_array_tuple([stats.ec_level+1, stats.num_ec_codewords], POWERS_OF_TWO));
 
     return(div_alg0 && div_alg3 && div_alg6 && div_alg_r);
 }
@@ -99,7 +103,7 @@ struct PolynomialResult {
     field result_quotient; // the integer division value when computing mod 929 for the sum
 }
 
-def check_error_correction<W>(field[W] codewords, field[W] corrected_codewords, field ec_level, PolynomialResult[512] poly_witness) -> bool {
+def check_error_correction<W>(field[W] codewords, field[W] corrected_codewords, field num_ec_codewords, PolynomialResult[512] poly_witness) -> bool {
     field mut t = 0;
     for u32 k in 0..W {
         field error = codewords[k] - corrected_codewords[k];
@@ -107,10 +111,7 @@ def check_error_correction<W>(field[W] codewords, field[W] corrected_codewords, 
         t = t + to_add;
     }
 
-    // TODO: get rid of this dynamic array access by making POWERS_OF_TWO at len-2 table and taking in the correct power-of-two as an input
-    field power_of_two = POWERS_OF_TWO[ec_level+1];
-
-    field sparsity = power_of_two - 2*t - 4;
+    field sparsity = num_ec_codewords - 2*t - 4;
     bool[9] bits = unpack(sparsity);
     bool sufficiently_sparse = check_bit_decomp(sparsity, bits);
 
@@ -135,7 +136,7 @@ def check_error_correction<W>(field[W] codewords, field[W] corrected_codewords, 
         zero_syndromes = zero_syndromes && zero_syndrome;
 
         field i_f = u32_to_field(i);
-        zero_syndromes = zero_syndromes && (gt_9bit(i_f, power_of_two) || zero_syndrome);
+        zero_syndromes = zero_syndromes && (gt_9bit(i_f, num_ec_codewords) || zero_syndrome);
         
     }
 
@@ -156,6 +157,6 @@ def main(
 ) -> () {
     // bool ok_stats = check_barcode_stats(row_indc, stats, left_row_inds);
     // assert(ok_stats);
-    bool ok_ec = check_error_correction(codewords, corrected_codewords, stats.ec_level, poly_witness);
+    bool ok_ec = check_error_correction(codewords, corrected_codewords, stats.num_ec_codewords, poly_witness);
     assert(ok_ec);
 }

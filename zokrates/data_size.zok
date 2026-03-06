@@ -1,9 +1,6 @@
 // Check that the barcode has the appropriate amount of data after error correction.
 
-from "./const_range_check.zok" import POWERS_OF_TWO;
-
-def check_num_cw<W>(field[W] corrected_codewords, field num_rows, field num_cols, field ec_level) -> bool {
-    field num_ec_codewords = POWERS_OF_TWO[ec_level + 1]; // TODO - this gets computed multiple times - maybe we can unify this?
+def check_num_cw<W>(field[W] corrected_codewords, field num_rows, field num_cols, field num_ec_codewords) -> bool {
     field mut num_cw = 0;
     field mut sld = 0;
     bool mut found_sld = false;
@@ -30,10 +27,10 @@ def check_num_cw<W>(field[W] corrected_codewords, field num_rows, field num_cols
 }
 
 // test function
-const u32 W = 2;
+const u32 W = 64;
 
-def main(field[W] corrected_codewords, field num_rows, field num_cols, field ec_level) {
-    assert(check_num_cw(corrected_codewords, num_rows, num_cols, ec_level));
+def main(field[W] corrected_codewords, field num_rows, field num_cols, field num_ec_codewords) {
+    assert(check_num_cw(corrected_codewords, num_rows, num_cols, num_ec_codewords));
 }
 
 
