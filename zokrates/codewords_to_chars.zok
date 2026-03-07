@@ -52,7 +52,6 @@ def codewords_to_chars<W>(field[W] corrected_codewords, TableState[2*W] table_st
 
         field idx_f = u32_to_field(cw_idx);
         // Don't try to decode error correction codewords, pads, or higher-degree terms that are zero
-        // TODO: perhaps there is a more efficient way to handle all of these edge cases than a bunch of if-elses. Perhaps more lookups?
         (bool, field, field) decode = if (gt_9bit(num_ec_codewords, idx_f)) {
             if (codeword ==  PAD_CODEWORD) {
                 ((state1 == PAD_TABLE_STATE) && (state2 == PAD_TABLE_STATE), 0, 0)
@@ -102,7 +101,7 @@ def codewords_to_chars<W>(field[W] corrected_codewords, TableState[2*W] table_st
 }
 
 // test function
-const u32 W = 2;
+const u32 W = 2700;
 
 def main(field[W] corrected_codewords, private TableState[2*W] states, private field num_ec_codewords, field[2*W] chars) {
     assert(codewords_to_chars(corrected_codewords, states, num_ec_codewords, chars));
