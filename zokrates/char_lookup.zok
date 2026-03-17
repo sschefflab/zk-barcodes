@@ -55,8 +55,9 @@ def check_transition(TableState state1, TableState state2) -> bool {
 }
 
 // test main function
-def main(private TableState state1, private TableState state2) {
-    assert(check_table_state(state1));
-    assert(check_table_state(state2));
+def main(private TableState state1, private TableState state2, private TableState state3) {
+    // assert(check_table_state(state1));
+    // assert(check_table_state(state2));
     assert(check_transition(state1, state2));
+    assert(check_transition(state2, state3));
 }

@@ -2,13 +2,6 @@
 
 from "EMBED" import unpack;
 
-// The number of pixels to read from a row from the image at a time for lookup
-const u32 L = 10;
-
-// The max number of blocks in a row. This should just be the number of pixels in a row.
-// Assuming the largest image we handle is an HD image, this is the largest possible row size, and therefore the largest block size in pixels
-const u32 B = 1080;
-
 // 919 is "reserved in the pdf417 spec and currently has no use.
 // We can use it as a valid field element that has no meaning.
 // Row indicators can also never take this value - they are always on the range [0, 899]
@@ -16,6 +9,18 @@ const field DUMMY_CODEWORD = 919;
 
 // 900 is a pad codeword and should not be interpreted as a character
 const field PAD_CODEWORD = 900;
+
+// MSB to LSB
+def check_bit_decomp<B>(field v, bool[B] bits) -> bool {
+    field mut sum = 0;
+    
+    for u32 i in 0..B {
+        field field_bit = bits[i] ? 1 : 0;
+        sum = sum + 2**(B - i - 1)*field_bit;
+    }
+
+    return(sum == v);
+}
 
 def gt_9bit(field a, field b) -> bool {
     bool[9] a_bits = unpack(a);

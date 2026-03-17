@@ -3,7 +3,7 @@
 // Check that error correction is done correctly.
 
 from "EMBED" import value_in_array, value_in_array_tuple, u32_to_field, unpack;
-from "./utils.zok" import gt_9bit;
+from "./utils.zok" import gt_9bit, check_bit_decomp;
 from "./const_range_check.zok" import RANGE_0_3, RANGE_0_30, RANGE_EC_LEVEL, RANGE_NUM_ROWS, RANGE_NUM_COLS, POWERS_OF_TWO, GF_929, POWERS_OF_3_MOD_929;
 
 struct BarcodeStats {
@@ -26,18 +26,6 @@ struct RowIndicatorVars {
 
     field r0;
     field r3;
-}
-
-// MSB to LSB
-def check_bit_decomp<B>(field v, bool[B] bits) -> bool {
-    field mut sum = 0;
-    
-    for u32 i in 0..B {
-        field field_bit = bits[i] ? 1 : 0;
-        sum = sum + 2**(B - i - 1)*field_bit;
-    }
-
-    return(sum == v);
 }
 
 def check_division_algorithm_inner<Q>(field y, field x, field q, field r, field[Q] range_check_table) -> bool {
