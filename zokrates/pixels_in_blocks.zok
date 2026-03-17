@@ -1,6 +1,7 @@
 // Measure the length of blocks in pixels
 
 from "./utils.zok" import check_bit_decomp;
+from "./const_range_check.zok" import RANGE_0_512;
 from "EMBED" import value_in_array, value_in_array_tuple, sample_challenge, u32_to_field, unpack;
 
 // The number of pixels to read from a row from the image at a time for lookup
@@ -197,4 +198,22 @@ def check_blocks<R,C,B,M,LOGM>(field[R][C] bin_pixels, BlockLookup[R][C/L] looku
     }
 
     return(correct_chunks && consistent);
+}
+
+const u32 GARBAGE_ROWS = 89;
+
+// always returns true, but does an assert inside
+def non_decreasing_array_9bit<A>(field[A] arr) -> bool {
+    for u32 i in 1..A {
+        field diff = arr[i] - arr[i-1];
+        assert(value_in_array(diff, RANGE_0_512));
+    }
+
+    return(true);
+}
+
+def check_garbage_split<R,C>(field[R][C] bin_pixels, field[R][C] well_behaved, field[R] wb_inds, field[GARBAGE_ROWS][C] garbage, field garbage_inds) {
+    bool is_true = non_decreasing_array_9bit(wb_inds);
+
+    // TODO: finish
 }
