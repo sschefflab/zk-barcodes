@@ -155,35 +155,35 @@ def check_consistency<C,B,M,LOGM>(field[B] powers_of_beta, field[B] blocks, fiel
     return(result_f == result_g);
 }
 
+def flatten_array<R,C>(field[R][C] arr) -> field[R*C] {
+    field[R*C] mut result = [0; R*C];
+    for u32 r in 0..R {
+        for u32 c in 0..C {
+            result[r*C + c] = arr[r][c];
+        }
+    }
+    return(result);
+}
+
 def check_blocks<R,C,B,M,LOGM>(field[R][C] bin_pixels, BlockLookup[R][C/L] lookups, field[TABLE_LEN][6] chunk_lookup_table, field[L][2] powers_of_B, field[R][B] blocks, field[R][C/L][L] baseB_decomps, field[B] range_check_table) -> bool {
     u32 num_chunks = C/L;
     bool mut correct_chunks = true;
 
     // lookup and process all chunks
     field[R][num_chunks] mut block_chunks = [ [0; num_chunks]; R];
-    field[R*num_chunks] mut flattened_block_chunks = [0; R*num_chunks];
     field[R][num_chunks] mut all_nb = [ [0; num_chunks]; R];
-    field[R*num_chunks] mut flattened_all_nb = [0; R*num_chunks];
     for u32 r in 0..R {
         correct_chunks = correct_chunks && check_chunks(bin_pixels[r], lookups[r], chunk_lookup_table);
 
         (field[num_chunks], field[num_chunks]) processed = process_chunks(lookups[r], powers_of_B);
         block_chunks[r] = processed.0;
         all_nb[r] = processed.1;
-
-        for u32 c in 0..num_chunks {
-            flattened_block_chunks[r*num_chunks + c] = block_chunks[r][c];
-            flattened_all_nb[r*num_chunks + c] = all_nb[r][c];
-        }
     }
 
     // get a verifier challenge
-    field[R*B] flattened_blocks = [0; R*B];
-    for u32 r in 0..R {
-        for u32 b in 0..B {
-            flattened_blocks[r*B + b] = blocks[r][b];
-        }
-    }
+    field[R*B] flattened_blocks = flatten_array(blocks);
+    field[R*num_chunks] flattened_block_chunks = flatten_array(block_chunks);
+    field[R*num_chunks] flattened_all_nb = flatten_array(all_nb);
     field beta = sample_challenge([...flattened_blocks, ...flattened_block_chunks, ...flattened_all_nb]);
 
     field[B] mut powers_of_beta = [1; B];
@@ -212,8 +212,60 @@ def non_decreasing_array_9bit<A>(field[A] arr) -> bool {
     return(true);
 }
 
+def combine_bits<B>(field[B] bits) -> field {
+    field mut sum = 0;
+
+    for u32 b in 0..B {
+        sum = sum + bits[b] * 2**b;
+    }
+
+    return(sum);
+}
+
+def combine_rows<R,C>(field[R][C] arr, field gamma) -> field[R] {
+    field[R] mut result = [0; R];
+    u32 maxC = if (C % 100 == 0) {
+        C / 100
+    } else {
+        C / 100 + 1
+    };
+    
+    for u32 r in 0..R {
+        field mut sum = 0;
+        for u32 c in 0..maxC {
+            u32 starting_ind = c*100;
+            u32 ending_ind = if (starting_ind + 100 < maxC) {
+                starting_ind + 100
+            } else {
+                maxC
+            };
+            
+            field comb1 = combine_bits(arr[r][c*100..ending_ind]);
+            sum = sum + comb1 * gamma**c;
+        }
+
+        result[r] = sum;
+    }
+
+    return(result);
+}
+
 def check_garbage_split<R,C>(field[R][C] bin_pixels, field[R][C] well_behaved, field[R] wb_inds, field[GARBAGE_ROWS][C] garbage, field garbage_inds) {
     bool is_true = non_decreasing_array_9bit(wb_inds);
 
+    // combine rows into single field elements
+    field[R*C] flattened_bin_img = flatten_array(bin_pixels);
+    field[R*C] flattened_wb = flatten_array(well_behaved);
+    field[GARBAGE_ROWS*C] flattened_garbage = flatten_array(garbage);
+    field gamma = sample_challenge([...flattened_bin_img, ...flattened_wb, ...flattened_garbage]);
+
+    field[R] bin_img_rows = combine_rows(bin_pixels, gamma);
+    field[R] wb_rows = combine_rows(well_behaved, gamma);
+    field[GARBAGE_ROWS] garbage_rows = combine_rows(garbage, gamma);
+
+    // Habock argument
+    field alpha = sample_challenge([...bin_img_rows, ...wb_rows, ...garbage_rows]);
+    field beta = sample_challenge([...bin_img_rows, ...wb_rows, ...garbage_rows]);
     // TODO: finish
+    
 }
