@@ -42,7 +42,11 @@ def encode(BlockLookup lookup) -> field[6] {
 }
 
 // requires that C be divisible by L
-def check_chunks<C>(field[C] bin_pixels, BlockLookup[C/L] lookups, field[TABLE_LEN][6] table) -> bool {
+def check_chunks<C>(
+    field[C] bin_pixels,
+    BlockLookup[C/L] lookups,
+    field[TABLE_LEN][6] table
+) -> bool {
     // Step 1 - Lookup
     bool mut correct_blocks = true;
     u32 num_chunks = C/L;
@@ -64,7 +68,10 @@ def check_chunks<C>(field[C] bin_pixels, BlockLookup[C/L] lookups, field[TABLE_L
     return(correct_blocks);
 }
 
-def process_chunks<C>(BlockLookup[C/L] lookups, field[L][2] powers_of_B) -> (field[C/L], field[C/L]) {
+def process_chunks<C>(
+    BlockLookup[C/L] lookups,
+    field[L][2] powers_of_B
+) -> (field[C/L], field[C/L]) {
     u32 num_chunks = C/L;
 
     // Step 2 - Initialization
@@ -94,7 +101,10 @@ def process_chunks<C>(BlockLookup[C/L] lookups, field[L][2] powers_of_B) -> (fie
 
 }
 
-def power_from_bit_decomp<B,LOGM>(field[B] powers_of_beta, field exponent) -> field {
+def power_from_bit_decomp<B,LOGM>(
+    field[B] powers_of_beta,
+    field exponent
+) -> field {
     bool[LOGM] bits = unpack(exponent);
     assert(check_bit_decomp(exponent, bits));
 
@@ -113,7 +123,14 @@ def power_from_bit_decomp<B,LOGM>(field[B] powers_of_beta, field exponent) -> fi
     return(result);
 }
 
-def check_consistency<C,B,M,LOGM>(field[B] powers_of_beta, field[B] blocks, field[C/L] block_chunks, field[C/L] all_nb, field[R/L][M] baseB_decomps, field[B] range_check_table) -> bool {
+def check_consistency<C,B,M,LOGM>(
+    field[B] powers_of_beta,
+    field[B] blocks,
+    field[C/L] block_chunks,
+    field[C/L] all_nb,
+    field[R/L][M] baseB_decomps,
+    field[B] range_check_table
+) -> bool {
     u32 num_chunks = C/L;
 
     field mut result_f = 0;
@@ -165,7 +182,15 @@ def flatten_array<R,C>(field[R][C] arr) -> field[R*C] {
     return(result);
 }
 
-def check_blocks<R,C,B,M,LOGM>(field[R][C] bin_pixels, BlockLookup[R][C/L] lookups, field[TABLE_LEN][6] chunk_lookup_table, field[L][2] powers_of_B, field[R][B] blocks, field[R][C/L][L] baseB_decomps, field[B] range_check_table) -> bool {
+def check_blocks<R,C,B,M,LOGM>(
+    field[R][C] bin_pixels,
+    BlockLookup[R][C/L] lookups,
+    field[TABLE_LEN][6] chunk_lookup_table,
+    field[L][2] powers_of_B,
+    field[R][B] blocks,
+    field[R][C/L][L] baseB_decomps,
+    field[B] range_check_table
+) -> bool {
     u32 num_chunks = C/L;
     bool mut correct_chunks = true;
 
@@ -250,8 +275,16 @@ def combine_rows<R,C>(field[R][C] arr, field gamma) -> field[R] {
     return(result);
 }
 
-def check_garbage_split<R,C>(field[R][C] bin_pixels, field[R][C] well_behaved, field[R] wb_inds, field[GARBAGE_ROWS][C] garbage, field garbage_inds) {
-    bool is_true = non_decreasing_array_9bit(wb_inds);
+def check_garbage_split<R,C>(
+    field[R][C] bin_pixels,
+    field[R][C] well_behaved,
+    field[R] wb_inds,
+    field[R] wb_ind_counts,
+    field[GARBAGE_ROWS][C] garbage,
+    field garbage_inds,
+    field num_zero_rows
+) -> bool {
+    bool is_true = non_decreasing_array_9bit(wb_inds); // this output is always true, but it does asserts inside
 
     // combine rows into single field elements
     field[R*C] flattened_bin_img = flatten_array(bin_pixels);
@@ -266,6 +299,28 @@ def check_garbage_split<R,C>(field[R][C] bin_pixels, field[R][C] well_behaved, f
     // Habock argument
     field alpha = sample_challenge([...bin_img_rows, ...wb_rows, ...garbage_rows]);
     field beta = sample_challenge([...bin_img_rows, ...wb_rows, ...garbage_rows]);
-    // TODO: finish
-    
+
+    field mut lhs = num_zero_rows / (alpha - 1);
+    field mut rhs = 0;
+
+    for u32 i in 0..R {
+        field i_f = u32_to_field(i);
+        field term = wb_ind_counts[i] / (alpha + i_f + beta * bin_img_rows[i]);
+        lhs = lhs + term;
+    }
+
+    for u32 j in 0..R {
+        field j_f = u32_to_field(j);
+        field term = 1 / (alpha + j_f + beta * wb_rows[j]);
+        rhs = rhs + term;
+    }
+
+    for u32 k in 0..GARBAGE_ROWS {
+        field k_f = u32_to_field(k);
+        field term = 1 / (alpha + k_f + beta * garbage_rows[k]);
+        rhs = rhs + term;
+    }
+
+    return(lhs == rhs);
 }
+
