@@ -1,7 +1,7 @@
 // Measure the length of blocks in pixels
 
 from "./utils.zok" import check_bit_decomp;
-from "./const_range_check.zok" import RANGE_0_512;
+from "./const_range_check.zok" import RANGE_0_512, RANGE_0_27, RANGE_0_1080;
 from "EMBED" import value_in_array, value_in_array_tuple, sample_challenge, u32_to_field, unpack;
 
 // The number of pixels to read from a row from the image at a time for lookup
@@ -324,3 +324,70 @@ def check_garbage_split<R,C>(
     return(lhs == rhs);
 }
 
+// Block measurement constants
+const u32 WB_B = 27;
+const u32 WB_M = 4;
+const u32 WB_LOGM = 2; // ceil(log2(WB_M))
+const u32 G_B = 1080;
+const u32 G_M = 10; // same as L
+const u32 G_LOGM = 4; // ceil(log2(G_M))
+
+// Placeholder lookup tables
+// TODO: fill in these tables
+const field[TABLE_LEN][6] WB_CHUNK_LOOKUP_TABLE = [[0; 6]; TABLE_LEN];
+const field[WB_B] WB_RANGE_CHECK_TABLE = RANGE_0_27;
+const field[TABLE_LEN][6] G_CHUNK_LOOKUP_TABLE = [[0; 6]; TABLE_LEN];
+const field[G_B] G_RANGE_CHECK_TABLE = RANGE_0_1080;
+
+def block_measurement<R,C>(
+    // The full binary image and the split into well-behaved / garbage rows
+    field[R][C] bin_image,
+    field[R][C] well_behaved,
+    field[R] wb_inds,
+    field[R] wb_ind_counts,
+    field[GARBAGE_ROWS][C] garbage,
+    field garbage_inds,
+    field num_zero_rows,
+    // Well-behaved block checking metadata
+    BlockLookup[R][C/L] wb_lookups,
+    field[L][2] wb_powers_of_B,
+    field[R][WB_B] wb_blocks,
+    field[R][C/L][L] wb_baseB_decomps,
+    // Garbage block checking metadata
+    BlockLookup[GARBAGE_ROWS][C/L] g_lookups,
+    field[L][2] g_powers_of_B,
+    field[GARBAGE_ROWS][G_B] g_blocks,
+    field[GARBAGE_ROWS][C/L][L] g_baseB_decomps
+) -> bool {
+    bool wb_blocks_ok = check_blocks::<R,C,WB_B,WB_M,WB_LOGM>(
+        well_behaved,
+        wb_lookups,
+        WB_CHUNK_LOOKUP_TABLE,
+        wb_powers_of_B,
+        wb_blocks,
+        wb_baseB_decomps,
+        WB_RANGE_CHECK_TABLE
+    );
+
+    bool g_blocks_ok = check_blocks::<GARBAGE_ROWS,C,G_B,G_M,G_LOGM>(
+        garbage,
+        g_lookups,
+        G_CHUNK_LOOKUP_TABLE,
+        g_powers_of_B,
+        g_blocks,
+        g_baseB_decomps,
+        G_RANGE_CHECK_TABLE
+    );
+
+    bool split_ok = check_garbage_split(
+        bin_image,
+        well_behaved,
+        wb_inds,
+        wb_ind_counts,
+        garbage,
+        garbage_inds,
+        num_zero_rows
+    );
+
+    return(wb_blocks_ok && g_blocks_ok && split_ok);
+}
