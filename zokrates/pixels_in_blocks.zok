@@ -292,7 +292,7 @@ def check_garbage_split<R,C>(
     // combine rows into single field elements
     field[R*C] flattened_bin_img = flatten_array(bin_pixels);
     field[R*C] flattened_wb = flatten_array(well_behaved);
-    field[GARBAGE_ROWS*C] flattened_garbage = flatten_array(garbage);
+    field[GARBAGE_ROWS*C] flattened_garbage = flatten_array(garbage); // TODO: this is huge!! Takes too long to compile.
     field gamma = sample_challenge([...flattened_bin_img, ...flattened_wb, ...flattened_garbage]);
 
     field[R] bin_img_rows = combine_rows(bin_pixels, gamma);
