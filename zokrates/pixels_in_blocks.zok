@@ -3,10 +3,7 @@
 from "./utils.zok" import check_bit_decomp;
 from "./const_range_check.zok" import RANGE_0_512, RANGE_0_27, RANGE_0_1080;
 from "EMBED" import value_in_array, value_in_array_tuple, sample_challenge, u32_to_field, unpack;
-
-// The number of pixels to read from a row from the image at a time for lookup
-const u32 L = 10;
-const u32 TABLE_LEN = 1024; // 2^L
+from "./block_measurement_tables.zok" import L, TABLE_LEN, WB_POWERS_OF_B, WB_CHUNK_LOOKUP_TABLE, G_POWERS_OF_B, G_CHUNK_LOOKUP_TABLE;
 
 // base-B values representing a series of blocks
 type Blocks = field;
@@ -68,10 +65,15 @@ def check_chunks<C>(
     return(correct_blocks);
 }
 
+struct ProcessedChunks<C> {
+    field[C/L] block_chunks;
+    field[C/L] all_nb;
+}
+
 def process_chunks<C>(
     BlockLookup[C/L] lookups,
     field[L][2] powers_of_B
-) -> (field[C/L], field[C/L]) {
+) -> ProcessedChunks<C> {
     u32 num_chunks = C/L;
 
     // Step 2 - Initialization
@@ -97,7 +99,8 @@ def process_chunks<C>(
         black_r = lookups[i].remainder_is_black;
     }
 
-    return((block_chunks, all_nb));
+    ProcessedChunks<C> result = ProcessedChunks { block_chunks : block_chunks, all_nb : all_nb };
+    return(result);
 
 }
 
@@ -200,13 +203,13 @@ def check_blocks<R,C,B,M,LOGM>(
     for u32 r in 0..R {
         correct_chunks = correct_chunks && check_chunks(bin_pixels[r], lookups[r], chunk_lookup_table);
 
-        (field[num_chunks], field[num_chunks]) processed = process_chunks(lookups[r], powers_of_B);
-        block_chunks[r] = processed.0;
-        all_nb[r] = processed.1;
+        ProcessedChunks<C> processed = process_chunks::<C>(lookups[r], powers_of_B);
+        block_chunks[r] = processed.block_chunks;
+        all_nb[r] = processed.all_nb;
     }
 
     // get a verifier challenge
-    field[R*B] flattened_blocks = flatten_array(blocks);
+    field[R*B] flattened_blocks = flatten_array(blocks); // TODO: this is so big! 89*1080 \approx 96k. Can we get a challenge without needing to create this huge array? CirC will not even compile this right now.
     field[R*num_chunks] flattened_block_chunks = flatten_array(block_chunks);
     field[R*num_chunks] flattened_all_nb = flatten_array(all_nb);
     field beta = sample_challenge([...flattened_blocks, ...flattened_block_chunks, ...flattened_all_nb]);
@@ -332,11 +335,8 @@ const u32 G_B = 1080;
 const u32 G_M = 10; // same as L
 const u32 G_LOGM = 4; // ceil(log2(G_M))
 
-// Placeholder lookup tables
-// TODO: fill in these tables
-const field[TABLE_LEN][6] WB_CHUNK_LOOKUP_TABLE = [[0; 6]; TABLE_LEN];
+// Range check tables
 const field[WB_B] WB_RANGE_CHECK_TABLE = RANGE_0_27;
-const field[TABLE_LEN][6] G_CHUNK_LOOKUP_TABLE = [[0; 6]; TABLE_LEN];
 const field[G_B] G_RANGE_CHECK_TABLE = RANGE_0_1080;
 
 def block_measurement<R,C>(
@@ -350,12 +350,10 @@ def block_measurement<R,C>(
     field num_zero_rows,
     // Well-behaved block checking metadata
     BlockLookup[R][C/L] wb_lookups,
-    field[L][2] wb_powers_of_B,
     field[R][WB_B] wb_blocks,
     field[R][C/L][L] wb_baseB_decomps,
     // Garbage block checking metadata
     BlockLookup[GARBAGE_ROWS][C/L] g_lookups,
-    field[L][2] g_powers_of_B,
     field[GARBAGE_ROWS][G_B] g_blocks,
     field[GARBAGE_ROWS][C/L][L] g_baseB_decomps
 ) -> bool {
@@ -363,7 +361,7 @@ def block_measurement<R,C>(
         well_behaved,
         wb_lookups,
         WB_CHUNK_LOOKUP_TABLE,
-        wb_powers_of_B,
+        WB_POWERS_OF_B,
         wb_blocks,
         wb_baseB_decomps,
         WB_RANGE_CHECK_TABLE
@@ -373,7 +371,7 @@ def block_measurement<R,C>(
         garbage,
         g_lookups,
         G_CHUNK_LOOKUP_TABLE,
-        g_powers_of_B,
+        G_POWERS_OF_B,
         g_blocks,
         g_baseB_decomps,
         G_RANGE_CHECK_TABLE
@@ -390,4 +388,43 @@ def block_measurement<R,C>(
     );
 
     return(wb_blocks_ok && g_blocks_ok && split_ok);
+}
+
+// test function
+const u32 R = 3;
+const u32 C = 10;
+
+def main(
+    // The full binary image and the split into well-behaved / garbage rows
+    field[R][C] bin_image,
+    field[R][C] well_behaved,
+    field[R] wb_inds,
+    field[R] wb_ind_counts,
+    field[GARBAGE_ROWS][C] garbage,
+    field garbage_inds,
+    field num_zero_rows,
+    // Well-behaved block checking metadata
+    BlockLookup[R][C/L] wb_lookups,
+    field[R][WB_B] wb_blocks,
+    field[R][C/L][L] wb_baseB_decomps,
+    // Garbage block checking metadata
+    BlockLookup[GARBAGE_ROWS][C/L] g_lookups,
+    field[GARBAGE_ROWS][G_B] g_blocks,
+    field[GARBAGE_ROWS][C/L][L] g_baseB_decomps
+) {
+    assert(block_measurement(
+        bin_image,
+        well_behaved,
+        wb_inds,
+        wb_ind_counts,
+        garbage,
+        garbage_inds,
+        num_zero_rows,
+        wb_lookups,
+        wb_blocks,
+        wb_baseB_decomps,
+        g_lookups,
+        g_blocks,
+        g_baseB_decomps
+    ));
 }

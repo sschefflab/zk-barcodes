@@ -4,15 +4,14 @@
 Generate tables needed for lookups for block measurement.
 """
 
-B = 1080
 L = 10
 
 
-def generate_powers_of_B():
+def generate_powers_of_B(B):
     return [[i, B**i] for i in range(0, L)]
 
 
-def generate_pixels_and_blocks():
+def generate_pixels_and_blocks(B):
     table = []
     for i in range(0, 2**L):
         c = i
@@ -42,12 +41,16 @@ def generate_pixels_and_blocks():
 
 
 if __name__ == "__main__":
-    powers_of_B = generate_powers_of_B()
-    print("POWERS_OF_B:")
-    print(powers_of_B)
-    print()
+    for B in [27, 1080]:
+        print(f"=== B = {B} ===")
+        print()
 
-    pixels_and_blocks = generate_pixels_and_blocks()
-    print("PIXELS_AND_BLOCKS:")
-    print(pixels_and_blocks)
-    print()
+        powers_of_B = generate_powers_of_B(B)
+        print("POWERS_OF_B:")
+        print(powers_of_B)
+        print()
+
+        pixels_and_blocks = generate_pixels_and_blocks(B)
+        print("PIXELS_AND_BLOCKS:")
+        print(pixels_and_blocks)
+        print()
