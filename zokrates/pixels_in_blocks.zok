@@ -127,7 +127,6 @@ def power_from_bit_decomp<B,LOGM>(
 }
 
 def check_consistency<C,B,M,LOGM>(
-    field[B] powers_of_beta,
     field[B] blocks,
     field[C/L] block_chunks,
     field[C/L] all_nb,
@@ -135,6 +134,12 @@ def check_consistency<C,B,M,LOGM>(
     field[B] range_check_table
 ) -> bool {
     u32 num_chunks = C/L;
+
+    field beta = sample_challenge([...blocks, ...block_chunks, ...all_nb]);
+    field[B] mut powers_of_beta = [1; B];
+    for u32 b in 1..B {
+        powers_of_beta[b] = powers_of_beta[b-1] * beta;
+    }
 
     field mut result_f = 0;
     for u32 b in 0..B {
@@ -208,21 +213,10 @@ def check_blocks<R,C,B,M,LOGM>(
         all_nb[r] = processed.all_nb;
     }
 
-    // get a verifier challenge
-    field[R*B] flattened_blocks = flatten_array(blocks); // TODO: this is so big! 89*1080 \approx 96k. Can we get a challenge without needing to create this huge array? CirC will not even compile this right now.
-    field[R*num_chunks] flattened_block_chunks = flatten_array(block_chunks);
-    field[R*num_chunks] flattened_all_nb = flatten_array(all_nb);
-    field beta = sample_challenge([...flattened_blocks, ...flattened_block_chunks, ...flattened_all_nb]);
-
-    field[B] mut powers_of_beta = [1; B];
-    for u32 b in 1..B {
-        powers_of_beta[b] = powers_of_beta[b-1] * beta;
-    }
-
-    // check consistency of all rows using that verifier challenge
+    // check consistency of all rows, each generating its own verifier challenge
     bool mut consistent = true;
     for u32 r in 0..R {
-        consistent = consistent && check_consistency::<C,B,M,LOGM>(powers_of_beta, blocks[r], block_chunks[r], all_nb[r], baseB_decomps[r], range_check_table);
+        consistent = consistent && check_consistency::<C,B,M,LOGM>(blocks[r], block_chunks[r], all_nb[r], baseB_decomps[r], range_check_table);
     }
 
     return(correct_chunks && consistent);
@@ -292,7 +286,7 @@ def check_garbage_split<R,C>(
     // combine rows into single field elements
     field[R*C] flattened_bin_img = flatten_array(bin_pixels);
     field[R*C] flattened_wb = flatten_array(well_behaved);
-    field[GARBAGE_ROWS*C] flattened_garbage = flatten_array(garbage); // TODO: this is huge!! Takes too long to compile.
+    field[GARBAGE_ROWS*C] flattened_garbage = flatten_array(garbage);
     field gamma = sample_challenge([...flattened_bin_img, ...flattened_wb, ...flattened_garbage]);
 
     field[R] bin_img_rows = combine_rows(bin_pixels, gamma);
@@ -391,26 +385,26 @@ def block_measurement<R,C>(
 }
 
 // test function
-const u32 R = 3;
-const u32 C = 10;
+const u32 R = 100;
+const u32 C = 100;
 
 def main(
     // The full binary image and the split into well-behaved / garbage rows
-    field[R][C] bin_image,
-    field[R][C] well_behaved,
-    field[R] wb_inds,
-    field[R] wb_ind_counts,
-    field[GARBAGE_ROWS][C] garbage,
-    field garbage_inds,
-    field num_zero_rows,
+    private field[R][C] bin_image,
+    private field[R][C] well_behaved,
+    private field[R] wb_inds,
+    private field[R] wb_ind_counts,
+    private field[GARBAGE_ROWS][C] garbage,
+    private field garbage_inds,
+    private field num_zero_rows,
     // Well-behaved block checking metadata
-    BlockLookup[R][C/L] wb_lookups,
-    field[R][WB_B] wb_blocks,
-    field[R][C/L][L] wb_baseB_decomps,
+    private BlockLookup[R][C/L] wb_lookups,
+    private field[R][WB_B] wb_blocks,
+    private field[R][C/L][L] wb_baseB_decomps,
     // Garbage block checking metadata
-    BlockLookup[GARBAGE_ROWS][C/L] g_lookups,
-    field[GARBAGE_ROWS][G_B] g_blocks,
-    field[GARBAGE_ROWS][C/L][L] g_baseB_decomps
+    private BlockLookup[GARBAGE_ROWS][C/L] g_lookups,
+    private field[GARBAGE_ROWS][G_B] g_blocks,
+    private field[GARBAGE_ROWS][C/L][L] g_baseB_decomps
 ) {
     assert(block_measurement(
         bin_image,
