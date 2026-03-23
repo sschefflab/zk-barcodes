@@ -125,6 +125,7 @@ def check_error_correction<W>(field[W] codewords, field[W] corrected_codewords, 
         zero_syndromes = zero_syndromes && zero_syndrome;
 
         field i_f = u32_to_field(i);
+        // TODO: this will fail for i where we actually aren't greater than 9 bit since it does an assert inside!!
         zero_syndromes = zero_syndromes && (gt_9bit(i_f, num_ec_codewords) || zero_syndrome);
         
     }
