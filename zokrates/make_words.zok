@@ -2,7 +2,6 @@
 // Normalize blocks, and then combined the normalized blocks into one.
 
 from "EMBED" import value_in_array;
-from "./utils.zok" import L, B;
 from "./const_range_check" import RANGE_NEG8_8_INCL as table;
 
 
@@ -22,7 +21,7 @@ def compute_word(field[8] blocks, field[8] normalized_blocks) -> field {
     return(word);
 }
 
-def compute_words_per_row(field[B] blocks, field[B/8][8] normalized_blocks) -> field[B/8] {
+def compute_words_per_row<B>(field[B] blocks, field[B/8][8] normalized_blocks) -> field[B/8] {
     u32 CW = B / 8;
     field[CW][8] mut grouped_blocks = [[0; 8]; CW];
     for u32 i in 0..CW {
@@ -39,7 +38,7 @@ def compute_words_per_row(field[B] blocks, field[B/8][8] normalized_blocks) -> f
     return(words);
 }
 
-def compute_words<R>(field[R][B] blocks, field[R][B/8][8] normalized_blocks) -> field[R][B/8] {
+def compute_words<R,B>(field[R][B] blocks, field[R][B/8][8] normalized_blocks) -> field[R][B/8] {
     u32 CW = B / 8;
     field[R][CW] mut words = [[0; CW]; R];
     for u32 r in 0..R {
@@ -50,6 +49,7 @@ def compute_words<R>(field[R][B] blocks, field[R][B/8][8] normalized_blocks) -> 
 
 // test function
 const u32 R = 1;
+const u32 B = 1080;
 
 def main(private field[R][B] blocks, private field[R][B/8][8] normalized_blocks) -> field[R][B/8] {
     return(compute_words(blocks, normalized_blocks));

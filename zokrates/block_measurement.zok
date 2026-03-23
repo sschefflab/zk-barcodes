@@ -1,0 +1,424 @@
+// Measure the length of blocks in pixels
+
+from "./utils.zok" import check_bit_decomp;
+from "./const_range_check.zok" import RANGE_0_512, RANGE_0_27, RANGE_0_1080;
+from "EMBED" import value_in_array, value_in_array_tuple, sample_challenge, u32_to_field, unpack;
+from "./block_measurement_tables.zok" import L, TABLE_LEN, WB_POWERS_OF_B, WB_CHUNK_LOOKUP_TABLE, G_POWERS_OF_B, G_CHUNK_LOOKUP_TABLE;
+
+// base-B values representing a series of blocks
+type Blocks = field;
+
+// a positive integer
+type NumBlocks = field;
+
+struct BlockLookup {
+    field binary_enc;
+
+    Blocks baseB_enc;
+    Blocks remainder;
+
+    NumBlocks num_blocks;
+
+    field num_blocks_is_odd;
+    field remainder_is_black;
+
+    field power_of_B;
+}
+
+// we already know the pixels are binary values, so just have to combine them
+def pixels_to_binary<P>(field[P] pixels) -> field {
+    field mut result = 0;
+    for u32 i in 0..P {
+        result = result + 2**i*pixels[i];
+    }
+    return(result);
+}
+
+def encode(BlockLookup lookup) -> field[6] {
+    return([lookup.binary_enc, lookup.baseB_enc, lookup.remainder, lookup.num_blocks, lookup.num_blocks_is_odd, lookup.remainder_is_black]);
+}
+
+// requires that C be divisible by L
+def check_chunks<C>(
+    field[C] bin_pixels,
+    BlockLookup[C/L] lookups,
+    field[TABLE_LEN][6] table
+) -> bool {
+    // Step 1 - Lookup
+    bool mut correct_blocks = true;
+    u32 num_chunks = C/L;
+    for u32 i in 0..num_chunks {
+        field[L] expanded_chunk = [0; L];
+        
+        for u32 j in 0..L {
+            expanded_chunk[j] = bin_pixels[i*L + j];
+        }
+
+        field binary_chunk = pixels_to_binary(expanded_chunk); // this is no constraints because we already know the pixels are binary values
+        // Ensure that the binary encoding of pixels found in the lookups is consistent with the binary image
+        correct_blocks = correct_blocks && (binary_chunk == lookups[i].binary_enc);
+
+        field[6] lookup_enc = encode(lookups[i]);
+        assert(value_in_array_tuple(lookup_enc, table));
+    }
+
+    return(correct_blocks);
+}
+
+struct ProcessedChunks<C> {
+    field[C/L] block_chunks;
+    field[C/L] all_nb;
+}
+
+def process_chunks<C>(
+    BlockLookup[C/L] lookups,
+    field[L][2] powers_of_B
+) -> ProcessedChunks<C> {
+    u32 num_chunks = C/L;
+
+    // Step 2 - Initialization
+    field[num_chunks] mut block_chunks = [0; num_chunks];
+    field[num_chunks] mut all_nb = [0; num_chunks];
+    field mut remainder = 0;
+    field mut black_r = 0;
+
+    // Step 3 - Process chunks
+    for u32 i in 0..num_chunks {
+        field a = lookups[i].remainder_is_black;
+        field b = black_r;
+        field c = lookups[i].num_blocks_is_odd;
+        field offset = 1 - a - b - c + 2*a*b + 2*a*c + 2*b*c - 4*a*b*c;
+        field exp = lookups[i].num_blocks - offset;
+
+        assert(value_in_array_tuple([exp, lookups[i].power_of_B], powers_of_B));
+
+        block_chunks[i] = remainder*lookups[i].power_of_B + lookups[i].baseB_enc;
+        all_nb[i] = lookups[i].num_blocks + 1 - offset;
+
+        remainder = lookups[i].remainder;
+        black_r = lookups[i].remainder_is_black;
+    }
+
+    ProcessedChunks<C> result = ProcessedChunks { block_chunks : block_chunks, all_nb : all_nb };
+    return(result);
+
+}
+
+def power_from_bit_decomp<B,LOGM>(
+    field[B] powers_of_beta,
+    field exponent
+) -> field {
+    bool[LOGM] bits = unpack(exponent);
+    assert(check_bit_decomp(exponent, bits));
+
+    field mut result = 1;
+    for u32 i in 0..LOGM {
+        u32 ind = LOGM - i - 1;
+        field to_mult = if (bits[ind]) {
+            powers_of_beta[ind]
+        } else {
+            1
+        };
+
+        result = result * to_mult;
+    }
+
+    return(result);
+}
+
+def check_consistency<C,B,M,LOGM>(
+    field[B] blocks,
+    field[C/L] block_chunks,
+    field[C/L] all_nb,
+    field[R/L][M] baseB_decomps,
+    field[B] range_check_table
+) -> bool {
+    u32 num_chunks = C/L;
+
+    field beta = sample_challenge([...blocks, ...block_chunks, ...all_nb]);
+    field[B] mut powers_of_beta = [1; B];
+    for u32 b in 1..B {
+        powers_of_beta[b] = powers_of_beta[b-1] * beta;
+    }
+
+    field mut result_f = 0;
+    for u32 b in 0..B {
+        result_f = result_f + blocks[b] * powers_of_beta[b];
+    }
+
+    bool mut correct_baseb_decomp = true;
+    field mut outer_power = 1;
+    field mut result_g = 0;
+    for u32 i in 0..num_chunks {
+        // check that the baseB_decomp is legit
+        field[L] baseB_decomp = baseB_decomps[i];
+        field mut baseB_sum = 0;
+        field b_f = u32_to_field(B);
+        for u32 j in 0..M {
+            baseB_sum = baseB_sum + baseB_decomp[j] * b_f**j;
+            assert(value_in_array(baseB_decomp[j], range_check_table));
+        }
+        correct_baseb_decomp = correct_baseb_decomp && (baseB_sum == block_chunks[i]);
+        
+        // compute the polynomial
+        field mut sum = 0;
+        for u32 j in 0..M {
+            sum = sum + (baseB_decomp[j] * powers_of_beta[j]);
+        }
+
+
+        field to_mult = if i > 0 {
+            power_from_bit_decomp::<B,LOGM>(powers_of_beta, all_nb[i-1])
+        } else {
+            1
+        };
+        outer_power = outer_power * to_mult;
+
+        result_g = result_g + sum * outer_power;
+    }
+    
+    return(result_f == result_g);
+}
+
+def flatten_array<R,C>(field[R][C] arr) -> field[R*C] {
+    field[R*C] mut result = [0; R*C];
+    for u32 r in 0..R {
+        for u32 c in 0..C {
+            result[r*C + c] = arr[r][c];
+        }
+    }
+    return(result);
+}
+
+def check_blocks<R,C,B,M,LOGM>(
+    field[R][C] bin_pixels,
+    BlockLookup[R][C/L] lookups,
+    field[TABLE_LEN][6] chunk_lookup_table,
+    field[L][2] powers_of_B,
+    field[R][B] blocks,
+    field[R][C/L][L] baseB_decomps,
+    field[B] range_check_table
+) -> bool {
+    u32 num_chunks = C/L;
+    bool mut correct_chunks = true;
+
+    // lookup and process all chunks
+    field[R][num_chunks] mut block_chunks = [ [0; num_chunks]; R];
+    field[R][num_chunks] mut all_nb = [ [0; num_chunks]; R];
+    for u32 r in 0..R {
+        correct_chunks = correct_chunks && check_chunks(bin_pixels[r], lookups[r], chunk_lookup_table);
+
+        ProcessedChunks<C> processed = process_chunks::<C>(lookups[r], powers_of_B);
+        block_chunks[r] = processed.block_chunks;
+        all_nb[r] = processed.all_nb;
+    }
+
+    // check consistency of all rows, each generating its own verifier challenge
+    bool mut consistent = true;
+    for u32 r in 0..R {
+        consistent = consistent && check_consistency::<C,B,M,LOGM>(blocks[r], block_chunks[r], all_nb[r], baseB_decomps[r], range_check_table);
+    }
+
+    return(correct_chunks && consistent);
+}
+
+const u32 GARBAGE_ROWS = 89;
+
+// always returns true, but does an assert inside
+def non_decreasing_array_9bit<A>(field[A] arr) -> bool {
+    for u32 i in 1..A {
+        field diff = arr[i] - arr[i-1];
+        assert(value_in_array(diff, RANGE_0_512));
+    }
+
+    return(true);
+}
+
+def combine_bits<B>(field[B] bits) -> field {
+    field mut sum = 0;
+
+    for u32 b in 0..B {
+        sum = sum + bits[b] * 2**b;
+    }
+
+    return(sum);
+}
+
+def combine_rows<R,C>(field[R][C] arr, field gamma) -> field[R] {
+    field[R] mut result = [0; R];
+    u32 maxC = if (C % 100 == 0) {
+        C / 100
+    } else {
+        C / 100 + 1
+    };
+    
+    for u32 r in 0..R {
+        field mut sum = 0;
+        for u32 c in 0..maxC {
+            u32 starting_ind = c*100;
+            u32 ending_ind = if (starting_ind + 100 < C) {
+                starting_ind + 100
+            } else {
+                C
+            };
+            
+            field comb1 = combine_bits(arr[r][c*100..ending_ind]);
+            sum = sum + comb1 * gamma**c;
+        }
+
+        result[r] = sum;
+    }
+
+    return(result);
+}
+
+def check_garbage_split<R,C>(
+    field[R][C] bin_pixels,
+    field[R][C] well_behaved,
+    field[R] wb_inds,
+    field[R] wb_ind_counts,
+    field[GARBAGE_ROWS][C] garbage,
+    field garbage_inds,
+    field num_zero_rows
+) -> bool {
+    bool is_true = non_decreasing_array_9bit(wb_inds); // this output is always true, but it does asserts inside
+
+    // combine rows into single field elements
+    field[R*C] flattened_bin_img = flatten_array(bin_pixels);
+    field[R*C] flattened_wb = flatten_array(well_behaved);
+    field[GARBAGE_ROWS*C] flattened_garbage = flatten_array(garbage);
+    field gamma = sample_challenge([...flattened_bin_img, ...flattened_wb, ...flattened_garbage]);
+
+    field[R] bin_img_rows = combine_rows(bin_pixels, gamma);
+    field[R] wb_rows = combine_rows(well_behaved, gamma);
+    field[GARBAGE_ROWS] garbage_rows = combine_rows(garbage, gamma);
+
+    // Habock argument
+    field alpha = sample_challenge([...bin_img_rows, ...wb_rows, ...garbage_rows]);
+    field beta = sample_challenge([...bin_img_rows, ...wb_rows, ...garbage_rows]);
+
+    field mut lhs = num_zero_rows / (alpha - 1);
+    field mut rhs = 0;
+
+    for u32 i in 0..R {
+        field i_f = u32_to_field(i);
+        field term = wb_ind_counts[i] / (alpha + i_f + beta * bin_img_rows[i]);
+        lhs = lhs + term;
+    }
+
+    for u32 j in 0..R {
+        field j_f = u32_to_field(j);
+        field term = 1 / (alpha + j_f + beta * wb_rows[j]);
+        rhs = rhs + term;
+    }
+
+    for u32 k in 0..GARBAGE_ROWS {
+        field k_f = u32_to_field(k);
+        field term = 1 / (alpha + k_f + beta * garbage_rows[k]);
+        rhs = rhs + term;
+    }
+
+    return(lhs == rhs);
+}
+
+// Block measurement constants
+const u32 WB_B = 27;
+const u32 WB_M = 4;
+const u32 WB_LOGM = 2; // ceil(log2(WB_M))
+const u32 G_B = 1080;
+const u32 G_M = 10; // same as L
+const u32 G_LOGM = 4; // ceil(log2(G_M))
+
+// Range check tables
+const field[WB_B] WB_RANGE_CHECK_TABLE = RANGE_0_27;
+const field[G_B] G_RANGE_CHECK_TABLE = RANGE_0_1080;
+
+def block_measurement<R,C>(
+    // The full binary image and the split into well-behaved / garbage rows
+    field[R][C] bin_image,
+    field[R][C] well_behaved,
+    field[R] wb_inds,
+    field[R] wb_ind_counts,
+    field[GARBAGE_ROWS][C] garbage,
+    field garbage_inds,
+    field num_zero_rows,
+    // Well-behaved block checking metadata
+    BlockLookup[R][C/L] wb_lookups,
+    field[R][WB_B] wb_blocks,
+    field[R][C/L][L] wb_baseB_decomps,
+    // Garbage block checking metadata
+    BlockLookup[GARBAGE_ROWS][C/L] g_lookups,
+    field[GARBAGE_ROWS][G_B] g_blocks,
+    field[GARBAGE_ROWS][C/L][L] g_baseB_decomps
+) -> bool {
+    bool wb_blocks_ok = check_blocks::<R,C,WB_B,WB_M,WB_LOGM>(
+        well_behaved,
+        wb_lookups,
+        WB_CHUNK_LOOKUP_TABLE,
+        WB_POWERS_OF_B,
+        wb_blocks,
+        wb_baseB_decomps,
+        WB_RANGE_CHECK_TABLE
+    );
+
+    bool g_blocks_ok = check_blocks::<GARBAGE_ROWS,C,G_B,G_M,G_LOGM>(
+        garbage,
+        g_lookups,
+        G_CHUNK_LOOKUP_TABLE,
+        G_POWERS_OF_B,
+        g_blocks,
+        g_baseB_decomps,
+        G_RANGE_CHECK_TABLE
+    );
+
+    bool split_ok = check_garbage_split(
+        bin_image,
+        well_behaved,
+        wb_inds,
+        wb_ind_counts,
+        garbage,
+        garbage_inds,
+        num_zero_rows
+    );
+
+    return(wb_blocks_ok && g_blocks_ok && split_ok);
+}
+
+// test function
+const u32 R = 3;
+const u32 C = 90;
+
+def main(
+    // The full binary image and the split into well-behaved / garbage rows
+    private field[R][C] bin_image,
+    private field[R][C] well_behaved,
+    private field[R] wb_inds,
+    private field[R] wb_ind_counts,
+    private field[GARBAGE_ROWS][C] garbage,
+    private field garbage_inds,
+    private field num_zero_rows,
+    // Well-behaved block checking metadata
+    private BlockLookup[R][C/L] wb_lookups,
+    private field[R][WB_B] wb_blocks,
+    private field[R][C/L][L] wb_baseB_decomps,
+    // Garbage block checking metadata
+    private BlockLookup[GARBAGE_ROWS][C/L] g_lookups,
+    private field[GARBAGE_ROWS][G_B] g_blocks,
+    private field[GARBAGE_ROWS][C/L][L] g_baseB_decomps
+) {
+    assert(block_measurement(
+        bin_image,
+        well_behaved,
+        wb_inds,
+        wb_ind_counts,
+        garbage,
+        garbage_inds,
+        num_zero_rows,
+        wb_lookups,
+        wb_blocks,
+        wb_baseB_decomps,
+        g_lookups,
+        g_blocks,
+        g_baseB_decomps
+    ));
+}

@@ -1,6 +1,6 @@
 from "./utils.zok" import L, B;
 from "./binarize.zok" import binarize;
-from "./pixels_in_blocks.zok" import check_blocks, BlockLookup;
+from "./block_measurement.zok" import BlockLookup, block_measurement;
 from "./make_words.zok" import compute_words;
 from "./make_codewords.zok" import check_codewords;
 from "./error_correction.zok" import BarcodeStats, RowIndicatorVars, PolynomialResult, check_barcode_stats, check_error_correction;
@@ -57,9 +57,12 @@ def main(u32[SHA_OUTPUT_SIZE] image_digest,
     assert(computed_digest == image_digest);
 
     assert(binarize(image, bin_image));
+    // TODO: check_blocks is now block_measurement and takes a lot more input - fix
     assert(check_blocks(bin_image, block_lookups, blocks, baseB_decomps));
 
+    // TODO: compute words needs to be called once for well-behaved words and once for garbage
     field[R][CW] words = compute_words(blocks, normalized_blocks);
+    // TODO: check_codewords needs to be modified to take garbage and well-behaved rows separately
     assert(check_codewords(words, words_with_dummies, ext_codewords, codewords, left_row_inds));
 
     assert(check_barcode_stats(row_indc, stats, left_row_inds));
