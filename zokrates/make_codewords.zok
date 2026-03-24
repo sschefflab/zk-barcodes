@@ -23,6 +23,11 @@ def check_dummies<CW>(field[CW] words, field[CW] words_with_dummies) -> bool {
     return(correct);
 }
 
+// This should operate on the "well-behaved" rows of the image.
+// Even though the rows are well-behaved, there may still be garbage since the words array must account for the largest possible barcode.
+// Also, there may be garbage terms at the edges, for example, after the STOP symbol.
+// Treat this array as the image, pull out garbage, and check that it is garbage.
+// Check that the non-garbage parts are consistent with the prover-provided codewords.
 def check_codewords<R, RW, CW, W>(
     field[R][CW] words,
     field[R][CW] words_with_dummies,
@@ -181,6 +186,8 @@ def check_codewords<R, RW, CW, W>(
     return(dummies_ok && cw_ok && garbage_ok && codewords_consistent && row_inds_consistent);
 }
 
+// Check codewords as above, but also check that rows pulled out as garbage during block measurement really are garbage.
+// TODO: maybe instead of checking that everything in the garbage words are garbage, we should instead check that at least one word per row is garbage?
 def check_codewords_and_garbage<WB_R, WB_RW, WB_CW, G_R, G_CW, W>(
     field[WB_R][WB_CW] words,
     field[WB_R][WB_CW] words_with_dummies,
