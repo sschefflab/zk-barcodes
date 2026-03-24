@@ -126,8 +126,8 @@ def power_from_bit_decomp<B,LOGM>(
     return(result);
 }
 
-def check_consistency<C,B,M,LOGM>(
-    field[B] blocks,
+def check_consistency<C,B,NB,M,LOGM>(
+    field[NB] blocks,
     field[C/L] block_chunks,
     field[C/L] all_nb,
     field[R/L][M] baseB_decomps,
@@ -136,13 +136,13 @@ def check_consistency<C,B,M,LOGM>(
     u32 num_chunks = C/L;
 
     field beta = sample_challenge([...blocks, ...block_chunks, ...all_nb]);
-    field[B] mut powers_of_beta = [1; B];
-    for u32 b in 1..B {
+    field[NB] mut powers_of_beta = [1; NB];
+    for u32 b in 1..NB {
         powers_of_beta[b] = powers_of_beta[b-1] * beta;
     }
 
     field mut result_f = 0;
-    for u32 b in 0..B {
+    for u32 b in 0..NB {
         result_f = result_f + blocks[b] * powers_of_beta[b];
     }
 
@@ -168,7 +168,7 @@ def check_consistency<C,B,M,LOGM>(
 
 
         field to_mult = if i > 0 {
-            power_from_bit_decomp::<B,LOGM>(powers_of_beta, all_nb[i-1])
+            power_from_bit_decomp::<NB,LOGM>(powers_of_beta, all_nb[i-1])
         } else {
             1
         };
@@ -180,12 +180,12 @@ def check_consistency<C,B,M,LOGM>(
     return(result_f == result_g);
 }
 
-def check_blocks<R,C,B,M,LOGM>(
+def check_blocks<R,C,B,NB,M,LOGM>(
     field[R][C] bin_pixels,
     BlockLookup[R][C/L] lookups,
     field[TABLE_LEN][6] chunk_lookup_table,
     field[L][2] powers_of_B,
-    field[R][B] blocks,
+    field[R][NB] blocks,
     field[R][C/L][L] baseB_decomps,
     field[B] range_check_table
 ) -> bool {
@@ -206,7 +206,7 @@ def check_blocks<R,C,B,M,LOGM>(
     // check consistency of all rows, each generating its own verifier challenge
     bool mut consistent = true;
     for u32 r in 0..R {
-        consistent = consistent && check_consistency::<C,B,M,LOGM>(blocks[r], block_chunks[r], all_nb[r], baseB_decomps[r], range_check_table);
+        consistent = consistent && check_consistency::<C,B,NB,M,LOGM>(blocks[r], block_chunks[r], all_nb[r], baseB_decomps[r], range_check_table);
     }
 
     return(correct_chunks && consistent);
@@ -312,10 +312,14 @@ def check_garbage_split<R,C>(
 }
 
 // Block measurement constants
+// B = max block length in pixels (used as base for encoding and range check table size)
+// NB = number of blocks per row
 const u32 WB_B = 27;
+const u32 WB_NB = 273;
 const u32 WB_M = 4;
 const u32 WB_LOGM = 2; // ceil(log2(WB_M))
 const u32 G_B = 1080;
+const u32 G_NB = 1080;
 const u32 G_M = 10; // same as L
 const u32 G_LOGM = 4; // ceil(log2(G_M))
 
@@ -334,14 +338,14 @@ def block_measurement<R,C>(
     field num_zero_rows,
     // Well-behaved block checking metadata
     BlockLookup[R][C/L] wb_lookups,
-    field[R][WB_B] wb_blocks,
+    field[R][WB_NB] wb_blocks,
     field[R][C/L][L] wb_baseB_decomps,
     // Garbage block checking metadata
     BlockLookup[GARBAGE_ROWS][C/L] g_lookups,
-    field[GARBAGE_ROWS][G_B] g_blocks,
+    field[GARBAGE_ROWS][G_NB] g_blocks,
     field[GARBAGE_ROWS][C/L][L] g_baseB_decomps
 ) -> bool {
-    bool wb_blocks_ok = check_blocks::<R,C,WB_B,WB_M,WB_LOGM>(
+    bool wb_blocks_ok = check_blocks::<R,C,WB_B,WB_NB,WB_M,WB_LOGM>(
         well_behaved,
         wb_lookups,
         WB_CHUNK_LOOKUP_TABLE,
@@ -351,7 +355,7 @@ def block_measurement<R,C>(
         WB_RANGE_CHECK_TABLE
     );
 
-    bool g_blocks_ok = check_blocks::<GARBAGE_ROWS,C,G_B,G_M,G_LOGM>(
+    bool g_blocks_ok = check_blocks::<GARBAGE_ROWS,C,G_B,G_NB,G_M,G_LOGM>(
         garbage,
         g_lookups,
         G_CHUNK_LOOKUP_TABLE,
@@ -389,11 +393,11 @@ def main(
     private field num_zero_rows,
     // Well-behaved block checking metadata
     private BlockLookup[R][C/L] wb_lookups,
-    private field[R][WB_B] wb_blocks,
+    private field[R][WB_NB] wb_blocks,
     private field[R][C/L][L] wb_baseB_decomps,
     // Garbage block checking metadata
     private BlockLookup[GARBAGE_ROWS][C/L] g_lookups,
-    private field[GARBAGE_ROWS][G_B] g_blocks,
+    private field[GARBAGE_ROWS][G_NB] g_blocks,
     private field[GARBAGE_ROWS][C/L][L] g_baseB_decomps
 ) {
     assert(block_measurement(
