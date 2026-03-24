@@ -1,6 +1,6 @@
 // Measure the length of blocks in pixels
 
-from "./utils.zok" import check_bit_decomp;
+from "./utils.zok" import check_bit_decomp, flatten_array;
 from "./const_range_check.zok" import RANGE_0_512, RANGE_0_27, RANGE_0_1080;
 from "EMBED" import value_in_array, value_in_array_tuple, sample_challenge, u32_to_field, unpack;
 from "./block_measurement_tables.zok" import L, TABLE_LEN, WB_POWERS_OF_B, WB_CHUNK_LOOKUP_TABLE, G_POWERS_OF_B, G_CHUNK_LOOKUP_TABLE;
@@ -178,16 +178,6 @@ def check_consistency<C,B,M,LOGM>(
     }
     
     return(result_f == result_g);
-}
-
-def flatten_array<R,C>(field[R][C] arr) -> field[R*C] {
-    field[R*C] mut result = [0; R*C];
-    for u32 r in 0..R {
-        for u32 c in 0..C {
-            result[r*C + c] = arr[r][c];
-        }
-    }
-    return(result);
 }
 
 def check_blocks<R,C,B,M,LOGM>(

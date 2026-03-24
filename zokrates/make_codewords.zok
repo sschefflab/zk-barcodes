@@ -1,8 +1,10 @@
 // Go from words (bsbsbsbs patterns) to codewords
 // Ensure that decoding is done correctly with the lookup table and discarded words are appropriate
 // Checks data codewords and left row indicators
+// Also checks that garbage rows pulled out during block measurement contain only garbage
 
 from "EMBED" import sample_challenge;
+from "./utils.zok" import flatten_array;
 from "./codeword_lookup.zok" import lookup_codeword, START, STOP, ZERO, VALID_WORDS;
 from "./not_in_table.zok" import disjoint_sets;
 
@@ -38,7 +40,7 @@ def check_codewords<R, RW, CW, W>(
     u32 N = R * CW;
 
     field[N] mut cw_and_dummies = [DUMMY; N]; // start it off filled with dummies
-    field[R] mut row_inds_and_dummies = [0; R];
+    field[R] mut row_inds_and_dummies = [DUMMY; R];
 
     field[N] mut garbage = [ KNOWN_GARBAGE; N ];
 
@@ -103,7 +105,7 @@ def check_codewords<R, RW, CW, W>(
 
             // only some columns are left row indicators - only modify the row indicators if so
             field to_add_row_ind = if (j == 1) {
-                ext_cw
+                ext_cw - DUMMY // subtract out the dummy codeword we filled everything with
             } else {
                 0
             };
@@ -179,20 +181,44 @@ def check_codewords<R, RW, CW, W>(
     return(dummies_ok && cw_ok && garbage_ok && codewords_consistent && row_inds_consistent);
 }
 
+def check_codewords_and_garbage<WB_R, WB_RW, WB_CW, G_R, G_CW, W>(
+    field[WB_R][WB_CW] words,
+    field[WB_R][WB_CW] words_with_dummies,
+    field[T] wb_disjoint_set_poly_f,
+    field[WB_R*WB_CW] wb_disjoint_set_poly_g,
+    field[WB_R][WB_CW] ext_codewords,
+    field[W] codewords,
+    field[WB_RW] left_row_inds,
+    field[G_R][G_CW] garbage_words,
+    field[T] garbage_disjoint_set_poly_f,
+    field[G_R*G_CW] garbage_disjoint_set_poly_g
+) -> bool {
+    bool wb_ok = check_codewords(words, words_with_dummies, wb_disjoint_set_poly_f, wb_disjoint_set_poly_g, ext_codewords, codewords, left_row_inds);
+    u32 Ng = G_R * G_CW;
+    field[Ng] flattened_garbage_words = flatten_array(garbage_words);
+    bool garbage_is_garbage = disjoint_sets::<Ng, T>(flattened_garbage_words, VALID_WORDS, garbage_disjoint_set_poly_f, garbage_disjoint_set_poly_g);
+    return(wb_ok && garbage_is_garbage);
+}
+
 // test function
 const u32 R = 4;
 const u32 CW = 6; // should actually be B / 8
 const u32 W = 2;
 const u32 RW = 2; // the number of logical barcode rows. Should be 90.
+const u32 G_R = 2;
+const u32 G_CW = 6;
 
 def main(
     field[R][CW] words,
     private field[R][CW] words_with_dummies,
-    field[T] disjoint_set_poly_f,
-    private field[R*CW] disjoint_set_poly_g,
+    field[T] wb_disjoint_set_poly_f,
+    private field[R*CW] wb_disjoint_set_poly_g,
     private field[R][CW] ext_codewords,
     private field[W] codewords,
-    private field[RW] left_row_inds
+    private field[RW] left_row_inds,
+    field[G_R][G_CW] garbage_words,
+    field[T] garbage_disjoint_set_poly_f,
+    private field[G_R*G_CW] garbage_disjoint_set_poly_g
 ) {
-    assert(check_codewords(words, words_with_dummies, disjoint_set_poly_f, disjoint_set_poly_g, ext_codewords, codewords, left_row_inds));
+    assert(check_codewords_and_garbage(words, words_with_dummies, wb_disjoint_set_poly_f, wb_disjoint_set_poly_g, ext_codewords, codewords, left_row_inds, garbage_words, garbage_disjoint_set_poly_f, garbage_disjoint_set_poly_g));
 }

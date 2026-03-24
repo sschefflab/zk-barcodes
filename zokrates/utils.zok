@@ -27,3 +27,13 @@ def gt_9bit(field a, field b) -> bool {
     field diff = a - b;
     assert(value_in_array(diff, RANGE_0_512[1..512]));
 }
+
+def flatten_array<R,C>(field[R][C] arr) -> field[R*C] {
+    field[R*C] mut result = [0; R*C];
+    for u32 r in 0..R {
+        for u32 c in 0..C {
+            result[r*C + c] = arr[r][c];
+        }
+    }
+    return(result);
+}

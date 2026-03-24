@@ -21,8 +21,7 @@ def compute_word(field[8] blocks, field[8] normalized_blocks) -> field {
     return(word);
 }
 
-def compute_words_per_row<B>(field[B] blocks, field[B/8][8] normalized_blocks) -> field[B/8] {
-    u32 CW = B / 8;
+def compute_words_per_row<B,CW>(field[B] blocks, field[CW][8] normalized_blocks) -> field[B/8] {
     field[CW][8] mut grouped_blocks = [[0; 8]; CW];
     for u32 i in 0..CW {
         for u32 j in 0..8 {
@@ -38,8 +37,7 @@ def compute_words_per_row<B>(field[B] blocks, field[B/8][8] normalized_blocks) -
     return(words);
 }
 
-def compute_words<R,B>(field[R][B] blocks, field[R][B/8][8] normalized_blocks) -> field[R][B/8] {
-    u32 CW = B / 8;
+def compute_words<R,B,CW>(field[R][B] blocks, field[R][CW][8] normalized_blocks) -> field[R][CW] {
     field[R][CW] mut words = [[0; CW]; R];
     for u32 r in 0..R {
         words[r] = compute_words_per_row(blocks[r], normalized_blocks[r]);
@@ -49,8 +47,9 @@ def compute_words<R,B>(field[R][B] blocks, field[R][B/8][8] normalized_blocks) -
 
 // test function
 const u32 R = 1;
-const u32 B = 1080;
+const u32 B = 48;
+const u32 CW = 6;
 
-def main(private field[R][B] blocks, private field[R][B/8][8] normalized_blocks) -> field[R][B/8] {
+def main(private field[R][B] blocks, private field[R][CW][8] normalized_blocks) -> field[R][CW] {
     return(compute_words(blocks, normalized_blocks));
 }
