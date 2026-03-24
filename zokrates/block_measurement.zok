@@ -212,8 +212,6 @@ def check_blocks<R,C,B,NB,M,LOGM>(
     return(correct_chunks && consistent);
 }
 
-const u32 GARBAGE_ROWS = 89;
-
 // always returns true, but does an assert inside
 def non_decreasing_array_9bit<A>(field[A] arr) -> bool {
     for u32 i in 1..A {
@@ -262,12 +260,12 @@ def combine_rows<R,C>(field[R][C] arr, field gamma) -> field[R] {
     return(result);
 }
 
-def check_garbage_split<R,C>(
+def check_garbage_split<R,C,G_R>(
     field[R][C] bin_pixels,
     field[R][C] well_behaved,
     field[R] wb_inds,
     field[R] wb_ind_counts,
-    field[GARBAGE_ROWS][C] garbage,
+    field[G_R][C] garbage,
     field garbage_inds,
     field num_zero_rows
 ) -> bool {
@@ -276,12 +274,12 @@ def check_garbage_split<R,C>(
     // combine rows into single field elements
     field[R*C] flattened_bin_img = flatten_array(bin_pixels);
     field[R*C] flattened_wb = flatten_array(well_behaved);
-    field[GARBAGE_ROWS*C] flattened_garbage = flatten_array(garbage);
+    field[G_R*C] flattened_garbage = flatten_array(garbage);
     field gamma = sample_challenge([...flattened_bin_img, ...flattened_wb, ...flattened_garbage]);
 
     field[R] bin_img_rows = combine_rows(bin_pixels, gamma);
     field[R] wb_rows = combine_rows(well_behaved, gamma);
-    field[GARBAGE_ROWS] garbage_rows = combine_rows(garbage, gamma);
+    field[G_R] garbage_rows = combine_rows(garbage, gamma);
 
     // Habock argument
     field alpha = sample_challenge([...bin_img_rows, ...wb_rows, ...garbage_rows]);
@@ -302,7 +300,7 @@ def check_garbage_split<R,C>(
         rhs = rhs + term;
     }
 
-    for u32 k in 0..GARBAGE_ROWS {
+    for u32 k in 0..G_R {
         field k_f = u32_to_field(k);
         field term = 1 / (alpha + k_f + beta * garbage_rows[k]);
         rhs = rhs + term;
@@ -327,13 +325,13 @@ const u32 G_LOGM = 4; // ceil(log2(G_M))
 const field[WB_B] WB_RANGE_CHECK_TABLE = RANGE_0_27;
 const field[G_B] G_RANGE_CHECK_TABLE = RANGE_0_1080;
 
-def block_measurement<R,C>(
+def block_measurement<R,C,G_R>(
     // The full binary image and the split into well-behaved / garbage rows
     field[R][C] bin_image,
     field[R][C] well_behaved,
     field[R] wb_inds,
     field[R] wb_ind_counts,
-    field[GARBAGE_ROWS][C] garbage,
+    field[G_R][C] garbage,
     field garbage_inds,
     field num_zero_rows,
     // Well-behaved block checking metadata
@@ -341,9 +339,9 @@ def block_measurement<R,C>(
     field[R][WB_NB] wb_blocks,
     field[R][C/L][L] wb_baseB_decomps,
     // Garbage block checking metadata
-    BlockLookup[GARBAGE_ROWS][C/L] g_lookups,
-    field[GARBAGE_ROWS][G_NB] g_blocks,
-    field[GARBAGE_ROWS][C/L][L] g_baseB_decomps
+    BlockLookup[G_R][C/L] g_lookups,
+    field[G_R][G_NB] g_blocks,
+    field[G_R][C/L][L] g_baseB_decomps
 ) -> bool {
     bool wb_blocks_ok = check_blocks::<R,C,WB_B,WB_NB,WB_M,WB_LOGM>(
         well_behaved,
@@ -355,7 +353,7 @@ def block_measurement<R,C>(
         WB_RANGE_CHECK_TABLE
     );
 
-    bool g_blocks_ok = check_blocks::<GARBAGE_ROWS,C,G_B,G_NB,G_M,G_LOGM>(
+    bool g_blocks_ok = check_blocks::<G_R,C,G_B,G_NB,G_M,G_LOGM>(
         garbage,
         g_lookups,
         G_CHUNK_LOOKUP_TABLE,
@@ -365,7 +363,7 @@ def block_measurement<R,C>(
         G_RANGE_CHECK_TABLE
     );
 
-    bool split_ok = check_garbage_split(
+    bool split_ok = check_garbage_split::<R,C,G_R>(
         bin_image,
         well_behaved,
         wb_inds,
@@ -381,6 +379,7 @@ def block_measurement<R,C>(
 // test function
 const u32 R = 3;
 const u32 C = 90;
+const u32 G_R = 1;
 
 def main(
     // The full binary image and the split into well-behaved / garbage rows
@@ -388,7 +387,7 @@ def main(
     private field[R][C] well_behaved,
     private field[R] wb_inds,
     private field[R] wb_ind_counts,
-    private field[GARBAGE_ROWS][C] garbage,
+    private field[G_R][C] garbage,
     private field garbage_inds,
     private field num_zero_rows,
     // Well-behaved block checking metadata
@@ -396,9 +395,9 @@ def main(
     private field[R][WB_NB] wb_blocks,
     private field[R][C/L][L] wb_baseB_decomps,
     // Garbage block checking metadata
-    private BlockLookup[GARBAGE_ROWS][C/L] g_lookups,
-    private field[GARBAGE_ROWS][G_NB] g_blocks,
-    private field[GARBAGE_ROWS][C/L][L] g_baseB_decomps
+    private BlockLookup[G_R][C/L] g_lookups,
+    private field[G_R][G_NB] g_blocks,
+    private field[G_R][C/L][L] g_baseB_decomps
 ) {
     assert(block_measurement(
         bin_image,
