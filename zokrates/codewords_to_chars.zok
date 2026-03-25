@@ -72,8 +72,6 @@ def codewords_to_chars<W>(field[W] corrected_codewords, TableState[2*W] table_st
         interpreted_chars[2*i + 1] = decode.2;
     }
 
-    // TODO - this kind of polynomial check gets used several times. Twice in make_codewords, and it will get used again in pixel_counting.
-    // Can we pull it out into a util and reduce code dupe?
     field beta = sample_challenge([...interpreted_chars, ...chars]);
 
     field mut result1 = 0;
