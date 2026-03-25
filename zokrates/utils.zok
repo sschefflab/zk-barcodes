@@ -23,9 +23,11 @@ def check_bit_decomp<B>(field v, bool[B] bits) -> bool {
     return(sum == v);
 }
 
+// always returns true, but does an assert inside
 def gt_9bit(field a, field b) -> bool {
     field diff = a - b;
     assert(value_in_array(diff, RANGE_0_512[1..512]));
+    return(true);
 }
 
 def flatten_array<R,C>(field[R][C] arr) -> field[R*C] {

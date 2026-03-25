@@ -50,8 +50,6 @@ def check_division_algorithm_quotient_bit_decomp<Q,B>(field y, field x, field q,
     return(check_division_algorithm_inner(y, x, q, r, range_check_table));
 }
 
-
-// TODO - we can maybe make this smaller by getting rid of some of the lookup tables
 def check_barcode_stats<R>(
     RowIndicatorVars row_indc,
     BarcodeStats stats,
@@ -89,6 +87,8 @@ def check_barcode_stats<R>(
 struct PolynomialResult {
     field result; // the sum of all the terms mod 929
     field result_quotient; // the integer division value when computing mod 929 for the sum
+
+    bool should_be_zero;
 }
 
 def check_error_correction<W>(field[W] codewords, field[W] corrected_codewords, field num_ec_codewords, PolynomialResult[512] poly_witness) -> bool {
@@ -119,14 +119,21 @@ def check_error_correction<W>(field[W] codewords, field[W] corrected_codewords, 
         PolynomialResult poly_result = poly_witness[i-1];
 
         // 22 bits is sufficient here as the upper bound on the quotient should be 929*2700. (Upper bound on sum_pre_mod is 929*929*2700.)
-        // TODO: this could maybe be faster using lookup tables instead of bit decomp, but as-is the lookup table is too big
         bool correct_eval = check_division_algorithm_quotient_bit_decomp::<929,22>(sum_pre_mod, poly_result.result_quotient, 929, poly_result.result, GF_929);
         bool zero_syndrome = correct_eval && (poly_result.result == 0);
         zero_syndromes = zero_syndromes && zero_syndrome;
 
         field i_f = u32_to_field(i);
-        // TODO: this will fail for i where we actually aren't greater than 9 bit since it does an assert inside!!
-        zero_syndromes = zero_syndromes && (gt_9bit(i_f, num_ec_codewords) || zero_syndrome);
+
+        // check that prover-provided should_be_zero is correct. We only care that it is false when it should be. Extra true's do not affect soundness.
+        field to_compare = if (poly_result.should_be_zero) {
+            0
+        } else {
+            num_ec_codewords
+        };
+        bool always_true = gt_9bit(i_f, to_compare); // this function always returns true but does an assert inside
+        
+        zero_syndromes = zero_syndromes && (!poly_result.should_be_zero || zero_syndrome);
         
     }
 
