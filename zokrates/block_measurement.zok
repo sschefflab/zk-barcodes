@@ -1,7 +1,7 @@
 // Measure the length of blocks in pixels
 
-from "./utils.zok" import check_bit_decomp, flatten_array;
-from "./const_range_check.zok" import RANGE_0_512, RANGE_0_27, RANGE_0_1080;
+from "./utils.zok" import check_bit_decomp, flatten_array, diff_lookup;
+from "./const_range_check.zok" import RANGE_1_513, RANGE_0_27, RANGE_0_1080;
 from "EMBED" import value_in_array, value_in_array_tuple, sample_challenge, u32_to_field, unpack;
 from "./block_measurement_tables.zok" import L, TABLE_LEN, WB_POWERS_OF_B, WB_CHUNK_LOOKUP_TABLE, G_POWERS_OF_B, G_CHUNK_LOOKUP_TABLE;
 
@@ -215,8 +215,7 @@ def check_blocks<R,C,B,NB,M,LOGM>(
 // always returns true, but does an assert inside
 def non_decreasing_array_9bit<A>(field[A] arr) -> bool {
     for u32 i in 1..A {
-        field diff = arr[i] - arr[i-1];
-        assert(value_in_array(diff, RANGE_0_512));
+        bool is_true = diff_lookup(arr[i], arr[i-1], [0, ...RANGE_1_513]); // always returns true, but does an assert inside
     }
 
     return(true);
@@ -377,9 +376,9 @@ def block_measurement<R,C,G_R>(
 }
 
 // test function
-const u32 R = 3;
+const u32 R = 128;
 const u32 C = 90;
-const u32 G_R = 1;
+const u32 G_R = 25;
 
 def main(
     // The full binary image and the split into well-behaved / garbage rows

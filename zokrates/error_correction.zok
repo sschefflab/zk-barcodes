@@ -3,8 +3,8 @@
 // Check that error correction is done correctly.
 
 from "EMBED" import value_in_array, value_in_array_tuple, u32_to_field, unpack;
-from "./utils.zok" import gt_9bit, check_bit_decomp;
-from "./const_range_check.zok" import RANGE_0_3, RANGE_0_30, RANGE_EC_LEVEL, RANGE_NUM_ROWS, RANGE_NUM_COLS, POWERS_OF_TWO, GF_929, POWERS_OF_3_MOD_929;
+from "./utils.zok" import diff_lookup, check_bit_decomp;
+from "./const_range_check.zok" import RANGE_0_3, RANGE_0_30, RANGE_1_513, RANGE_EC_LEVEL, RANGE_NUM_ROWS, RANGE_NUM_COLS, POWERS_OF_TWO, GF_929, POWERS_OF_3_MOD_929;
 
 struct BarcodeStats {
      field num_rows;
@@ -131,7 +131,7 @@ def check_error_correction<W>(field[W] codewords, field[W] corrected_codewords, 
         } else {
             num_ec_codewords
         };
-        bool always_true = gt_9bit(i_f, to_compare); // this function always returns true but does an assert inside
+        bool always_true = diff_lookup(i_f, to_compare, RANGE_1_513); // this function always returns true but does an assert inside
         
         zero_syndromes = zero_syndromes && (!poly_result.should_be_zero || zero_syndrome);
         
@@ -142,7 +142,7 @@ def check_error_correction<W>(field[W] codewords, field[W] corrected_codewords, 
 
 // test function
 const u32 R = 90;
-const u32 W = 64;
+const u32 W = 16;
 
 def main(
     private RowIndicatorVars row_indc,

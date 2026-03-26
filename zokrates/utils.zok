@@ -1,7 +1,6 @@
 // Utility functions and common values used throughout the zokrates code.
 
 from "EMBED" import unpack, value_in_array;
-from "./const_range_check.zok" import RANGE_0_512;
 
 // 919 is "reserved in the pdf417 spec and currently has no use.
 // We can use it as a valid field element that has no meaning.
@@ -23,10 +22,11 @@ def check_bit_decomp<B>(field v, bool[B] bits) -> bool {
     return(sum == v);
 }
 
+// Checks that the difference between two elements is inside the given lookup table
 // always returns true, but does an assert inside
-def gt_9bit(field a, field b) -> bool {
+def diff_lookup<N>(field a, field b, field[N] lookup) -> bool {
     field diff = a - b;
-    assert(value_in_array(diff, RANGE_0_512[1..512]));
+    assert(value_in_array(diff, lookup));
     return(true);
 }
 

@@ -1,8 +1,8 @@
 // Check character interpretation state machine for converting PDF417 codewords into characters.
 
 from "EMBED" import sample_challenge, value_in_array, u32_to_field;
-from "./const_range_check.zok" import POWERS_OF_TWO;
-from "./utils.zok" import gt_9bit, PAD_CODEWORD;
+from "./const_range_check.zok" import POWERS_OF_TWO, RANGE_1_513;
+from "./utils.zok" import diff_lookup, PAD_CODEWORD;
 from "./char_lookup.zok" import TableState, check_table_state, check_transition;
 
 // a dummy table state that is used before decoding actually begins
@@ -51,8 +51,19 @@ def codewords_to_chars<W>(field[W] corrected_codewords, TableState[2*W] table_st
         prev_table_state = state2;
 
         field idx_f = u32_to_field(cw_idx);
+
+        // if we are in an error correction state, make sure we are in the error correction portion of the codewords array
+        bool is_ec_cw = (state1 == EC_TABLE_STATE) && (state2 == EC_TABLE_STATE);
+        field to_compare = if is_ec_cw {
+            num_ec_codewords // if we really are in an error correction state, the number of ec codewords should be greater than our idx
+        } else {
+            idx_f + 1 // otherwise, we don't care about this result - set it to something always greater than the idx
+        };
+
+        bool always_true = diff_lookup(to_compare, idx_f, RANGE_1_513);
+        
         // Don't try to decode error correction codewords, pads, or higher-degree terms that are zero
-        (bool, field, field) decode = if (gt_9bit(num_ec_codewords, idx_f)) {
+        (bool, field, field) decode = if (!is_ec_cw) {
             if (codeword ==  PAD_CODEWORD) {
                 ((state1 == PAD_TABLE_STATE) && (state2 == PAD_TABLE_STATE), 0, 0)
             } else {
@@ -60,11 +71,12 @@ def codewords_to_chars<W>(field[W] corrected_codewords, TableState[2*W] table_st
                     (true, 0, 0)
                 } else {
                     // It's ok to decode zero states - they will just decode to null characters
+                    // If we have some mix of non-codeword states here, they will fail to decode
                     (check_char_split(codeword, state1.base30_val, state2.base30_val), state1.char, state2.char)
                 }
             }
         } else {
-            ((state1 == EC_TABLE_STATE) && (state2 == EC_TABLE_STATE), 0, 0)
+            (true, 0, 0) // we already checked the ec codewords states
         };
 
         correct_char_split = correct_char_split && decode.0;
