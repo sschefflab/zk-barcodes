@@ -1,7 +1,7 @@
 // Check character interpretation state machine for converting PDF417 codewords into characters.
 
 from "EMBED" import sample_challenge, u32_to_field;
-from "./const_range_check.zok" import POWERS_OF_TWO, RANGE_1_513;
+from "./const_range_check.zok" import RANGE_1_513;
 from "./utils.zok" import diff_lookup, PAD_CODEWORD;
 from "./char_lookup.zok" import TableState, check_table_state, check_transition;
 
@@ -47,7 +47,7 @@ def codewords_to_chars<W>(field[W] corrected_codewords, TableState[2*W] table_st
         // check consistency of state2 with state1
         bool dummy4 = check_transition(state1, state2);
 
-        // set prev_table_state to state2 for the next
+        // set prev_table_state to state2 for the next looop
         prev_table_state = state2;
 
         field idx_f = u32_to_field(cw_idx);
@@ -60,7 +60,7 @@ def codewords_to_chars<W>(field[W] corrected_codewords, TableState[2*W] table_st
             idx_f + 1 // otherwise, we don't care about this result - set it to something always greater than the idx
         };
 
-        bool always_true = diff_lookup(to_compare, idx_f, RANGE_1_513);
+        bool always_true = diff_lookup(to_compare, idx_f, RANGE_1_513); // always returns true, but does an assert inside
         
         // Don't try to decode error correction codewords, pads, or higher-degree terms that are zero
         (bool, field, field) decode = if (!is_ec_cw) {
