@@ -1,6 +1,6 @@
 // Check character interpretation state machine for converting PDF417 codewords into characters.
 
-from "EMBED" import sample_challenge, value_in_array, u32_to_field;
+from "EMBED" import sample_challenge, u32_to_field;
 from "./const_range_check.zok" import POWERS_OF_TWO, RANGE_1_513;
 from "./utils.zok" import diff_lookup, PAD_CODEWORD;
 from "./char_lookup.zok" import TableState, check_table_state, check_transition;

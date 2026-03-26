@@ -1,6 +1,6 @@
 // Utility functions and common values used throughout the zokrates code.
 
-from "EMBED" import unpack, value_in_array;
+from "EMBED" import value_in_array;
 
 // 919 is "reserved in the pdf417 spec and currently has no use.
 // We can use it as a valid field element that has no meaning.

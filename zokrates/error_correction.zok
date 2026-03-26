@@ -142,7 +142,7 @@ def check_error_correction<W>(field[W] codewords, field[W] corrected_codewords, 
 
 // test function
 const u32 R = 90;
-const u32 W = 16;
+const u32 W = 64;
 
 def main(
     private RowIndicatorVars row_indc,
