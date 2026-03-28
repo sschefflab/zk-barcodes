@@ -27,5 +27,8 @@ python-scripts/venv/
 python-scripts/__pycache__/
 python-scripts/*.png
 
+# SP1 test images
+sp1-pdf417/script/src/bin/test-images/
+
 # MacOS
 .DS_Store
