@@ -4,7 +4,7 @@ from "EMBED" import value_in_array;
 from "./const_range_check.zok" import GF_929;
 
 // these three decode into the symbol 919, which is in GF(929) but not used in the pdf417 spec
-const field START = 8111113;
+const field START = 81111113;
 const field STOP = 71131112;
 const field ZERO = 0;
 
