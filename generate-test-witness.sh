@@ -114,8 +114,6 @@ echo ""
 echo "Step 3: Converting witness JSON to .pin and .vin files..."
 ${PYTHON_BIN} python-scripts/json_to_witness.py \
     -i "$WITNESS_FILE" \
-    --map bin_image=binarized_image \
-    --map image=image \
     --type bin_image=bool \
     --modulus "$MOD" \
     --pin "$WITNESS_PIN" \
