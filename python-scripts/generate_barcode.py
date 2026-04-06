@@ -117,8 +117,10 @@ def generate_pdf417_barcode(
     ec_level,
     output_filename="pdf417_barcode.png",
     scale=3,
-    padding=10,
+    padding=0,
     text_style="mixed",
+    target_width=None,
+    target_height=None,
 ):
     """
     Generate a PDF417 barcode with specific rows, columns, and error correction.
@@ -128,9 +130,11 @@ def generate_pdf417_barcode(
         num_cols (int): Number of columns (1-30)
         ec_level (int): Error correction level (0-8)
         output_filename (str): Output image filename
-        scale (int): Scale factor for the image
+        scale (int): Scale factor for the image (ignored if target_width or target_height set)
         padding (int): Padding/quiet zone around barcode in pixels
         text_style (str): Style of generated text data
+        target_width (int): Desired output image width in pixels (exact, overrides scale)
+        target_height (int): Desired output image height in pixels (exact, overrides scale)
 
     Returns:
         PIL.Image: The generated barcode image
@@ -167,8 +171,39 @@ def generate_pdf417_barcode(
     # Encode the data
     codes = pdf417gen.encode(data, columns=num_cols, security_level=ec_level)
 
-    # Render to image
-    image = pdf417gen.render_image(codes, scale=scale, ratio=3, padding=padding)
+    # If target dimensions are specified, pick the largest integer scale that fits,
+    # then do a small bilinear resize to hit the exact target dimensions.
+    if target_width is not None or target_height is not None:
+        base = pdf417gen.render_image(codes, scale=1, ratio=3, padding=padding)
+        base_w, base_h = base.size
+
+        # Error if target is smaller than the scale=1 barcode (would require downsampling)
+        if target_width is not None and target_width < base_w:
+            raise ValueError(
+                f"Target width {target_width} is smaller than the minimum barcode "
+                f"width {base_w}. Downsampling would distort barcode patterns."
+            )
+        if target_height is not None and target_height < base_h:
+            raise ValueError(
+                f"Target height {target_height} is smaller than the minimum barcode "
+                f"height {base_h}. Downsampling would distort barcode patterns."
+            )
+
+        # Compute max integer scale that fits within the target on each specified axis
+        scale_candidates = []
+        if target_width is not None:
+            scale_candidates.append(target_width // base_w)
+        if target_height is not None:
+            scale_candidates.append(target_height // base_h)
+        scale = max(1, min(scale_candidates))
+
+        out_w = target_width if target_width is not None else base_w * scale
+        out_h = target_height if target_height is not None else base_h * scale
+
+        image = pdf417gen.render_image(codes, scale=scale, ratio=3, padding=padding)
+        image = image.resize((out_w, out_h), Image.BILINEAR)
+    else:
+        image = pdf417gen.render_image(codes, scale=scale, ratio=3, padding=padding)
 
     # Save the image
     image.save(output_filename)
@@ -188,6 +223,7 @@ Examples:
   %(prog)s -r 15 -c 10 -e 4 -o my_barcode.png
   %(prog)s --rows 20 --cols 8 --ec 3 --scale 5 --padding 20
   %(prog)s -r 10 -c 5 -e 2 --text-style upper --padding 0
+  %(prog)s -r 15 -c 10 -e 2 --width 1080 --height 720
 
 Text Styles (all valid in Text Compaction mode):
   mixed:  Mix of upper, lower, digits, punctuation (default)
@@ -236,8 +272,8 @@ Error Correction Levels:
         "-p",
         "--padding",
         type=int,
-        default=10,
-        help="Padding/quiet zone in pixels (default: 10)",
+        default=0,
+        help="Padding/quiet zone in pixels (default: 0)",
     )
     parser.add_argument(
         "--text-style",
@@ -245,6 +281,18 @@ Error Correction Levels:
         default="mixed",
         choices=["mixed", "upper", "lower", "alpha", "alnum"],
         help="Style of generated text data (default: mixed)",
+    )
+    parser.add_argument(
+        "--width",
+        type=int,
+        default=None,
+        help="Target output image width in pixels (overrides --scale)",
+    )
+    parser.add_argument(
+        "--height",
+        type=int,
+        default=None,
+        help="Target output image height in pixels (overrides --scale)",
     )
 
     args = parser.parse_args()
@@ -263,6 +311,8 @@ Error Correction Levels:
             scale=args.scale,
             padding=args.padding,
             text_style=args.text_style,
+            target_width=args.width,
+            target_height=args.height,
         )
         print("\n✓ Success!")
 

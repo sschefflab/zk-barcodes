@@ -24,19 +24,18 @@ Examples:
       --map image=image --map bin_image=binarized_image
 """
 
-import json
 import argparse
+import json
 import sys
-from typing import Any, Dict, List, Tuple, Optional, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
-# Spartan uses Curve25519 scalar field
-SPARTAN_MODULUS = "7237005577332262213973186563042994240857116359379907606001950938285454250989"
+MOD = "52435875175126190479447740508185965837690552500527637822603658699938581184513"
 
 
 def format_field_value(value: Union[int, str]) -> str:
     """Format a value as a field element in decimal."""
     if isinstance(value, str):
-        if value.startswith('#'):
+        if value.startswith("#"):
             return value
         value = int(value, 0)
     return f"#f{value}"
@@ -45,7 +44,7 @@ def format_field_value(value: Union[int, str]) -> str:
 def format_u32_value(value: Union[int, str]) -> str:
     """Format a value as a u32 in hex."""
     if isinstance(value, str):
-        if value.startswith('#'):
+        if value.startswith("#"):
             return value
         value = int(value, 0)
     return f"#x{value:08x}"
@@ -54,44 +53,46 @@ def format_u32_value(value: Union[int, str]) -> str:
 def format_bool_value(value: Union[bool, int, str]) -> str:
     """Format a boolean value."""
     if isinstance(value, str):
-        value = value.lower() in ('true', '1', 'yes')
+        value = value.lower() in ("true", "1", "yes")
     elif isinstance(value, int):
         value = bool(value)
-    return 'true' if value else 'false'
+    return "true" if value else "false"
 
 
 def infer_type(value: Any) -> str:
     """Infer the type of a value."""
     if isinstance(value, bool):
-        return 'bool'
+        return "bool"
     elif isinstance(value, int):
-        return 'field'  # default for integers
+        return "field"  # default for integers
     elif isinstance(value, str):
-        if value.startswith('#x'):
-            return 'u32'
-        elif value.startswith('#f'):
-            return 'field'
-        elif value.lower() in ('true', 'false'):
-            return 'bool'
-        return 'field'
+        if value.startswith("#x"):
+            return "u32"
+        elif value.startswith("#f"):
+            return "field"
+        elif value.lower() in ("true", "false"):
+            return "bool"
+        return "field"
     elif isinstance(value, list):
         if len(value) > 0:
             return infer_type(value[0])
-        return 'field'
-    return 'field'
+        return "field"
+    return "field"
 
 
 def format_value(value: Any, value_type: str) -> str:
     """Format a value according to its type."""
-    if value_type == 'bool':
+    if value_type == "bool":
         return format_bool_value(value)
-    elif value_type == 'u32':
+    elif value_type == "u32":
         return format_u32_value(value)
     else:  # field
         return format_field_value(value)
 
 
-def flatten_value(prefix: str, value: Any, type_hints: Dict[str, str]) -> List[Tuple[str, str]]:
+def flatten_value(
+    prefix: str, value: Any, type_hints: Dict[str, str]
+) -> List[Tuple[str, str]]:
     """
     Recursively flatten a value into (name, formatted_value) pairs.
 
@@ -111,7 +112,7 @@ def flatten_value(prefix: str, value: Any, type_hints: Dict[str, str]) -> List[T
     if isinstance(value, dict):
         # Recursively handle nested objects
         for key, val in value.items():
-            if key.startswith('_'):  # Skip metadata keys
+            if key.startswith("_"):  # Skip metadata keys
                 continue
             child_prefix = f"{prefix}.{key}" if prefix else key
             entries.extend(flatten_value(child_prefix, val, type_hints))
@@ -120,7 +121,9 @@ def flatten_value(prefix: str, value: Any, type_hints: Dict[str, str]) -> List[T
         for i, item in enumerate(value):
             child_prefix = f"{prefix}.{i}"
             # Check for per-element type hint, fallback to array type hint
-            child_type = type_hints.get(child_prefix, type_hints.get(prefix, infer_type(item)))
+            child_type = type_hints.get(
+                child_prefix, type_hints.get(prefix, infer_type(item))
+            )
 
             if isinstance(item, (dict, list)):
                 entries.extend(flatten_value(child_prefix, item, type_hints))
@@ -133,9 +136,11 @@ def flatten_value(prefix: str, value: Any, type_hints: Dict[str, str]) -> List[T
     return entries
 
 
-def write_witness_file(entries: List[Tuple[str, str]], output_path: str, modulus: Optional[str] = None):
+def write_witness_file(
+    entries: List[Tuple[str, str]], output_path: str, modulus: Optional[str] = None
+):
     """Write entries to a witness file in S-expression format."""
-    with open(output_path, 'w') as f:
+    with open(output_path, "w") as f:
         if modulus:
             f.write(f"(set_default_modulus {modulus}\n")
         f.write("(let (\n")
@@ -170,7 +175,7 @@ def apply_mappings(data: Dict, mappings: Dict[str, str]) -> Dict:
 
     # Include unmapped fields if no explicit mappings for them
     for key, value in data.items():
-        if key not in result and not key.startswith('_'):
+        if key not in result and not key.startswith("_"):
             # Check if this key is used as a source in mappings
             if key not in mappings.values():
                 result[key] = value
@@ -181,15 +186,15 @@ def apply_mappings(data: Dict, mappings: Dict[str, str]) -> Dict:
 def parse_type_hints(data: Dict) -> Dict[str, str]:
     """Extract type hints from the _types field."""
     type_hints = {}
-    if '_types' in data:
-        for path, type_name in data['_types'].items():
+    if "_types" in data:
+        for path, type_name in data["_types"].items():
             type_hints[path] = type_name
     return type_hints
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Convert JSON to ZoKrates/CirC witness files (.pin/.vin)',
+        description="Convert JSON to ZoKrates/CirC witness files (.pin/.vin)",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -214,46 +219,75 @@ Type detection:
   - Use --type to override (e.g., --type digest=u32)
 
 The _types, _public, and _return fields in JSON are also recognized.
-        """
+        """,
     )
 
-    parser.add_argument('-i', '--input', required=True,
-                        help='Input JSON file')
-    parser.add_argument('-o', '--output', default='witness',
-                        help='Output basename (creates .pin and .vin)')
-    parser.add_argument('--pin', help='Override .pin output path')
-    parser.add_argument('--vin', help='Override .vin output path')
-    parser.add_argument('--map', action='append', metavar='OUT=IN',
-                        help='Map output field name to input field name (repeatable)')
-    parser.add_argument('--type', action='append', metavar='FIELD=TYPE',
-                        help='Set type for a field: field, u32, bool (repeatable)')
-    parser.add_argument('--public', action='append', metavar='FIELD',
-                        help='Mark field as public (included in .vin)')
-    parser.add_argument('--limit', action='append', metavar='FIELD=N',
-                        help='Limit array field to first N elements (repeatable)')
-    parser.add_argument('--only-pin', action='store_true',
-                        help='Only generate .pin file')
-    parser.add_argument('--only-vin', action='store_true',
-                        help='Only generate .vin file')
-    parser.add_argument('--exclude', action='append', metavar='FIELD',
-                        help='Exclude field from output (repeatable)')
-    parser.add_argument('--modulus', metavar='MODULUS',
-                        help='Set field modulus (required for Spartan)')
-    parser.add_argument('--spartan', action='store_true',
-                        help='Use Spartan modulus (shorthand for --modulus 723700557733...)')
+    parser.add_argument("-i", "--input", required=True, help="Input JSON file")
+    parser.add_argument(
+        "-o",
+        "--output",
+        default="witness",
+        help="Output basename (creates .pin and .vin)",
+    )
+    parser.add_argument("--pin", help="Override .pin output path")
+    parser.add_argument("--vin", help="Override .vin output path")
+    parser.add_argument(
+        "--map",
+        action="append",
+        metavar="OUT=IN",
+        help="Map output field name to input field name (repeatable)",
+    )
+    parser.add_argument(
+        "--type",
+        action="append",
+        metavar="FIELD=TYPE",
+        help="Set type for a field: field, u32, bool (repeatable)",
+    )
+    parser.add_argument(
+        "--public",
+        action="append",
+        metavar="FIELD",
+        help="Mark field as public (included in .vin)",
+    )
+    parser.add_argument(
+        "--limit",
+        action="append",
+        metavar="FIELD=N",
+        help="Limit array field to first N elements (repeatable)",
+    )
+    parser.add_argument(
+        "--only-pin", action="store_true", help="Only generate .pin file"
+    )
+    parser.add_argument(
+        "--only-vin", action="store_true", help="Only generate .vin file"
+    )
+    parser.add_argument(
+        "--exclude",
+        action="append",
+        metavar="FIELD",
+        help="Exclude field from output (repeatable)",
+    )
+    parser.add_argument(
+        "--modulus", metavar="MODULUS", help="Set field modulus (required for Spartan)"
+    )
+    parser.add_argument(
+        "--default-mod",
+        action="store_true",
+        help="Use default modulus (shorthand for --modulus 5243587517...)",
+    )
 
     args = parser.parse_args()
 
     # Handle modulus
     modulus = None
-    if args.spartan:
-        modulus = SPARTAN_MODULUS
+    if args.default_mod:
+        modulus = MOD
     elif args.modulus:
         modulus = args.modulus
 
     # Load input JSON
     try:
-        with open(args.input, 'r') as f:
+        with open(args.input, "r") as f:
             data = json.load(f)
     except FileNotFoundError:
         print(f"Error: Input file '{args.input}' not found", file=sys.stderr)
@@ -266,22 +300,31 @@ The _types, _public, and _return fields in JSON are also recognized.
     mappings = {}
     if args.map:
         for m in args.map:
-            if '=' not in m:
-                print(f"Error: Invalid mapping '{m}', expected OUT=IN format", file=sys.stderr)
+            if "=" not in m:
+                print(
+                    f"Error: Invalid mapping '{m}', expected OUT=IN format",
+                    file=sys.stderr,
+                )
                 sys.exit(1)
-            out_name, in_name = m.split('=', 1)
+            out_name, in_name = m.split("=", 1)
             mappings[out_name] = in_name
 
     # Parse type hints from command line
     type_hints = parse_type_hints(data)
     if args.type:
         for t in args.type:
-            if '=' not in t:
-                print(f"Error: Invalid type '{t}', expected FIELD=TYPE format", file=sys.stderr)
+            if "=" not in t:
+                print(
+                    f"Error: Invalid type '{t}', expected FIELD=TYPE format",
+                    file=sys.stderr,
+                )
                 sys.exit(1)
-            field, type_name = t.split('=', 1)
-            if type_name not in ('field', 'u32', 'bool'):
-                print(f"Error: Unknown type '{type_name}', expected field/u32/bool", file=sys.stderr)
+            field, type_name = t.split("=", 1)
+            if type_name not in ("field", "u32", "bool"):
+                print(
+                    f"Error: Unknown type '{type_name}', expected field/u32/bool",
+                    file=sys.stderr,
+                )
                 sys.exit(1)
             type_hints[field] = type_name
 
@@ -289,10 +332,13 @@ The _types, _public, and _return fields in JSON are also recognized.
     limits = {}
     if args.limit:
         for l in args.limit:
-            if '=' not in l:
-                print(f"Error: Invalid limit '{l}', expected FIELD=N format", file=sys.stderr)
+            if "=" not in l:
+                print(
+                    f"Error: Invalid limit '{l}', expected FIELD=N format",
+                    file=sys.stderr,
+                )
                 sys.exit(1)
-            field, n = l.split('=', 1)
+            field, n = l.split("=", 1)
             limits[field] = int(n)
 
     # Apply limits to data
@@ -319,11 +365,11 @@ The _types, _public, and _return fields in JSON are also recognized.
 
     # Remove metadata fields
     for key in list(data.keys()):
-        if key.startswith('_'):
+        if key.startswith("_"):
             del data[key]
 
     # Parse public fields
-    public_fields = set(data.get('_public', []))
+    public_fields = set(data.get("_public", []))
     if args.public:
         public_fields.update(args.public)
 
@@ -348,8 +394,8 @@ The _types, _public, and _return fields in JSON are also recognized.
         private_entries.append((name, value))  # .pin includes everything
 
     # Handle return values for .vin
-    if '_return' in data:
-        return_entries = flatten_value('return', data['_return'], type_hints)
+    if "_return" in data:
+        return_entries = flatten_value("return", data["_return"], type_hints)
         public_entries.extend(return_entries)
 
     # Determine output paths
@@ -373,8 +419,10 @@ The _types, _public, and _return fields in JSON are also recognized.
         print(f"  ./target/release/examples/zk --field-custom-modulus {modulus} \\")
         print(f"      --pin ../../{pin_path} --vin ../../{vin_path} --action spartan")
     else:
-        print(f"  ./target/release/examples/zk --inputs ../../{pin_path} --action prove")
+        print(
+            f"  ./target/release/examples/zk --inputs ../../{pin_path} --action prove"
+        )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

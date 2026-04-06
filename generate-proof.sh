@@ -17,9 +17,22 @@ if [ ! -f "${ZOKRATES_DIR}/${ZOK_FILE}" ]; then
     echo "Error: ZoKrates file not found: ${ZOKRATES_DIR}/${ZOK_FILE}"
     TO_EXIT=1
 fi
-# Check if witness file exists in the zokrates directory
+# Derive .pin and .vin paths from witness JSON (same directory, same basename)
+WITNESS_BASE="${WITNESS_JSON%.json}"
+WITNESS_PIN="${WITNESS_BASE}.pin"
+WITNESS_VIN="${WITNESS_BASE}.vin"
+
+# Check if witness files exist
 if [ ! -f "${WITNESS_JSON}" ]; then
     echo "Error: Witness file not found: ${WITNESS_JSON}"
+    TO_EXIT=1
+fi
+if [ ! -f "${WITNESS_PIN}" ]; then
+    echo "Error: Witness .pin file not found: ${WITNESS_PIN}"
+    TO_EXIT=1
+fi
+if [ ! -f "${WITNESS_VIN}" ]; then
+    echo "Error: Witness .vin file not found: ${WITNESS_VIN}"
     TO_EXIT=1
 fi
 # Check if $1 is a .json file
@@ -44,51 +57,27 @@ fi
 # Extract the basename without extension for output files
 ZOK_BASENAME=$(basename "$ZOK_FILE" .zok)
 
-# The commented-out stuff is for use with Spartan. Spartan in basic circ does not implement lookups. Using mirage for now.
-
-#MOD=7237005577332262213973186563042994240857116359379907606001950938285454250989
-MOD=52435875175126190479447740508185965837690552500527637822603658699938581184513
-
-# Get python path from within venv
-# TODO: Write an opt-out flag that lets the user run not in a venv if they absolutely want to. For now, just assume they are using the venv and error if not.
-if ! python -c 'import sys; exit(0 if sys.prefix != sys.base_prefix else 1)'; then
-    echo "Not inside a virtual environment; exiting. Please activate a virtual environment and try again."
-    exit 1
-fi
-PYTHON_BIN=$(python -c 'import sys; print(sys.executable)')
-
-${PYTHON_BIN} python-scripts/json_to_witness.py -i "$WITNESS_JSON" --map bin_image=binarized_image --map image=image --type bin_image=bool \
-			       --modulus "$MOD" \
-			       --pin "${ZOKRATES_DIR}/bin/${ZOK_BASENAME}.pin" --vin "${ZOKRATES_DIR}/bin/${ZOK_BASENAME}.vin"
-
 export RSMT2_CVC4_CMD=cvc5
 
 cd external/circ
-#./driver.py -F zok zokc r1cs spartan smt
 ./driver.py -F zok zokc r1cs bellman smt
 
 ./driver.py -b
 
 ./target/release/examples/circ "../../${ZOKRATES_DIR}/${ZOK_FILE}" --language zsharp-curly r1cs \
     --action setup \
-    --proof-impl mirage \
+    --proof-impl dorian \
     --prover-key "../../${ZOKRATES_DIR}/bin/${ZOK_BASENAME}_P" \
     --verifier-key "../../${ZOKRATES_DIR}/bin/${ZOK_BASENAME}_V"
 
-#    --field-custom-modulus "$MOD"  r1cs \
-#    --action spartan-setup \
-
-# ./target/release/examples/zk --prover-key ../../${ZOKRATES_DIR}/bin/binarize_P --verifier-key ../../${ZOKRATES_DIR}/bin/binarize_V \
-# 	--pin ../../${ZOKRATES_DIR}/bin/binarize.pin --vin ../../${ZOKRATES_DIR}/bin/binarize.vin --action spartan
-
 ./target/release/examples/zk --action prove \
-    --proof-impl mirage \
+    --proof-impl dorian \
     --prover-key "../../${ZOKRATES_DIR}/bin/${ZOK_BASENAME}_P" \
-    --inputs "../../${ZOKRATES_DIR}/bin/${ZOK_BASENAME}.pin" \
+    --inputs "../../${WITNESS_PIN}" \
     --proof "../../${ZOKRATES_DIR}/bin/${ZOK_BASENAME}.pi"
 
 ./target/release/examples/zk --action verify \
-    --proof-impl mirage \
+    --proof-impl dorian \
     --verifier-key "../../${ZOKRATES_DIR}/bin/${ZOK_BASENAME}_V" \
-    --inputs "../../${ZOKRATES_DIR}/bin/${ZOK_BASENAME}.vin" \
+    --inputs "../../${WITNESS_VIN}" \
     --proof "../../${ZOKRATES_DIR}/bin/${ZOK_BASENAME}.pi"

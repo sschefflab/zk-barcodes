@@ -17,8 +17,8 @@ def binarize<R,C>(field[R][C] image, field[R][C] bin_image) -> bool {
 }
 
 // test main function
-const u32 R = 4;
-const u32 C = 8;
+const u32 R = 32;
+const u32 C = 360;
 
 def main(private field[R][C] image, private field[R][C] bin_image) -> () {
     assert(binarize(image, bin_image));
