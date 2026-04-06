@@ -376,9 +376,9 @@ def block_measurement<R,C,G_R>(
 }
 
 // test function
-const u32 R = 128;
-const u32 C = 90;
-const u32 G_R = 25;
+const u32 R = 32;
+const u32 C = 360;
+const u32 G_R = 89;
 
 def main(
     // The full binary image and the split into well-behaved / garbage rows
