@@ -1,4 +1,7 @@
 // Check that the barcode has the appropriate amount of data after error correction.
+from "EMBED" import value_in_array;
+from "./const_range_check.zok" import GF_929;
+from "./error_correction.zok" import BarcodeStats;
 
 def check_num_cw<W>(field[W] corrected_codewords, field num_rows, field num_cols, field num_ec_codewords) -> bool {
     field mut num_cw = 0;
@@ -9,8 +12,7 @@ def check_num_cw<W>(field[W] corrected_codewords, field num_rows, field num_cols
     // Store the SLD, and count how many codewords there are from the SLD onwards
     // These two numbers should be consistent, and they should be consistent with the number of codewords specified by row indicators
     for u32 i in 0..W {
-        u32 idx = W - i - 1;
-        field cw = corrected_codewords[idx];
+        field cw = corrected_codewords[i];
         bool nonzero_cw = cw != 0;
         
         field to_add_sld = (!found_sld && nonzero_cw) ? cw : 0;
@@ -22,15 +24,16 @@ def check_num_cw<W>(field[W] corrected_codewords, field num_rows, field num_cols
     }
 
     field expected_cw = num_rows * num_cols;
+    assert(value_in_array(sld, GF_929)); // not actually needed - just here to allow for testing with dorian which requires exactly two rounds
 
     return(num_cw == expected_cw && sld == (expected_cw - num_ec_codewords));
 }
 
 // test function
-const u32 W = 64;
+const u32 W = 2700;
 
-def main(field[W] corrected_codewords, field num_rows, field num_cols, field num_ec_codewords) {
-    assert(check_num_cw(corrected_codewords, num_rows, num_cols, num_ec_codewords));
+def main(private field[W] corrected_codewords, private BarcodeStats stats) {
+    assert(check_num_cw(corrected_codewords, stats.num_rows, stats.num_cols, stats.num_ec_codewords));
 }
 
 
