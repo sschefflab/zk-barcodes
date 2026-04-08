@@ -108,11 +108,11 @@ def check_error_correction<W>(field[W] codewords, field[W] corrected_codewords, 
     // possible error correction levels are [0,8]. Need i's in range [1, 2**(ec_level+1)]. Note the closed interval, hence the range to 513 instead of 512
     for u32 i in 1..513 {
         // Polynomial evaluation at eval point 3^i mod 929
-        // powers[j] = (3^i)^j mod 929 = 3^(i*j) mod 929 = POWERS_OF_3_MOD_929[(i*j) % 928]
-        // Since i and j are compile-time constants, (i*j) % 928 is computed at compile time
+        // powers[j] = (3^i)^(W-1-j) mod 929 = POWERS_OF_3_MOD_929[(i*(W-1-j)) % 928]
+        // Since i and j are compile-time constants, (i*(W-1-j)) % 928 is computed at compile time
         field mut sum_pre_mod = 0;
         for u32 j in 0..W {
-            sum_pre_mod = sum_pre_mod + corrected_codewords[j] * POWERS_OF_3_MOD_929[(i * j) % 928];
+            sum_pre_mod = sum_pre_mod + corrected_codewords[j] * POWERS_OF_3_MOD_929[(i * (W - 1 - j)) % 928];
         }
 
         // Since we are iterating starting at 1, subtract 1 from i
@@ -121,7 +121,6 @@ def check_error_correction<W>(field[W] codewords, field[W] corrected_codewords, 
         // 22 bits is sufficient here as the upper bound on the quotient should be 929*2700. (Upper bound on sum_pre_mod is 929*929*2700.)
         bool correct_eval = check_division_algorithm_quotient_bit_decomp::<929,22>(sum_pre_mod, poly_result.result_quotient, 929, poly_result.result, GF_929);
         bool zero_syndrome = correct_eval && (poly_result.result == 0);
-        zero_syndromes = zero_syndromes && zero_syndrome;
 
         field i_f = u32_to_field(i);
 
@@ -145,15 +144,15 @@ const u32 R = 90;
 const u32 W = 2700;
 
 def main(
-    private RowIndicatorVars row_indc,
-    private field[R] left_row_inds,
-    private BarcodeStats stats
-    // private PolynomialResult[512] poly_witness,
-    // field[W] codewords,
-    // field[W] corrected_codewords
+    // private RowIndicatorVars row_indc,
+    // private field[R] left_row_inds,
+    private BarcodeStats stats,
+    private PolynomialResult[512] poly_witness,
+    private field[W] codewords,
+    private field[W] corrected_codewords
 ) -> () {
-    bool ok_stats = check_barcode_stats(row_indc, stats, left_row_inds);
-    assert(ok_stats);
-    // bool ok_ec = check_error_correction(codewords, corrected_codewords, stats.num_ec_codewords, poly_witness);
-    // assert(ok_ec);
+    // bool ok_stats = check_barcode_stats(row_indc, stats, left_row_inds);
+    // assert(ok_stats);
+    bool ok_ec = check_error_correction(codewords, corrected_codewords, stats.num_ec_codewords, poly_witness);
+    assert(ok_ec);
 }
