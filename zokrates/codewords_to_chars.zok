@@ -4,6 +4,7 @@ from "EMBED" import sample_challenge, u32_to_field;
 from "./const_range_check.zok" import RANGE_1_513;
 from "./utils.zok" import diff_lookup, PAD_CODEWORD;
 from "./char_lookup.zok" import TableState, check_table_state, check_transition;
+from "./error_correction.zok" import BarcodeStats;
 
 // a dummy table state that is used before decoding actually begins
 const TableState ZERO_TABLE_STATE = TableState { base30_val: 0, char: 0, this_table: 0, next_table: 0, next_next_table: 0 };
@@ -31,9 +32,10 @@ def codewords_to_chars<W>(field[W] corrected_codewords, TableState[2*W] table_st
 
     field[2*W] mut interpreted_chars = [0; 2*W];
 
+    field mut num_sld_states = 0;
+
     for u32 i in 0..W {
-        u32 cw_idx = W - 1 - i;
-        field codeword = corrected_codewords[cw_idx];
+        field codeword = corrected_codewords[i];
         TableState state1 = table_states[2*i];
         TableState state2 = table_states[2*i+1];
 
@@ -50,39 +52,43 @@ def codewords_to_chars<W>(field[W] corrected_codewords, TableState[2*W] table_st
         // set prev_table_state to state2 for the next looop
         prev_table_state = state2;
 
-        field idx_f = u32_to_field(cw_idx);
+        field i_f = u32_to_field(i);
 
         // if we are in an error correction state, make sure we are in the error correction portion of the codewords array
         bool is_ec_cw = (state1 == EC_TABLE_STATE) && (state2 == EC_TABLE_STATE);
+        field back_idx = u32_to_field(W - 1 - i);
         field to_compare = if is_ec_cw {
-            num_ec_codewords // if we really are in an error correction state, the number of ec codewords should be greater than our idx
+            num_ec_codewords // if we really are in an error correction state, the number of ec codewords should be greater than our W - 1 - i
         } else {
-            idx_f + 1 // otherwise, we don't care about this result - set it to something always greater than the idx
+            back_idx +1 // otherwise, we don't care about this result - set it to something always greater than back_idx
         };
 
-        bool always_true = diff_lookup(to_compare, idx_f, RANGE_1_513); // always returns true, but does an assert inside
+        bool always_true = diff_lookup(to_compare, back_idx, RANGE_1_513); // always returns true, but does an assert inside
         
         // Don't try to decode error correction codewords, pads, or higher-degree terms that are zero
-        (bool, field, field) decode = if (!is_ec_cw) {
+        (bool, field, field, field) decode = if (!is_ec_cw) {
             if (codeword ==  PAD_CODEWORD) {
-                ((state1 == PAD_TABLE_STATE) && (state2 == PAD_TABLE_STATE), 0, 0)
+                ((state1 == PAD_TABLE_STATE) && (state2 == PAD_TABLE_STATE), 0, 0, 0)
             } else {
                 if (state1 == SLD_TABLE_STATE && state2 == SLD_TABLE_STATE) {
-                    (true, 0, 0)
+                    (true, 0, 0, 2)
                 } else {
                     // It's ok to decode zero states - they will just decode to null characters
                     // If we have some mix of non-codeword states here, they will fail to decode
-                    (check_char_split(codeword, state1.base30_val, state2.base30_val), state1.char, state2.char)
+                    (check_char_split(codeword, state1.base30_val, state2.base30_val), state1.char, state2.char, 0)
                 }
             }
         } else {
-            (true, 0, 0) // we already checked the ec codewords states
+            (true, 0, 0, 0) // we already checked the ec codewords states
         };
 
         correct_char_split = correct_char_split && decode.0;
         interpreted_chars[2*i] = decode.1;
         interpreted_chars[2*i + 1] = decode.2;
+        num_sld_states = num_sld_states + decode.3;
     }
+
+    bool correct_sld_states = num_sld_states == 2;
 
     field beta = sample_challenge([...interpreted_chars, ...chars]);
 
@@ -107,12 +113,12 @@ def codewords_to_chars<W>(field[W] corrected_codewords, TableState[2*W] table_st
 
     bool correct_chars = result1 == result2;
     
-    return(correct_char_split && correct_chars);
+    return(correct_char_split && correct_sld_states && correct_chars);
 }
 
 // test function
 const u32 W = 2700;
 
-def main(field[W] corrected_codewords, private TableState[2*W] states, private field num_ec_codewords, field[2*W] chars) {
-    assert(codewords_to_chars(corrected_codewords, states, num_ec_codewords, chars));
+def main(private field[W] corrected_codewords, private TableState[2*W] char_table_states, private BarcodeStats stats, private field[2*W] chars) {
+    assert(codewords_to_chars(corrected_codewords, char_table_states, stats.num_ec_codewords, chars));
 }

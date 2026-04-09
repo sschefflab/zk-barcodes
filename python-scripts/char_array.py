@@ -509,12 +509,15 @@ def generate_valid_transitions():
     valid_transitions.append(encode_state_tuple(ZERO_STATE_ENCODED, SLD_STATE_ENCODED))
 
     # SLD state transitions:
+    # - SLD -> SLD is allowed (intra-codeword: state1=SLD, state2=SLD for the one SLD codeword)
+    #   The circuit separately asserts there are exactly 2 SLD states total.
+    valid_transitions.append(encode_state_tuple(SLD_STATE_ENCODED, SLD_STATE_ENCODED))
+
     # - SLD -> Alpha is allowed (transition from SLD to start of actual data)
     #   Alpha states are indices 0-29
     for idx in range(30):
         encoded_tuple = encode_state_tuple(SLD_STATE_ENCODED, encoded_table[idx])
         valid_transitions.append(encoded_tuple)
-    # Note: SLD -> SLD is NOT allowed (SLD is exactly one codeword)
 
     # PAD state transitions:
     # - PAD -> PAD is allowed (stay in pad state)
@@ -525,9 +528,8 @@ def generate_valid_transitions():
         encoded_tuple = encode_state_tuple(encoded_table[idx], PAD_STATE_ENCODED)
         valid_transitions.append(encoded_tuple)
 
-    # - Alpha -> EC is allowed (data can end without padding)
-    #   Alpha states are indices 0-29
-    for idx in range(30):
+    # - any normal state -> EC is allowed (data can end without padding, in any sub-mode)
+    for idx in range(120):
         encoded_tuple = encode_state_tuple(encoded_table[idx], EC_STATE_ENCODED)
         valid_transitions.append(encoded_tuple)
 
