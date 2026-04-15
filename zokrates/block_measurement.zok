@@ -1,7 +1,7 @@
 // Measure the length of blocks in pixels
 
 from "./utils.zok" import check_bit_decomp, flatten_array, diff_lookup;
-from "./const_range_check.zok" import RANGE_1_513, RANGE_0_27, RANGE_0_1080;
+from "./const_range_check.zok" import RANGE_1_513, RANGE_0_104, RANGE_0_1080;
 from "EMBED" import value_in_array, value_in_array_tuple, sample_challenge, u32_to_field, unpack;
 from "./block_measurement_tables.zok" import L, TABLE_LEN, WB_POWERS_OF_B, WB_CHUNK_LOOKUP_TABLE, G_POWERS_OF_B, G_CHUNK_LOOKUP_TABLE;
 
@@ -29,7 +29,8 @@ struct BlockLookup {
 def pixels_to_binary<P>(field[P] pixels) -> field {
     field mut result = 0;
     for u32 i in 0..P {
-        result = result + 2**i*pixels[i];
+        u32 idx = P - 1 - i; // binary values encoded big endian
+        result = result + 2**idx*pixels[i];
     }
     return(result);
 }
@@ -84,6 +85,7 @@ def process_chunks<C>(
 
     // Step 3 - Process chunks
     for u32 i in 0..num_chunks {
+        // TODO - handle the case where the whole block is the remainder - currently causes exp to be -1
         field a = lookups[i].remainder_is_black;
         field b = black_r;
         field c = lookups[i].num_blocks_is_odd;
@@ -98,6 +100,10 @@ def process_chunks<C>(
         remainder = lookups[i].remainder;
         black_r = lookups[i].remainder_is_black;
     }
+
+    // Handle the last dangling remainder - add it to the last chunk
+    block_chunks[num_chunks - 1] = block_chunks[num_chunks -1] * powers_of_B[1][1] + remainder;
+    all_nb[num_chunks - 1] = all_nb[num_chunks - 1] + 1;
 
     ProcessedChunks<C> result = ProcessedChunks { block_chunks : block_chunks, all_nb : all_nb };
     return(result);
@@ -155,7 +161,8 @@ def check_consistency<C,B,NB,M,LOGM>(
         field mut baseB_sum = 0;
         field b_f = u32_to_field(B);
         for u32 j in 0..M {
-            baseB_sum = baseB_sum + baseB_decomp[j] * b_f**j;
+            u32 pwr = M - 1 - j;
+            baseB_sum = baseB_sum + baseB_decomp[j] * b_f**pwr;
             assert(value_in_array(baseB_decomp[j], range_check_table));
         }
         correct_baseb_decomp = correct_baseb_decomp && (baseB_sum == block_chunks[i]);
@@ -311,9 +318,9 @@ def check_garbage_split<R,C,G_R>(
 // Block measurement constants
 // B = max block length in pixels (used as base for encoding and range check table size)
 // NB = number of blocks per row
-const u32 WB_B = 27;
-const u32 WB_NB = 273;
-const u32 WB_M = 4;
+const u32 WB_B = 104; // min 17*5 = 85 modules in a row, 1080 / 85 = 13 pixels/module, 8 modules in max bar for max 104 pixels per block
+const u32 WB_NB = 281; // 8 blocks per data column + 32 blocks for start and row indicators + 9 blocks for stop. Max 30 data columns = 281 blocks
+const u32 WB_M = 4; // max blocks per chunk = ceil(1080 / 281) = 4
 const u32 WB_LOGM = 2; // ceil(log2(WB_M))
 const u32 G_B = 1080;
 const u32 G_NB = 1080;
@@ -321,7 +328,7 @@ const u32 G_M = 10; // same as L
 const u32 G_LOGM = 4; // ceil(log2(G_M))
 
 // Range check tables
-const field[WB_B] WB_RANGE_CHECK_TABLE = RANGE_0_27;
+const field[WB_B] WB_RANGE_CHECK_TABLE = RANGE_0_104;
 const field[G_B] G_RANGE_CHECK_TABLE = RANGE_0_1080;
 
 def block_measurement<R,C,G_R>(
@@ -386,7 +393,7 @@ def main(
     private field[R][C] well_behaved,
     private field[R] wb_inds,
     private field[R] wb_ind_counts,
-    private field[G_R][C] garbage,
+    private field[G_R][C] garbage_image,
     private field garbage_inds,
     private field num_zero_rows,
     // Well-behaved block checking metadata
@@ -403,7 +410,7 @@ def main(
         well_behaved,
         wb_inds,
         wb_ind_counts,
-        garbage,
+        garbage_image,
         garbage_inds,
         num_zero_rows,
         wb_lookups,

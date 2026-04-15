@@ -1,0 +1,42 @@
+from "./make_words.zok" import compute_words;
+from "./make_codewords.zok" import check_codewords_and_garbage, T;
+
+const u32 R = 100;
+const u32 G_R = 24;
+const u32 WB_NB = 273;
+const u32 WB_CW = 35; // words per well-behaved row (WB_NB should be 273)
+const u32 G_NB = 1080;
+const u32 G_CW = 135;   // words per garbage row (G_NB should be 1080)
+const u32 RW = 25;         // max number of logical barcode rows
+const u32 W = 750;
+
+def main(
+    private field[R][WB_NB] wb_blocks,
+    private field[G_R][G_NB] g_blocks,
+    private field[R][WB_CW][8] wb_normalized_blocks,
+    private field[G_R][G_CW][8] g_normalized_blocks,
+    private field[R][WB_CW] words_with_dummies,
+    field[T] wb_disjoint_set_poly_f,
+    private field[R*WB_CW] wb_disjoint_set_poly_g,
+    private field[R][WB_CW] ext_codewords,
+    private field[W] codewords,
+    private field[RW] left_row_inds,
+    field[T] garbage_disjoint_set_poly_f,
+    private field[G_R*G_CW] garbage_disjoint_set_poly_g
+) {
+    field[R][WB_CW] words = compute_words(wb_blocks, wb_normalized_blocks);
+    field[G_R][G_CW] garbage_words = compute_words(g_blocks, g_normalized_blocks);
+
+    assert(check_codewords_and_garbage(
+        words,
+        words_with_dummies,
+        wb_disjoint_set_poly_f,
+        wb_disjoint_set_poly_g,
+        ext_codewords,
+        codewords,
+        left_row_inds,
+        garbage_words,
+        garbage_disjoint_set_poly_f,
+        garbage_disjoint_set_poly_g
+    ));
+}

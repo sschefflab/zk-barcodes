@@ -115,6 +115,8 @@ echo "Step 3: Converting witness JSON to .pin and .vin files..."
 ${PYTHON_BIN} python-scripts/json_to_witness.py \
     -i "$WITNESS_FILE" \
     --type bin_image=bool \
+    --public wb_disjoint_set_poly_f \
+    --public garbage_disjoint_set_poly_f \
     --modulus "$MOD" \
     --pin "$WITNESS_PIN" \
     --vin "$WITNESS_VIN"

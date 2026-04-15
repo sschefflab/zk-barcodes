@@ -139,11 +139,10 @@ def check_codewords<R, RW, CW, W>(
     field mut result1 = 0;
     field mut pow = 1;
     for u32 i in 0..N {
-        u32 ind = N - i - 1; // this array is reversed from the codewords array
-        (field, field) acc = if (cw_and_dummies[ind] == DUMMY) {
+        (field, field) acc = if (cw_and_dummies[i] == DUMMY) {
             (0, pow)
         } else {
-            (cw_and_dummies[ind] * pow, pow * beta)
+            (cw_and_dummies[i] * pow, pow * beta)
         };
         result1 = result1 + acc.0;
         pow = acc.1;

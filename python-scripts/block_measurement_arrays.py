@@ -16,32 +16,35 @@ def generate_pixels_and_blocks(B):
     for i in range(0, 2**L):
         c = i
 
-        binary = format(i, f"0{L}b")  # zero-padded L-bit string
-        previous = binary[0]
+        binary = format(
+            i, f"0{L}b"
+        )  # zero-padded L-bit string, binary[0]=pixel[0]=leftmost
+        previous = binary[0]  # start at leftmost pixel (MSB of integer)
         num_bits = 1
-        enc_baseB = 0
-        power_of_B = 0
-
-        for b in range(1, len(binary)):
+        blocks = []  # completed (non-remainder) blocks, left to right
+        for b in range(1, len(binary)):  # iterate toward rightmost pixel (LSB)
             if binary[b] == previous:
                 num_bits += 1
             else:
-                enc_baseB += B**power_of_B * num_bits
-                power_of_B += 1
+                blocks.append(num_bits)
                 num_bits = 1
                 previous = binary[b]
 
-        r = num_bits
-        nb = power_of_B
+        r = num_bits  # remainder = rightmost block
+        nb = len(blocks)  # number of completed blocks, not including the remainder
         odd = int(nb % 2 == 1)
-        black = int(previous == "0")
+        black = int(previous == "1")  # 1 if rightmost (remainder) block is black
+
+        # Big-endian base-B encoding: leftmost block gets B^(nb-1), rightmost gets B^0
+        enc_baseB = sum(B ** (nb - 1 - j) * s for j, s in enumerate(blocks))
+
         table.append([c, enc_baseB, r, nb, odd, black])
 
     return table
 
 
 if __name__ == "__main__":
-    for B in [27, 1080]:
+    for B in [104, 1080]:
         print(f"=== B = {B} ===")
         print()
 
