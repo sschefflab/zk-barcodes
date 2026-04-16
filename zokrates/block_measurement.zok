@@ -85,20 +85,31 @@ def process_chunks<C>(
 
     // Step 3 - Process chunks
     for u32 i in 0..num_chunks {
-        // TODO - handle the case where the whole block is the remainder - currently causes exp to be -1
+        // only used in the non-zero case, but zokrates is weird and I have to declare this out here
         field a = lookups[i].remainder_is_black;
         field b = black_r;
         field c = lookups[i].num_blocks_is_odd;
         field offset = 1 - a - b - c + 2*a*b + 2*a*c + 2*b*c - 4*a*b*c;
-        field exp = lookups[i].num_blocks - offset;
 
-        assert(value_in_array_tuple([exp, lookups[i].power_of_B], powers_of_B));
+        // exp, power_of_B, block_chunk, nb, remainder, remainder_is_black
+        (field, field, field, field, field, field) combined = if (lookups[i].num_blocks == 0) {
+            // This is gross, but all these values have to be inlined because no values can be declared inside an if statement
+            if ((lookups[i].remainder_is_black == 1 && black_r == 1) || (lookups[i].remainder_is_black == 0 && black_r == 0)) {
+                (0, 1, 0, 0, remainder + lookups[i].remainder, black_r)
+            } else {
+                (0, 1, remainder, 1, lookups[i].remainder, lookups[i].remainder_is_black)
+            }
+        } else {
+            (lookups[i].num_blocks - offset, lookups[i].power_of_B, remainder*lookups[i].power_of_B + lookups[i].baseB_enc, lookups[i].num_blocks + 1 - offset, lookups[i].remainder, lookups[i].remainder_is_black)
+        };
 
-        block_chunks[i] = remainder*lookups[i].power_of_B + lookups[i].baseB_enc;
-        all_nb[i] = lookups[i].num_blocks + 1 - offset;
+        assert(value_in_array_tuple([combined.0, combined.1], powers_of_B));
 
-        remainder = lookups[i].remainder;
-        black_r = lookups[i].remainder_is_black;
+        block_chunks[i] = combined.2;
+        all_nb[i] = combined.3;
+
+        remainder = combined.4;
+        black_r = combined.5;
     }
 
     // Handle the last dangling remainder - add it to the last chunk
