@@ -1,14 +1,14 @@
 from "./make_words.zok" import compute_words;
 from "./make_codewords.zok" import check_codewords_and_garbage, T;
 
-const u32 R = 100;
-const u32 G_R = 24;
-const u32 WB_NB = 273;
-const u32 WB_CW = 35; // words per well-behaved row (WB_NB should be 273)
+const u32 R = 32;
+const u32 G_R = 89;
+const u32 WB_NB = 281;
+const u32 WB_CW = 36; // words per well-behaved row (WB_NB should be 281)
 const u32 G_NB = 1080;
 const u32 G_CW = 135;   // words per garbage row (G_NB should be 1080)
-const u32 RW = 25;         // max number of logical barcode rows
-const u32 W = 750;
+const u32 RW = 90;         // max number of logical barcode rows
+const u32 W = 2700;
 
 def main(
     private field[R][WB_NB] wb_blocks,
@@ -27,7 +27,7 @@ def main(
     field[R][WB_CW] words = compute_words(wb_blocks, wb_normalized_blocks);
     field[G_R][G_CW] garbage_words = compute_words(g_blocks, g_normalized_blocks);
 
-    assert(check_codewords_and_garbage(
+    assert(check_codewords_and_garbage::<R, RW, WB_CW, G_R, G_CW, W>(
         words,
         words_with_dummies,
         wb_disjoint_set_poly_f,

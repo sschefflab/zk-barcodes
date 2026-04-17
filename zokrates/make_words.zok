@@ -13,7 +13,7 @@ def compute_word(field[8] blocks, field[8] normalized_blocks) -> field {
 
     field mut word = 0;
     for u32 i in 0..8 {
-        field r = blocks[i] * sum_pixels - 17 * normalized_blocks[i];
+        field r = blocks[i] * 17 - sum_pixels * normalized_blocks[i];
         assert(value_in_array(r, table));
         word = word + normalized_blocks[i] * 10**(7-i);
     }

@@ -114,17 +114,33 @@ def check_codewords<R, RW, CW, W>(
             } else {
                 0
             };
-
             row_inds_and_dummies[i] = row_inds_and_dummies[i] + to_add_row_ind;
 
             // only some columns are codewords - only modify codewords if so
-            // TODO: confirm this check isn't adding a ton of constraints
             field to_add_cw = if (j >= 2 && !found_stop) {
                ext_cw - DUMMY // subtract out the dummy codeword we filled everything with
             } else {
                 0
             };
 
+            // remove previous codewordd if we just found stop - this is a right row indicator
+            u32 idx_to_set = if (cw_idx == 0) {
+                0
+            } else {
+                cw_idx - 1
+            };
+            
+            field to_set_previous = if (cw_idx > 0) && (acc_found_stop) {
+                DUMMY
+            } else {
+                if (cw_idx == 0) {
+                    DUMMY // this is the start - we haven't set anything yet. Just set it to the DUMMY value it already is.
+                } else {
+                    cw_and_dummies[cw_idx - 1]
+                }
+            };
+
+            cw_and_dummies[idx_to_set] = to_set_previous; // idx_to_set is actually constant, so this should be fine
             cw_and_dummies[cw_idx] = cw_and_dummies[cw_idx] + to_add_cw;
         }
     }
@@ -201,18 +217,18 @@ def check_codewords_and_garbage<WB_R, WB_RW, WB_CW, G_R, G_CW, W>(
 ) -> bool {
     bool wb_ok = check_codewords(words, words_with_dummies, wb_disjoint_set_poly_f, wb_disjoint_set_poly_g, ext_codewords, codewords, left_row_inds);
     u32 Ng = G_R * G_CW;
-    field[Ng] flattened_garbage_words = flatten_array(garbage_words);
+    field[Ng] flattened_garbage_words = flatten_array::<G_R,G_CW>(garbage_words);
     bool garbage_is_garbage = disjoint_sets::<Ng, T>(flattened_garbage_words, VALID_WORDS, garbage_disjoint_set_poly_f, garbage_disjoint_set_poly_g);
     return(wb_ok && garbage_is_garbage);
 }
 
 // test function
-const u32 R = 4;
-const u32 CW = 6; // should actually be B / 8
-const u32 W = 2;
-const u32 RW = 2; // the number of logical barcode rows. Should be 90.
-const u32 G_R = 2;
-const u32 G_CW = 6;
+const u32 R = 32;
+const u32 CW = 36;
+const u32 W = 2700;
+const u32 RW = 90; // the number of logical barcode rows. Should be 90.
+const u32 G_R = 89;
+const u32 G_CW = 135;
 
 def main(
     field[R][CW] words,

@@ -111,10 +111,13 @@ echo "✓ Witness generated: $WITNESS_FILE"
 echo ""
 
 # Step 3: Convert witness JSON to witness files
+# TODO: remove the words public values when done testing
 echo "Step 3: Converting witness JSON to .pin and .vin files..."
 ${PYTHON_BIN} python-scripts/json_to_witness.py \
     -i "$WITNESS_FILE" \
     --type bin_image=bool \
+    --public wb_words \
+    --public garbage_words \
     --public wb_disjoint_set_poly_f \
     --public garbage_disjoint_set_poly_f \
     --modulus "$MOD" \
