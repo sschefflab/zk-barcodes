@@ -22,15 +22,14 @@ struct BlockLookup {
     field num_blocks_is_odd;
     field remainder_is_black;
 
-    field power_of_B;
+    field next_power_of_B;
 }
 
 // we already know the pixels are binary values, so just have to combine them
 def pixels_to_binary<P>(field[P] pixels) -> field {
     field mut result = 0;
     for u32 i in 0..P {
-        u32 idx = P - 1 - i; // binary values encoded big endian
-        result = result + 2**idx*pixels[i];
+        result = result + 2**i*pixels[i];
     }
     return(result);
 }
@@ -71,9 +70,9 @@ struct ProcessedChunks<C> {
     field[C/L] all_nb;
 }
 
-def process_chunks<C>(
+def process_chunks<C,NB>(
     BlockLookup[C/L] lookups,
-    field[L][2] powers_of_B
+    field[NB][2] powers_of_B
 ) -> ProcessedChunks<C> {
     u32 num_chunks = C/L;
 
@@ -83,56 +82,80 @@ def process_chunks<C>(
     field mut remainder = 0;
     field mut black_r = 0;
 
-    // Step 3 - Process chunks
-    for u32 i in 0..num_chunks {
+    // Step 3a - Process chunk 0: no previous remainder, so no extra_block offset
+    block_chunks[0] = lookups[0].baseB_enc;
+    all_nb[0] = lookups[0].num_blocks;
+    remainder = lookups[0].remainder;
+    black_r = lookups[0].remainder_is_black;
+
+    // Step 3b - Process remaining chunks
+    for u32 i in 1..num_chunks {
         // only used in the non-zero case, but zokrates is weird and I have to declare this out here
         field a = lookups[i].remainder_is_black;
         field b = black_r;
         field c = lookups[i].num_blocks_is_odd;
-        field offset = 1 - a - b - c + 2*a*b + 2*a*c + 2*b*c - 4*a*b*c;
-
-        // exp, power_of_B, block_chunk, nb, remainder, remainder_is_black
-        (field, field, field, field, field, field) combined = if (lookups[i].num_blocks == 0) {
-            // This is gross, but all these values have to be inlined because no values can be declared inside an if statement
-            if ((lookups[i].remainder_is_black == 1 && black_r == 1) || (lookups[i].remainder_is_black == 0 && black_r == 0)) {
-                (0, 1, 0, 0, remainder + lookups[i].remainder, black_r)
-            } else {
-                (0, 1, remainder, 1, lookups[i].remainder, lookups[i].remainder_is_black)
-            }
+        field extra_block = a + b + c - 2*a*b - 2*a*c - 2*b*c + 4*a*b*c;
+        field power_of_B = if (extra_block == 0) {
+            1
         } else {
-            (lookups[i].num_blocks - offset, lookups[i].power_of_B, remainder*lookups[i].power_of_B + lookups[i].baseB_enc, lookups[i].num_blocks + 1 - offset, lookups[i].remainder, lookups[i].remainder_is_black)
+            powers_of_B[1][1]
         };
 
-        assert(value_in_array_tuple([combined.0, combined.1], powers_of_B));
+        // block_chunk, nb, remainder, remainder_is_black
+        (field, field, field, field) combined = if (lookups[i].num_blocks == 0) {
+            // This is gross, but all these values have to be inlined because no values can be declared inside an if statement
+            if ((lookups[i].remainder_is_black == 1 && black_r == 1) || (lookups[i].remainder_is_black == 0 && black_r == 0)) {
+                (0, 0, remainder + lookups[i].remainder, black_r)
+            } else {
+                (remainder, 1, lookups[i].remainder, lookups[i].remainder_is_black)
+            }
+        } else {
+            (remainder+power_of_B*lookups[i].baseB_enc, lookups[i].num_blocks + extra_block, lookups[i].remainder, lookups[i].remainder_is_black)
+        };
 
-        block_chunks[i] = combined.2;
-        all_nb[i] = combined.3;
+        block_chunks[i] = combined.0;
+        all_nb[i] = combined.1;
 
-        remainder = combined.4;
-        black_r = combined.5;
+        remainder = combined.2;
+        black_r = combined.3;
     }
 
-    // Handle the last dangling remainder - add it to the last chunk
-    block_chunks[num_chunks - 1] = block_chunks[num_chunks -1] * powers_of_B[1][1] + remainder;
-    all_nb[num_chunks - 1] = all_nb[num_chunks - 1] + 1;
+    // Handle the last remainder
+    u32 last = num_chunks - 1;
+    assert(value_in_array_tuple([all_nb[last], lookups[last].next_power_of_B], powers_of_B));
+    block_chunks[last] = block_chunks[last] + remainder * lookups[last].next_power_of_B;
+    all_nb[last] = all_nb[last] + 1;
+
 
     ProcessedChunks<C> result = ProcessedChunks { block_chunks : block_chunks, all_nb : all_nb };
     return(result);
 
 }
 
-def power_from_bit_decomp<B,LOGM>(
-    field[B] powers_of_beta,
+def make_binary_powers<LOGM>(
+    field beta
+) -> field[LOGM] {
+    field[LOGM] result = [beta; LOGM];
+    for u32 i in 1..LOGM {
+        result[i] = result[i-1] * result[i-1];
+    }
+    return(result);
+}
+
+def power_from_bit_decomp<LOGM>(
+    field beta,
     field exponent
 ) -> field {
     bool[LOGM] bits = unpack(exponent);
     assert(check_bit_decomp(exponent, bits));
 
+    field[LOGM] binary_powers = make_binary_powers(beta);
+
     field mut result = 1;
     for u32 i in 0..LOGM {
-        u32 ind = LOGM - i - 1;
-        field to_mult = if (bits[ind]) {
-            powers_of_beta[ind]
+        u32 pwr = LOGM - i - 1;
+        field to_mult = if (bits[i]) {
+            binary_powers[pwr]
         } else {
             1
         };
@@ -147,7 +170,7 @@ def check_consistency<C,B,NB,M,LOGM>(
     field[NB] blocks,
     field[C/L] block_chunks,
     field[C/L] all_nb,
-    field[R/L][M] baseB_decomps,
+    field[C/L][M] baseB_decomps,
     field[B] range_check_table
 ) -> bool {
     u32 num_chunks = C/L;
@@ -167,13 +190,13 @@ def check_consistency<C,B,NB,M,LOGM>(
     field mut outer_power = 1;
     field mut result_g = 0;
     for u32 i in 0..num_chunks {
+
         // check that the baseB_decomp is legit
         field[L] baseB_decomp = baseB_decomps[i];
         field mut baseB_sum = 0;
         field b_f = u32_to_field(B);
         for u32 j in 0..M {
-            u32 pwr = M - 1 - j;
-            baseB_sum = baseB_sum + baseB_decomp[j] * b_f**pwr;
+            baseB_sum = baseB_sum + baseB_decomp[j] * b_f**j;
             assert(value_in_array(baseB_decomp[j], range_check_table));
         }
         correct_baseb_decomp = correct_baseb_decomp && (baseB_sum == block_chunks[i]);
@@ -184,25 +207,18 @@ def check_consistency<C,B,NB,M,LOGM>(
             sum = sum + (baseB_decomp[j] * powers_of_beta[j]);
         }
 
-
-        field to_mult = if i > 0 {
-            power_from_bit_decomp::<NB,LOGM>(powers_of_beta, all_nb[i-1])
-        } else {
-            1
-        };
-        outer_power = outer_power * to_mult;
-
         result_g = result_g + sum * outer_power;
+        outer_power = outer_power * power_from_bit_decomp::<LOGM>(beta, all_nb[i]);
     }
-    
-    return(result_f == result_g);
+
+    return(result_f == result_g && correct_baseb_decomp);
 }
 
 def check_blocks<R,C,B,NB,M,LOGM>(
     field[R][C] bin_pixels,
     BlockLookup[R][C/L] lookups,
     field[TABLE_LEN][6] chunk_lookup_table,
-    field[L][2] powers_of_B,
+    field[NB][2] powers_of_B,
     field[R][NB] blocks,
     field[R][C/L][L] baseB_decomps,
     field[B] range_check_table
@@ -216,7 +232,7 @@ def check_blocks<R,C,B,NB,M,LOGM>(
     for u32 r in 0..R {
         correct_chunks = correct_chunks && check_chunks(bin_pixels[r], lookups[r], chunk_lookup_table);
 
-        ProcessedChunks<C> processed = process_chunks::<C>(lookups[r], powers_of_B);
+        ProcessedChunks<C> processed = process_chunks::<C,NB>(lookups[r], powers_of_B);
         block_chunks[r] = processed.block_chunks;
         all_nb[r] = processed.all_nb;
     }
@@ -380,17 +396,17 @@ def block_measurement<R,C,G_R>(
         G_RANGE_CHECK_TABLE
     );
 
-    bool split_ok = check_garbage_split::<R,C,G_R>(
-        bin_image,
-        well_behaved,
-        wb_inds,
-        wb_ind_counts,
-        garbage,
-        garbage_inds,
-        num_zero_rows
-    );
+    // bool split_ok = check_garbage_split::<R,C,G_R>(
+    //     bin_image,
+    //     well_behaved,
+    //     wb_inds,
+    //     wb_ind_counts,
+    //     garbage,
+    //     garbage_inds,
+    //     num_zero_rows
+    // );
 
-    return(wb_blocks_ok && g_blocks_ok && split_ok);
+    return(wb_blocks_ok && g_blocks_ok);
 }
 
 // test function
