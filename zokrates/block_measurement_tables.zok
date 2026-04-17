@@ -2,19 +2,14 @@
 // B = 104 (WB), B = 1080 (G)
 
 const u32 L = 10;
+const u32 WB_M = 4;
 const u32 TABLE_LEN = 1024; // 2^L
 
-const field[L][2] WB_POWERS_OF_B = [
+const field[WB_M][2] WB_POWERS_OF_B = [
     [0, 1],
     [1, 104],
     [2, 10816],
-    [3, 1124864],
-    [4, 116985856],
-    [5, 12166529024],
-    [6, 1265319018496],
-    [7, 131593177923584],
-    [8, 13685690504052736],
-    [9, 1423311812421484544]
+    [3, 1124864]
 ];
 
 const field[TABLE_LEN][6] WB_CHUNK_LOOKUP_TABLE = [

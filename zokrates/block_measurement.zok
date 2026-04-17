@@ -70,9 +70,9 @@ struct ProcessedChunks<C> {
     field[C/L] all_nb;
 }
 
-def process_chunks<C,NB>(
+def process_chunks<C,M>(
     BlockLookup[C/L] lookups,
-    field[NB][2] powers_of_B
+    field[M][2] powers_of_B
 ) -> ProcessedChunks<C> {
     u32 num_chunks = C/L;
 
@@ -218,7 +218,7 @@ def check_blocks<R,C,B,NB,M,LOGM>(
     field[R][C] bin_pixels,
     BlockLookup[R][C/L] lookups,
     field[TABLE_LEN][6] chunk_lookup_table,
-    field[NB][2] powers_of_B,
+    field[M][2] powers_of_B,
     field[R][NB] blocks,
     field[R][C/L][L] baseB_decomps,
     field[B] range_check_table
@@ -232,7 +232,7 @@ def check_blocks<R,C,B,NB,M,LOGM>(
     for u32 r in 0..R {
         correct_chunks = correct_chunks && check_chunks(bin_pixels[r], lookups[r], chunk_lookup_table);
 
-        ProcessedChunks<C> processed = process_chunks::<C,NB>(lookups[r], powers_of_B);
+        ProcessedChunks<C> processed = process_chunks::<C,M>(lookups[r], powers_of_B);
         block_chunks[r] = processed.block_chunks;
         all_nb[r] = processed.all_nb;
     }
@@ -299,7 +299,7 @@ def check_garbage_split<R,C,G_R>(
     field[R] wb_inds,
     field[R] wb_ind_counts,
     field[G_R][C] garbage,
-    field garbage_inds,
+    field[G_R] garbage_inds,
     field num_zero_rows
 ) -> bool {
     bool is_true = non_decreasing_array_9bit(wb_inds); // this output is always true, but it does asserts inside
@@ -314,7 +314,7 @@ def check_garbage_split<R,C,G_R>(
     field[R] wb_rows = combine_rows(well_behaved, gamma);
     field[G_R] garbage_rows = combine_rows(garbage, gamma);
 
-    // Habock argument
+    // Haboeck argument
     field alpha = sample_challenge([...bin_img_rows, ...wb_rows, ...garbage_rows]);
     field beta = sample_challenge([...bin_img_rows, ...wb_rows, ...garbage_rows]);
 
@@ -328,14 +328,12 @@ def check_garbage_split<R,C,G_R>(
     }
 
     for u32 j in 0..R {
-        field j_f = u32_to_field(j);
-        field term = 1 / (alpha + j_f + beta * wb_rows[j]);
+        field term = 1 / (alpha + wb_inds[j] + beta * wb_rows[j]);
         rhs = rhs + term;
     }
 
     for u32 k in 0..G_R {
-        field k_f = u32_to_field(k);
-        field term = 1 / (alpha + k_f + beta * garbage_rows[k]);
+        field term = 1 / (alpha + garbage_inds[k] + beta * garbage_rows[k]);
         rhs = rhs + term;
     }
 
@@ -365,7 +363,7 @@ def block_measurement<R,C,G_R>(
     field[R] wb_inds,
     field[R] wb_ind_counts,
     field[G_R][C] garbage,
-    field garbage_inds,
+    field[G_R] garbage_inds,
     field num_zero_rows,
     // Well-behaved block checking metadata
     BlockLookup[R][C/L] wb_lookups,
@@ -380,7 +378,7 @@ def block_measurement<R,C,G_R>(
         well_behaved,
         wb_lookups,
         WB_CHUNK_LOOKUP_TABLE,
-        WB_POWERS_OF_B,
+        WB_POWERS_OF_B, // TODO: make this the right length. Don't need all 10 entries
         wb_blocks,
         wb_baseB_decomps,
         WB_RANGE_CHECK_TABLE
@@ -396,17 +394,17 @@ def block_measurement<R,C,G_R>(
         G_RANGE_CHECK_TABLE
     );
 
-    // bool split_ok = check_garbage_split::<R,C,G_R>(
-    //     bin_image,
-    //     well_behaved,
-    //     wb_inds,
-    //     wb_ind_counts,
-    //     garbage,
-    //     garbage_inds,
-    //     num_zero_rows
-    // );
+    bool split_ok = check_garbage_split::<R,C,G_R>(
+        bin_image,
+        well_behaved,
+        wb_inds,
+        wb_ind_counts,
+        garbage,
+        garbage_inds,
+        num_zero_rows
+    );
 
-    return(wb_blocks_ok && g_blocks_ok);
+    return(wb_blocks_ok && g_blocks_ok && split_ok);
 }
 
 // test function
@@ -421,7 +419,7 @@ def main(
     private field[R] wb_inds,
     private field[R] wb_ind_counts,
     private field[G_R][C] garbage_image,
-    private field garbage_inds,
+    private field[G_R] garbage_inds,
     private field num_zero_rows,
     // Well-behaved block checking metadata
     private BlockLookup[R][C/L] wb_lookups,
