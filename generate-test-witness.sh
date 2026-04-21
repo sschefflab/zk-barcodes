@@ -13,6 +13,7 @@ usage() {
     echo "  -e, --ec N           Error correction level (default: 1)"
     echo "  -W, --width N        Target image width in pixels"
     echo "  -H, --height N       Target image height in pixels"
+    echo "  --image-mode MODE    Image mode for witness extraction: hd (default) or sd"
     echo "  -h, --help           Show this help"
     echo ""
     echo "Examples:"
@@ -20,6 +21,8 @@ usage() {
     echo "  $0 --rows 10 --cols 5 --ec 2"
     echo "  $0 --rows 15 --cols 8 --ec 2 --width 1080 --height 720"
     echo "  $0 -r 10 -c 5 -e 2 -W 1920 -H 1080 -d my-witness"
+    echo "  $0 --image-mode sd"
+    echo "  $0 --width 640 --height 480 --image-mode sd"
 }
 
 # Defaults
@@ -29,17 +32,19 @@ COLS=2
 EC=1
 IMG_WIDTH=""
 IMG_HEIGHT=""
+IMAGE_MODE=""
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        -d|--dir)    WITNESS_DIR="$2"; shift 2 ;;
-        -r|--rows)   ROWS="$2";        shift 2 ;;
-        -c|--cols)   COLS="$2";        shift 2 ;;
-        -e|--ec)     EC="$2";          shift 2 ;;
-        -W|--width)  IMG_WIDTH="$2";   shift 2 ;;
-        -H|--height) IMG_HEIGHT="$2";  shift 2 ;;
-        -h|--help)   usage; exit 0 ;;
+        -d|--dir)       WITNESS_DIR="$2"; shift 2 ;;
+        -r|--rows)      ROWS="$2";        shift 2 ;;
+        -c|--cols)      COLS="$2";        shift 2 ;;
+        -e|--ec)        EC="$2";          shift 2 ;;
+        -W|--width)     IMG_WIDTH="$2";   shift 2 ;;
+        -H|--height)    IMG_HEIGHT="$2";  shift 2 ;;
+        --image-mode)   IMAGE_MODE="$2";  shift 2 ;;
+        -h|--help)      usage; exit 0 ;;
         *) echo "Unknown option: $1"; usage; exit 1 ;;
     esac
 done
@@ -54,10 +59,14 @@ elif [ -n "$IMG_HEIGHT" ]; then
     IMG_SUFFIX="_h${IMG_HEIGHT}"
 fi
 
-BARCODE_FILE="$WITNESS_DIR/pdf417_r${ROWS}_c${COLS}_e${EC}${IMG_SUFFIX}.png"
-WITNESS_FILE="$WITNESS_DIR/witness_r${ROWS}_c${COLS}_e${EC}${IMG_SUFFIX}.json"
-WITNESS_PIN="$WITNESS_DIR/witness_r${ROWS}_c${COLS}_e${EC}${IMG_SUFFIX}.pin"
-WITNESS_VIN="$WITNESS_DIR/witness_r${ROWS}_c${COLS}_e${EC}${IMG_SUFFIX}.vin"
+# Build filename suffix for image mode
+MODE_SUFFIX=""
+[ -n "$IMAGE_MODE" ] && MODE_SUFFIX="_${IMAGE_MODE}"
+
+BARCODE_FILE="$WITNESS_DIR/pdf417_r${ROWS}_c${COLS}_e${EC}${IMG_SUFFIX}${MODE_SUFFIX}.png"
+WITNESS_FILE="$WITNESS_DIR/witness_r${ROWS}_c${COLS}_e${EC}${IMG_SUFFIX}${MODE_SUFFIX}.json"
+WITNESS_PIN="$WITNESS_DIR/witness_r${ROWS}_c${COLS}_e${EC}${IMG_SUFFIX}${MODE_SUFFIX}.pin"
+WITNESS_VIN="$WITNESS_DIR/witness_r${ROWS}_c${COLS}_e${EC}${IMG_SUFFIX}${MODE_SUFFIX}.vin"
 
 MOD=7237005577332262213973186563042994240857116359379907606001950938285454250989
 
@@ -99,7 +108,9 @@ echo ""
 # Step 2: Decode barcode and generate witness
 echo "Step 2: Decoding barcode and generating witness..."
 cd external/rxing
-cargo run -p rxing-cli -- "../../$BARCODE_FILE" decode --save-witness "../../$WITNESS_FILE" --barcode-types PDF_417
+RXING_MODE_ARG=""
+[ -n "$IMAGE_MODE" ] && RXING_MODE_ARG="--image-mode $IMAGE_MODE"
+cargo run -p rxing-cli -- "../../$BARCODE_FILE" decode --save-witness "../../$WITNESS_FILE" --barcode-types PDF_417 $RXING_MODE_ARG
 if [ $? -ne 0 ]; then
     echo "Error: Failed to decode barcode"
     cd ../..
