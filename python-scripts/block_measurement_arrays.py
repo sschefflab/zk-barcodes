@@ -44,7 +44,7 @@ def generate_pixels_and_blocks(B):
 
 
 if __name__ == "__main__":
-    for B in [104, 1080]:
+    for B in [105, 1081]:
         print(f"=== B = {B} ===")
         print()
 
