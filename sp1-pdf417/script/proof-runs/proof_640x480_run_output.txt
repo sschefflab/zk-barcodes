@@ -1,0 +1,30 @@
+2026-04-21T16:23:50.873985Z  INFO initializing cpu prover
+2026-04-21T16:24:06.621071Z  INFO starting proof generation mode=Core
+stderr: WARNING: Using insecure random number generator.
+2026-04-21T18:31:53.865902Z  INFO prove: close time.busy=280ms time.idle=7667s mode=Core
+Successfully generated proof!
+Successfully verified proof!
+Proven barcode text: PDF417 barcode data: Block0000 Block0001 Block0002 Block0003 Block0004 Block0005 Block0006 Block0007 Block0008 Block0009 Block0010 Block0011 Block0012 Block0013 Block0014 Block0015 Block0016 Block0017 Block0018 Block0019 Block0020 Block0021 Block0022 Block0023 Block0024 Block0025 Block0026 Block0027 Block0028 Block0029 Block0030 Block0031 Block0032 Block0033 Block0034 Block0035 Block0036 Block0037 Block0038 Block0039 Block0040 Block0041 Block0042 Block0043 Block0044 Block0045 Block0046 Block0047
+        Command being timed: "cargo run --release -- --prove --image test-images/pdf417_r21_c15_e5_640x480.png"
+        User time (seconds): 397767.62
+        System time (seconds): 40839.73
+        Percent of CPU this job got: 5615%
+        Elapsed (wall clock) time (h:mm:ss or m:ss): 2:10:10
+        Average shared text size (kbytes): 0
+        Average unshared data size (kbytes): 0
+        Average stack size (kbytes): 0
+        Average total size (kbytes): 0
+        Maximum resident set size (kbytes): 135473648
+        Average resident set size (kbytes): 0
+        Major (requiring I/O) page faults: 0
+        Minor (reclaiming a frame) page faults: 3982092398
+        Voluntary context switches: 231586973
+        Involuntary context switches: 345173277
+        Swaps: 0
+        File system inputs: 0
+        File system outputs: 744632
+        Socket messages sent: 0
+        Socket messages received: 0
+        Signals delivered: 0
+        Page size (bytes): 4096
+        Exit status: 0
