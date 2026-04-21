@@ -24,11 +24,13 @@ test-witness/
 
 # Python stuff
 python-scripts/venv/
+python-scripts/.venv/
 python-scripts/__pycache__/
 python-scripts/*.png
 
-# SP1 test images
-sp1-pdf417/script/src/bin/test-images/
+# SP1 test images and big proofs
+sp1-pdf417/script/test-images
+sp1-pdf417/script/proof-runs/*.bin
 
 # MacOS
 .DS_Store

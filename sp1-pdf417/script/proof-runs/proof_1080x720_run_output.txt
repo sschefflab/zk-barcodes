@@ -1,0 +1,31 @@
+Running `/home/kmerrill/zk-barcodes/sp1-pdf417/target/release/pdf417 --prove --image test-images/pdf417_r21_c15_e5_1080x720.png`
+2026-04-20T03:59:03.412555Z  INFO initializing cpu prover
+2026-04-20T03:59:19.342486Z  INFO starting proof generation mode=Core
+stderr: WARNING: Using insecure random number generator.
+2026-04-20T04:55:19.205786Z  INFO prove: close time.busy=131ms time.idle=3360s mode=Core
+Successfully generated proof!
+Successfully verified proof!
+Proven barcode text: PDF417 barcode data: Block0000 Block0001 Block0002 Block0003 Block0004 Block0005 Block0006 Block0007 Block0008 Block0009 Block0010 Block0011 Block0012 Block0013 Block0014 Block0015 Block0016 Block0017 Block0018 Block0019 Block0020 Block0021 Block0022 Block0023 Block0024 Block0025 Block0026 Block0027 Block0028 Block0029 Block0030 Block0031 Block0032 Block0033 Block0034 Block0035 Block0036 Block0037 Block0038 Block0039 Block0040 Block0041 Block0042 Block0043 Block0044 Block0045 Block0046 Block0047
+        Command being timed: "cargo run --release -- --prove --image test-images/pdf417_r21_c15_e5_1080x720.png"
+        User time (seconds): 172603.15
+        System time (seconds): 17557.75
+        Percent of CPU this job got: 5539%
+        Elapsed (wall clock) time (h:mm:ss or m:ss): 57:12.92
+        Average shared text size (kbytes): 0
+        Average unshared data size (kbytes): 0
+        Average stack size (kbytes): 0
+        Average total size (kbytes): 0
+        Maximum resident set size (kbytes): 133306592
+        Average resident set size (kbytes): 0
+        Major (requiring I/O) page faults: 0
+        Minor (reclaiming a frame) page faults: 1725387568
+        Voluntary context switches: 98770387
+        Involuntary context switches: 113085552
+        Swaps: 0
+        File system inputs: 0
+        File system outputs: 322456
+        Socket messages sent: 0
+        Socket messages received: 0
+        Signals delivered: 0
+        Page size (bytes): 4096
+        Exit status: 0
