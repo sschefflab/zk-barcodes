@@ -1,0 +1,8 @@
+from "../binarize.zok" import binarize;
+
+const u32 R = 480;
+const u32 C = 640;
+
+def main(private field[R][C] image, private field[R][C] bin_image) -> () {
+    assert(binarize(image, bin_image));
+}
