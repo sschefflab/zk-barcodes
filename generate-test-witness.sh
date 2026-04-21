@@ -79,7 +79,6 @@ PYTHON_BIN=$(python -c 'import sys; print(sys.executable)')
 
 # Create/wipe witness directory
 echo "Preparing $WITNESS_DIR directory..."
-rm -rf "$WITNESS_DIR"
 mkdir -p "$WITNESS_DIR"
 echo "✓ Directory ready"
 echo ""
