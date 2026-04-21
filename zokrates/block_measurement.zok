@@ -378,7 +378,7 @@ def block_measurement<R,C,G_R>(
         well_behaved,
         wb_lookups,
         WB_CHUNK_LOOKUP_TABLE,
-        WB_POWERS_OF_B, // TODO: make this the right length. Don't need all 10 entries
+        WB_POWERS_OF_B,
         wb_blocks,
         wb_baseB_decomps,
         WB_RANGE_CHECK_TABLE

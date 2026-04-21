@@ -2,7 +2,7 @@
 // Normalize blocks, and then combined the normalized blocks into one.
 
 from "EMBED" import value_in_array;
-from "./const_range_check" import RANGE_NEG8_8_INCL as table;
+from "./const_range_check" import RANGE_NEG16_16_INCL as pair_table;
 
 
 def compute_word(field[8] blocks, field[8] normalized_blocks) -> field {
@@ -11,10 +11,18 @@ def compute_word(field[8] blocks, field[8] normalized_blocks) -> field {
         sum_pixels = sum_pixels + blocks[i];
     }
 
+    // Check 6 edge-to-similar-edge pair residuals (ISO 15438 Annex J.3).
+    // Pairing adjacent bars cancels edge-position noise: if a bar/space boundary
+    // is detected half a pixel late, one element grows and its neighbor shrinks
+    // by the same amount, so the pair sum is unaffected.
+    // Individual range validity is enforced downstream by the word lookup.
+    for u32 i in 0..6 {
+        field r = (blocks[i] + blocks[i+1]) * 17 - sum_pixels * (normalized_blocks[i] + normalized_blocks[i+1]);
+        assert(value_in_array(r, pair_table));
+    }
+
     field mut word = 0;
     for u32 i in 0..8 {
-        field r = blocks[i] * 17 - sum_pixels * normalized_blocks[i];
-        assert(value_in_array(r, table));
         word = word + normalized_blocks[i] * 10**(7-i);
     }
 

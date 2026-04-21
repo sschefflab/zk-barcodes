@@ -1,6 +1,6 @@
 from "./make_words.zok" import compute_words;
 
-const u32 R = 32;
+const u32 R = 36;
 const u32 WB_NB = 281;
 const u32 G_NB = 1080;
 const u32 WB_CW = 36;
