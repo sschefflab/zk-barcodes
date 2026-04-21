@@ -1,0 +1,46 @@
+Final r1cs: 1083 constraints, 3254 variables, 5406 entries, 2 rounds
+Final Witext steps: 6253, arguments: 9511
+Running Setup
+  * number_of_constraints 2048
+  * number_of_variables 4096
+  * number_of_inputs 7
+  * number_non-zero_entries_A 1134
+  * number_non-zero_entries_B 2172
+  * number_non-zero_entries_C 2100
+Dorian Proving (Spartan with verifier randomness)
+Time for inputs_to_wit0 inner 0: 2.150587352s
+Time for inputs_to_wit0 inner 1: 7.001059ms
+Time for inputs_to_wit0: 2.157622844s
+  * NIZKRand::prove00
+  * NIZKRand::prove00 15.624µs
+  * NIZKRand::prove01
+  * NIZKRand::prove01 2.168624ms
+Time for r1cs_to_spartan1,2: 3.227869ms
+  * NIZKRand::prove1
+    * IR1CSProof::prove1
+      * polycommit
+      * polycommit 2.409166ms
+      * prove_sc_phase_one
+      * prove_sc_phase_one 8.535318ms
+      * prove_sc_phase_two
+        * prove_phase_two inner
+        * prove_phase_two inner 13.904971ms
+      * prove_sc_phase_two 16.272095ms
+      * polyeval
+        * prove_poly_eval_inner2
+          * prove_poly_eval_inner2
+          * polyeval 11.134952ms
+        * IR1CSProof::prove1 39.41278ms
+        * len_r1cs_sat_proof 13784
+      * NIZKRand::prove1 39.484558ms
+Time for whole prove: 2.20266689s
+Time for Proving: 2.202676004s
+Dorian Verifying (Spartan with verifier randomness)
+Time for Process verifier input -- transforming inputs to appropriate form: 7.402µs
+  * NIZK::verify
+    * eval_sparse_polys
+    * eval_sparse_polys 7.468693ms
+    * verify_sat_proof
+    * verify_sat_proof 14.24247ms
+  * NIZK::verify 21.757433ms
+Time for NIZK::verify: 21.763853ms
