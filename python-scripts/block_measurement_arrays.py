@@ -44,9 +44,9 @@ def generate_pixels_and_blocks(B):
 
 
 if __name__ == "__main__":
-    # 69, 640 and wb and garbage for sd images
+    # 65, 640 and wb and garbage for sd images
     # 105, 1081 are the same for hd images
-    for B in [69, 105, 640, 1081]:
+    for B in [65, 105, 640, 1081]:
         print(f"=== B = {B} ===")
         print()
 

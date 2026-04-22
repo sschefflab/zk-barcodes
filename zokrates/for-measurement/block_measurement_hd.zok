@@ -1,14 +1,14 @@
 from "../block_measurement_const.zok" import L, TABLE_LEN, WB_B, WB_NB, WB_M, WB_LOGM, WB_POWERS_OF_B, WB_CHUNK_LOOKUP_TABLE, G_B, G_NB, G_M, G_LOGM, G_POWERS_OF_B, G_CHUNK_LOOKUP_TABLE;
-from "../block_measurement.zok" import block_measurement;
+from "../const_range_check.zok" import RANGE_0_105, RANGE_0_1081;
+from "../block_measurement.zok" import block_measurement, BlockLookup;
 
 
 const field[WB_B] WB_RANGE_CHECK_TABLE = RANGE_0_105;
 const field[G_B] G_RANGE_CHECK_TABLE = RANGE_0_1081;
 
-const u32 R = 32;
-const u32 C = 360;
-const u32 G_R = 10;
-
+const u32 R = 720;
+const u32 C = 1080;
+const u32 G_R = 89;
 
 def main(
     // The full binary image and the split into well-behaved / garbage rows
