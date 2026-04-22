@@ -3,7 +3,7 @@
 // Checks data codewords and left row indicators
 // Also checks that garbage rows pulled out during block measurement contain only garbage
 
-from "EMBED" import sample_challenge;
+from "EMBED" import sample_challenge, u32_to_field;
 from "./utils.zok" import flatten_array;
 from "./codeword_lookup.zok" import lookup_codeword, START, STOP, ZERO, VALID_WORDS;
 from "./not_in_table.zok" import disjoint_sets;
@@ -201,8 +201,38 @@ def check_codewords<R, RW, CW, W>(
     return(dummies_ok && cw_ok && garbage_ok && codewords_consistent && row_inds_consistent);
 }
 
+def check_garbage<G_R, G_CW>(
+    field[G_R][G_CW] garbage_rows,
+    field[G_R] garbage_words, // should be in the same order as garbage_inds and garbage_rows
+    field[G_R] garbage_word_index,
+    field[T] garbage_disjoint_set_poly_f,
+    field[G_R] garbage_disjoint_set_poly_g
+) -> bool {
+    // Prove garbage_words are in their respective garbage_rows
+    bool words_ok = true;
+    for u32 r in 0..G_R {
+        field mut equality_check = 0;
+        for u32 c in 0..G_CW {
+            field c_f = u32_to_field(c);
+            field to_add = if (c_f == garbage_word_index[r]) {
+                garbage_rows[r][c]
+            } else {
+                0
+            };
+            equality_check = equality_check + to_add;
+        }
+        words_ok = words_ok && (garbage_words[r] == equality_check);
+    }
+
+    // Prove all the garbage words are actually garbage
+    bool garbage_is_garbage = disjoint_sets::<G_R, T>(garbage_words, VALID_WORDS, garbage_disjoint_set_poly_f, garbage_disjoint_set_poly_g);
+    return(words_ok && garbage_is_garbage);
+}
+
 // Check codewords as above, but also check that rows pulled out as garbage during block measurement really are garbage.
 // TODO: maybe instead of checking that everything in the garbage words are garbage, we should instead check that at least one word per row is garbage?
+// >> Have the prover specify the row index of garbage and the word from that row that is garbage. Prove that the word is in the row, and then prove that those words are garbage
+// >> Prove word in the row - provide the index in the row. Specialized version of haboek argument with all exponents except 1 are zero?
 def check_codewords_and_garbage<WB_R, WB_RW, WB_CW, G_R, G_CW, W>(
     field[WB_R][WB_CW] words,
     field[WB_R][WB_CW] words_with_dummies,
@@ -211,15 +241,15 @@ def check_codewords_and_garbage<WB_R, WB_RW, WB_CW, G_R, G_CW, W>(
     field[WB_R][WB_CW] ext_codewords,
     field[W] codewords,
     field[WB_RW] left_row_inds,
-    field[G_R][G_CW] garbage_words,
+    field[G_R][G_CW] garbage_rows,
+    field[G_R] garbage_words,
+    field[G_R] garbage_word_index,
     field[T] garbage_disjoint_set_poly_f,
-    field[G_R*G_CW] garbage_disjoint_set_poly_g
+    field[G_R] garbage_disjoint_set_poly_g
 ) -> bool {
     bool wb_ok = check_codewords(words, words_with_dummies, wb_disjoint_set_poly_f, wb_disjoint_set_poly_g, ext_codewords, codewords, left_row_inds);
-    u32 Ng = G_R * G_CW;
-    field[Ng] flattened_garbage_words = flatten_array::<G_R,G_CW>(garbage_words);
-    bool garbage_is_garbage = disjoint_sets::<Ng, T>(flattened_garbage_words, VALID_WORDS, garbage_disjoint_set_poly_f, garbage_disjoint_set_poly_g);
-    return(wb_ok && garbage_is_garbage);
+    bool garbage_ok = check_garbage(garbage_rows, garbage_words, garbage_word_index, garbage_disjoint_set_poly_f, garbage_disjoint_set_poly_g);
+    return(wb_ok && garbage_ok);
 }
 
 // test function
@@ -238,9 +268,24 @@ def main(
     private field[R][CW] ext_codewords,
     private field[W] codewords,
     private field[RW] left_row_inds,
-    field[G_R][G_CW] garbage_words,
+    field[G_R][G_CW] garbage_rows,
+    field[G_R] garbage_words,
+    field[G_R] garbage_word_index,
     field[T] garbage_disjoint_set_poly_f,
-    private field[G_R*G_CW] garbage_disjoint_set_poly_g
+    private field[G_R] garbage_disjoint_set_poly_g
 ) {
-    assert(check_codewords_and_garbage(words, words_with_dummies, wb_disjoint_set_poly_f, wb_disjoint_set_poly_g, ext_codewords, codewords, left_row_inds, garbage_words, garbage_disjoint_set_poly_f, garbage_disjoint_set_poly_g));
+    assert(check_codewords_and_garbage(
+        words,
+        words_with_dummies,
+        wb_disjoint_set_poly_f,
+        wb_disjoint_set_poly_g,
+        ext_codewords,
+        codewords,
+        left_row_inds,
+        garbage_rows,
+        garbage_words,
+        garbage_word_index,
+        garbage_disjoint_set_poly_f,
+        garbage_disjoint_set_poly_g
+    ));
 }

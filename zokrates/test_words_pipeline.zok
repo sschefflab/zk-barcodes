@@ -18,11 +18,13 @@ def main(
     private field[R][WB_CW] ext_codewords,
     private field[W] codewords,
     private field[RW] left_row_inds,
+    private field[G_R] garbage_words,
+    private field[G_R] garbage_word_index,
     field[T] garbage_disjoint_set_poly_f,
-    private field[G_R*G_CW] garbage_disjoint_set_poly_g
+    private field[G_R] garbage_disjoint_set_poly_g
 ) {
     field[R][WB_CW] words = compute_words(wb_blocks, wb_normalized_blocks);
-    field[G_R][G_CW] garbage_words = compute_words(g_blocks, g_normalized_blocks);
+    field[G_R][G_CW] garbage_rows = compute_words(g_blocks, g_normalized_blocks);
 
     assert(check_codewords_and_garbage::<R, RW, WB_CW, G_R, G_CW, W>(
         words,
@@ -32,7 +34,9 @@ def main(
         ext_codewords,
         codewords,
         left_row_inds,
+        garbage_rows,
         garbage_words,
+        garbage_word_index,
         garbage_disjoint_set_poly_f,
         garbage_disjoint_set_poly_g
     ));

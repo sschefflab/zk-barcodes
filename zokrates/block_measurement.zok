@@ -3,7 +3,7 @@
 from "./utils.zok" import check_bit_decomp, flatten_array, diff_lookup;
 from "./const_range_check.zok" import RANGE_1_513, RANGE_0_105, RANGE_0_1081;
 from "EMBED" import value_in_array, value_in_array_tuple, sample_challenge, u32_to_field, unpack;
-from "./block_measurement_const.zok" import L, TABLE_LEN, WB_POWERS_OF_B, WB_CHUNK_LOOKUP_TABLE, G_POWERS_OF_B, G_CHUNK_LOOKUP_TABLE;
+from "./block_measurement_const.zok" import L, TABLE_LEN, WB_B, WB_NB, WB_M, WB_LOGM, WB_POWERS_OF_B, WB_CHUNK_LOOKUP_TABLE, G_B, G_NB, G_M, G_LOGM, G_POWERS_OF_B, G_CHUNK_LOOKUP_TABLE;
 
 // base-B values representing a series of blocks
 type Blocks = field;
