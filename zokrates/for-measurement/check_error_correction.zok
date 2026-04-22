@@ -1,0 +1,13 @@
+from "../error_correction.zok" import BarcodeStats, PolynomialResult, check_error_correction;
+
+const u32 RW = 90;
+const u32 W = 2700;
+
+def main(
+    private BarcodeStats stats,
+    private PolynomialResult[512] poly_witness,
+    private field[W] codewords,
+    private field[W] corrected_codewords
+) {
+    assert(check_error_correction(codewords, corrected_codewords, stats.num_ec_codewords, poly_witness));
+}
