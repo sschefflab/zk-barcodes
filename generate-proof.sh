@@ -6,6 +6,13 @@ ZOK_FILE="$2"
 ZOKRATES_DIR="zokrates"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# Find gnutime across platforms
+if command -v gtime &>/dev/null; then
+    gnu-time() { gtime --verbose "$@"; }
+else
+    gnu-time() { /usr/bin/time --verbose "$@"; }
+fi
+
 # Handle input errors + provide usage
 TO_EXIT=0
 # Check if arguments are provided
@@ -33,7 +40,7 @@ if [ ! -f "${ZOK_FILE}" ]; then
     TO_EXIT=1
 fi
 # Derive .pin and .vin paths from witness JSON (same directory, same basename)
-WITNESS_BASE="${WITNESS_JSON%.json}"
+WITNESS_BASE="$(cd "$(dirname "$WITNESS_JSON")" && pwd)/$(basename "$WITNESS_JSON" .json)"
 WITNESS_PIN="${WITNESS_BASE}.pin"
 WITNESS_VIN="${WITNESS_BASE}.vin"
 
@@ -74,13 +81,13 @@ cd "${SCRIPT_DIR}/external/circ"
     --prover-key "${SCRIPT_DIR}/${ZOKRATES_DIR}/bin/${ZOK_BASENAME}_P" \
     --verifier-key "${SCRIPT_DIR}/${ZOKRATES_DIR}/bin/${ZOK_BASENAME}_V"
 
-./target/release/examples/zk --action prove \
+gnu-time ./target/release/examples/zk --action prove \
     --proof-impl dorian \
     --prover-key "${SCRIPT_DIR}/${ZOKRATES_DIR}/bin/${ZOK_BASENAME}_P" \
     --inputs "${WITNESS_PIN}" \
     --proof "${SCRIPT_DIR}/${ZOKRATES_DIR}/bin/${ZOK_BASENAME}.pi"
 
-./target/release/examples/zk --action verify \
+gnu-time ./target/release/examples/zk --action verify \
     --proof-impl dorian \
     --verifier-key "${SCRIPT_DIR}/${ZOKRATES_DIR}/bin/${ZOK_BASENAME}_V" \
     --inputs "${WITNESS_VIN}" \
