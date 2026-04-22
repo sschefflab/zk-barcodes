@@ -16,9 +16,9 @@ def generate_pixels_and_blocks(B):
     for i in range(0, 2**L):
         c = i
 
-        binary = format(
-            i, f"0{L}b"
-        )[::-1]  # zero-padded L-bit string reversed: binary[0]=pixel[0]=LSB (little-endian)
+        binary = format(i, f"0{L}b")[
+            ::-1
+        ]  # zero-padded L-bit string reversed: binary[0]=pixel[0]=LSB (little-endian)
         previous = binary[0]  # start at leftmost pixel
         num_bits = 1
         blocks = []  # completed (non-remainder) blocks, left to right
@@ -36,7 +36,7 @@ def generate_pixels_and_blocks(B):
         black = int(previous == "1")  # 1 if rightmost (remainder) block is black
 
         # Little-endian base-B encoding: leftmost block gets B^0, rightmost gets B^(nb-1)
-        enc_baseB = sum(B ** j * s for j, s in enumerate(blocks))
+        enc_baseB = sum(B**j * s for j, s in enumerate(blocks))
 
         table.append([c, enc_baseB, r, nb, odd, black])
 
@@ -44,7 +44,9 @@ def generate_pixels_and_blocks(B):
 
 
 if __name__ == "__main__":
-    for B in [105, 1081]:
+    # 69, 640 and wb and garbage for sd images
+    # 105, 1081 are the same for hd images
+    for B in [69, 105, 640, 1081]:
         print(f"=== B = {B} ===")
         print()
 

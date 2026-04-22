@@ -1,10 +1,7 @@
 from "./make_words.zok" import compute_words;
+from "./block_measurement_const.zok" import WB_NB, G_NB, WB_CW, G_CW;
 
 const u32 R = 36;
-const u32 WB_NB = 281;
-const u32 G_NB = 1080;
-const u32 WB_CW = 36;
-const u32 G_CW = 135;
 
 def main(
     private field[R][WB_NB] wb_blocks,

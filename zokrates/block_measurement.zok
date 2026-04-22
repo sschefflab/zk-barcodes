@@ -3,7 +3,7 @@
 from "./utils.zok" import check_bit_decomp, flatten_array, diff_lookup;
 from "./const_range_check.zok" import RANGE_1_513, RANGE_0_105, RANGE_0_1081;
 from "EMBED" import value_in_array, value_in_array_tuple, sample_challenge, u32_to_field, unpack;
-from "./block_measurement_tables.zok" import L, TABLE_LEN, WB_POWERS_OF_B, WB_CHUNK_LOOKUP_TABLE, G_POWERS_OF_B, G_CHUNK_LOOKUP_TABLE;
+from "./block_measurement_const.zok" import L, TABLE_LEN, WB_POWERS_OF_B, WB_CHUNK_LOOKUP_TABLE, G_POWERS_OF_B, G_CHUNK_LOOKUP_TABLE;
 
 // base-B values representing a series of blocks
 type Blocks = field;
@@ -340,23 +340,7 @@ def check_garbage_split<R,C,G_R>(
     return(lhs == rhs);
 }
 
-// Block measurement constants
-// B = max block length in pixels (used as base for encoding and range check table size)
-// NB = number of blocks per row
-const u32 WB_B = 105; // min 17*5 = 85 modules in a row, 1080 / 85 = 13 pixels/module, 8 modules in max bar for max 104 pixels per block; base is max+1
-const u32 WB_NB = 281; // 8 blocks per data column + 32 blocks for start and row indicators + 9 blocks for stop. Max 30 data columns = 281 blocks
-const u32 WB_M = 4; // max blocks per chunk = ceil(1080 / 281) = 4
-const u32 WB_LOGM = 2; // ceil(log2(WB_M))
-const u32 G_B = 1081;
-const u32 G_NB = 1080;
-const u32 G_M = 10; // same as L
-const u32 G_LOGM = 4; // ceil(log2(G_M))
-
-// Range check tables
-const field[WB_B] WB_RANGE_CHECK_TABLE = RANGE_0_105;
-const field[G_B] G_RANGE_CHECK_TABLE = RANGE_0_1081;
-
-def block_measurement<R,C,G_R>(
+def block_measurement<R,C,G_R, WB_B, WB_NB, WB_M, WB_LOGM, G_B, G_NB, G_M, G_LOGM>(
     // The full binary image and the split into well-behaved / garbage rows
     field[R][C] bin_image,
     field[R][C] well_behaved,
@@ -372,26 +356,35 @@ def block_measurement<R,C,G_R>(
     // Garbage block checking metadata
     BlockLookup[G_R][C/L] g_lookups,
     field[G_R][G_NB] g_blocks,
-    field[G_R][C/L][L] g_baseB_decomps
+    field[G_R][C/L][L] g_baseB_decomps,
+    // constant tables depending on param values
+    // // wb tables
+    field[TABLE_LEN][6] wb_chunk_lookup_table,
+    field[WB_M][2] wb_powers_of_b,
+    field[WB_B] wb_range_check_table,
+    // // garbage tables
+    field[TABLE_LEN][6] g_chunk_lookup_table,
+    field[G_M][2] g_powers_of_b,
+    field[G_B] g_range_check_table    
 ) -> bool {
     bool wb_blocks_ok = check_blocks::<R,C,WB_B,WB_NB,WB_M,WB_LOGM>(
         well_behaved,
         wb_lookups,
-        WB_CHUNK_LOOKUP_TABLE,
-        WB_POWERS_OF_B,
+        wb_chunk_lookup_table,
+        wb_powers_of_b,
         wb_blocks,
         wb_baseB_decomps,
-        WB_RANGE_CHECK_TABLE
+        wb_range_check_table
     );
 
     bool g_blocks_ok = check_blocks::<G_R,C,G_B,G_NB,G_M,G_LOGM>(
         garbage,
         g_lookups,
-        G_CHUNK_LOOKUP_TABLE,
-        G_POWERS_OF_B,
+        g_chunk_lookup_table,
+        g_powers_of_b,
         g_blocks,
         g_baseB_decomps,
-        G_RANGE_CHECK_TABLE
+        g_range_check_table
     );
 
     bool split_ok = check_garbage_split::<R,C,G_R>(
@@ -408,6 +401,11 @@ def block_measurement<R,C,G_R>(
 }
 
 // test function
+
+// Range check tables
+const field[WB_B] WB_RANGE_CHECK_TABLE = RANGE_0_105;
+const field[G_B] G_RANGE_CHECK_TABLE = RANGE_0_1081;
+
 const u32 R = 32;
 const u32 C = 360;
 const u32 G_R = 10;
@@ -430,7 +428,7 @@ def main(
     private field[G_R][G_NB] g_blocks,
     private field[G_R][C/L][L] g_baseB_decomps
 ) {
-    assert(block_measurement(
+    assert(block_measurement::<R,C,G_R, WB_B, WB_NB, WB_M, WB_LOGM, G_B, G_NB, G_M, G_LOGM>(
         bin_image,
         well_behaved,
         wb_inds,
@@ -443,6 +441,12 @@ def main(
         wb_baseB_decomps,
         g_lookups,
         g_blocks,
-        g_baseB_decomps
+        g_baseB_decomps,
+        WB_CHUNK_LOOKUP_TABLE,
+        WB_POWERS_OF_B,
+        WB_RANGE_CHECK_TABLE,
+        G_CHUNK_LOOKUP_TABLE,
+        G_POWERS_OF_B,
+        G_RANGE_CHECK_TABLE
     ));
 }

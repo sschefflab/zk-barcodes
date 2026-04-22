@@ -1,12 +1,9 @@
 from "./make_words.zok" import compute_words;
 from "./make_codewords.zok" import check_codewords_and_garbage, T;
+from "./block_measurement_const.zok" import WB_NB, WB_CW, G_NB, G_CW;
 
 const u32 R = 32;
 const u32 G_R = 89;
-const u32 WB_NB = 281;
-const u32 WB_CW = 36; // words per well-behaved row (WB_NB should be 281)
-const u32 G_NB = 1080;
-const u32 G_CW = 135;   // words per garbage row (G_NB should be 1080)
 const u32 RW = 90;         // max number of logical barcode rows
 const u32 W = 2700;
 
