@@ -129,7 +129,7 @@ echo "Step 2: Decoding barcode and generating witness..."
 cd external/rxing
 RXING_MODE_ARG=""
 [ -n "$IMAGE_MODE" ] && RXING_MODE_ARG="--image-mode $IMAGE_MODE"
-cargo run -p rxing-cli -- "../../$BARCODE_FILE" decode --save-witness "../../$WITNESS_FILE" --barcode-types PDF_417 $RXING_MODE_ARG
+cargo run --release -p rxing-cli -- "../../$BARCODE_FILE" decode --save-witness "../../$WITNESS_FILE" --barcode-types PDF_417 $RXING_MODE_ARG
 if [ $? -ne 0 ]; then
     echo "Error: Failed to decode barcode"
     cd ../..
