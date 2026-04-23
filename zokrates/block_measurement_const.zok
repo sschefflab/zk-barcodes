@@ -4212,7 +4212,7 @@ const field[WB_M_SMALL][2] WB_POWERS_OF_B_SMALL = [
     [6, 244140625],
     [7, 6103515625],
     [8, 152587890625],
-    [9, 3814697265625],
+    [9, 3814697265625]
 ];
 
 const field[TABLE_LEN][6] WB_CHUNK_LOOKUP_TABLE_SMALL = [
@@ -5239,7 +5239,7 @@ const field[TABLE_LEN][6] WB_CHUNK_LOOKUP_TABLE_SMALL = [
     [1020, 2, 8, 1, 1, 1],
     [1021, 26, 8, 2, 0, 1],
     [1022, 1, 9, 1, 1, 1],
-    [1023, 0, 10, 0, 0, 1],
+    [1023, 0, 10, 0, 0, 1]
 ];
 
 const field[G_M_SMALL][2] G_POWERS_OF_B_SMALL = [
@@ -5252,7 +5252,7 @@ const field[G_M_SMALL][2] G_POWERS_OF_B_SMALL = [
     [6, 51682540549249],
     [7, 9974730326005057],
     [8, 1925122952918976001],
-    [9, 371548729913362368193],
+    [9, 371548729913362368193]
 ];
 
 const field[TABLE_LEN][6] G_CHUNK_LOOKUP_TABLE_SMALL = [
@@ -6279,5 +6279,5 @@ const field[TABLE_LEN][6] G_CHUNK_LOOKUP_TABLE_SMALL = [
     [1020, 2, 8, 1, 1, 1],
     [1021, 194, 8, 2, 0, 1],
     [1022, 1, 9, 1, 1, 1],
-    [1023, 0, 10, 0, 0, 1],
+    [1023, 0, 10, 0, 0, 1]
 ];
