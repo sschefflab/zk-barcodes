@@ -1,0 +1,117 @@
+bellman,r1cs,smt,zok,zokc
+warning: skipping duplicate package `dorian-t256 v0.9.0 (https://github.com/woopuiyung/Dorian.git?branch=t256#3e3f73b0)`:
+  /home/kmerrill/.cargo/git/checkouts/dorian-821625206728e344/3e3f73b/src/Cargo.toml
+in favor of /home/kmerrill/.cargo/git/checkouts/dorian-821625206728e344/3e3f73b/Cargo.toml
+
+warning: skipping duplicate package `fields v0.1.0 (https://github.com/woopuiyung/Dorian.git?branch=t256#3e3f73b0)`:
+  /home/kmerrill/.cargo/git/checkouts/dorian-821625206728e344/3e3f73b/src/fields/Cargo.toml
+in favor of /home/kmerrill/.cargo/git/checkouts/dorian-821625206728e344/3e3f73b/fields/Cargo.toml
+
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.29s
+warning: skipping duplicate package `dorian-t256 v0.9.0 (https://github.com/woopuiyung/Dorian.git?branch=t256#3e3f73b0)`:
+  /home/kmerrill/.cargo/git/checkouts/dorian-821625206728e344/3e3f73b/src/Cargo.toml
+in favor of /home/kmerrill/.cargo/git/checkouts/dorian-821625206728e344/3e3f73b/Cargo.toml
+
+warning: skipping duplicate package `fields v0.1.0 (https://github.com/woopuiyung/Dorian.git?branch=t256#3e3f73b0)`:
+  /home/kmerrill/.cargo/git/checkouts/dorian-821625206728e344/3e3f73b/src/fields/Cargo.toml
+in favor of /home/kmerrill/.cargo/git/checkouts/dorian-821625206728e344/3e3f73b/fields/Cargo.toml
+
+    Finished `release` profile [optimized + debuginfo] target(s) in 0.13s
+Running: cargo check --tests --examples --benches --bins --features smt,bellman,zok,r1cs,zokc
+Running: cargo build --release --examples --features smt,bellman,zok,r1cs,zokc
+Running frontend
+Running IR optimizations
+Running backend
+Running r1cs optimizations 
+Final r1cs: 55426 constraints, 138627 variables, 277121 entries, 2 rounds
+Final Witext steps: 249608, arguments: 360578
+Running Setup
+  * number_of_constraints 65536
+  * number_of_variables 131072
+  * number_of_inputs 1
+  * number_non-zero_entries_A 55424
+  * number_non-zero_entries_B 166143
+  * number_non-zero_entries_C 55554
+Dorian Proving (Spartan with verifier randomness)
+Time for inputs_to_wit0 inner 0: 156.089568ms
+Time for inputs_to_wit0 inner 1: 82.090758ms
+Time for inputs_to_wit0: 238.231152ms
+  * NIZKRand::prove00
+  * NIZKRand::prove00 21.131µs
+  * NIZKRand::prove01
+  * NIZKRand::prove01 20.913925ms
+Time for r1cs_to_spartan1,2: 28.06005ms
+  * NIZKRand::prove1
+    * IR1CSProof::prove1
+      * polycommit
+      * polycommit 37.447865ms
+      * prove_sc_phase_one
+      * prove_sc_phase_one 49.5034ms
+      * prove_sc_phase_two
+        * prove_phase_two inner
+        * prove_phase_two inner 83.975252ms
+      * prove_sc_phase_two 133.419142ms
+      * polyeval
+        * prove_poly_eval_inner2
+          * prove_poly_eval_inner2
+          * polyeval 104.3861ms
+        * IR1CSProof::prove1 332.897819ms
+        * len_r1cs_sat_proof 29736
+      * NIZKRand::prove1 333.589579ms
+Time for whole prove: 623.635329ms
+Time for Proving: 624.251254ms
+	Command being timed: "./target/release/examples/zk --action prove --proof-impl dorian --prover-key /home/kmerrill/zk-barcodes/zokrates/bin/binarize_small_P --inputs /home/kmerrill/zk-barcodes/test-witness/witness_r3_c2_e1_192x144_small.pin --proof /home/kmerrill/zk-barcodes/zokrates/bin/binarize_small.pi"
+	User time (seconds): 4.07
+	System time (seconds): 0.57
+	Percent of CPU this job got: 269%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.72
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 464780
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 168608
+	Voluntary context switches: 2662
+	Involuntary context switches: 5769
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 64
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+Dorian Verifying (Spartan with verifier randomness)
+Time for Process verifier input -- transforming inputs to appropriate form: 1.001µs
+  * NIZK::verify
+    * eval_sparse_polys
+    * eval_sparse_polys 31.08642ms
+    * verify_sat_proof
+    * verify_sat_proof 38.627078ms
+  * NIZK::verify 69.775721ms
+Time for NIZK::verify: 69.794049ms
+	Command being timed: "./target/release/examples/zk --action verify --proof-impl dorian --verifier-key /home/kmerrill/zk-barcodes/zokrates/bin/binarize_small_V --inputs /home/kmerrill/zk-barcodes/test-witness/witness_r3_c2_e1_192x144_small.vin --proof /home/kmerrill/zk-barcodes/zokrates/bin/binarize_small.pi"
+	User time (seconds): 0.11
+	System time (seconds): 0.06
+	Percent of CPU this job got: 132%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.14
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 67072
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 18196
+	Voluntary context switches: 522
+	Involuntary context switches: 1
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
