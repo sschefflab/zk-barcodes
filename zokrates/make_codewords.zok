@@ -34,7 +34,7 @@ def check_codewords<R, RW, CW, W>(
     field[T] disjoint_set_poly_f,
     field[R*CW] disjoint_set_poly_g,
     field[R][CW] ext_codewords,
-    field[W] codewords,
+    field[W] codewords, // expected to be left-padded with zeros to meet length W
     field[RW] left_row_inds
 ) -> bool {
     bool mut dummies_ok = true;
@@ -165,11 +165,23 @@ def check_codewords<R, RW, CW, W>(
     }
 
     // Compute polynomial for codeword array.
+    // The codewords array is left-padded with zeros, so we need to be sure to skip those.
+    // The SLD will always be non-zero and will be the first real codeword, so skip until we see the sld
+    bool mut found_sld = false;
     field mut result2 = 0;
     pow = 1;
     for u32 i in 0..W {
-        result2 = result2 + codewords[i] * pow;
-        pow = pow * beta;
+        bool nonzero_cw = (codewords[i] != 0);
+        found_sld = found_sld || nonzero_cw;
+
+        (field, field) acc = if found_sld {
+            (codewords[i] * pow, pow*beta)
+        } else {
+            (0, pow)
+        };
+
+        result2 = result2 + acc.0;
+        pow = acc.1;
     }
 
     bool codewords_consistent = result1 == result2;
@@ -230,9 +242,6 @@ def check_garbage<G_R, G_CW>(
 }
 
 // Check codewords as above, but also check that rows pulled out as garbage during block measurement really are garbage.
-// TODO: maybe instead of checking that everything in the garbage words are garbage, we should instead check that at least one word per row is garbage?
-// >> Have the prover specify the row index of garbage and the word from that row that is garbage. Prove that the word is in the row, and then prove that those words are garbage
-// >> Prove word in the row - provide the index in the row. Specialized version of haboek argument with all exponents except 1 are zero?
 def check_codewords_and_garbage<WB_R, WB_RW, WB_CW, G_R, G_CW, W>(
     field[WB_R][WB_CW] words,
     field[WB_R][WB_CW] words_with_dummies,
@@ -254,7 +263,7 @@ def check_codewords_and_garbage<WB_R, WB_RW, WB_CW, G_R, G_CW, W>(
 
 // test function
 const u32 R = 32;
-const u32 CW = 36;
+const u32 CW = 35;
 const u32 W = 2700;
 const u32 RW = 90; // the number of logical barcode rows. Should be 90.
 const u32 G_R = 89;

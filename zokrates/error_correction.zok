@@ -91,6 +91,7 @@ struct PolynomialResult {
     bool should_be_zero;
 }
 
+// Expects codewords and corrected_codewords to be left-padded with zeros to fit length W
 def check_error_correction<W>(field[W] codewords, field[W] corrected_codewords, field num_ec_codewords, PolynomialResult[512] poly_witness) -> bool {
     // sparsity check: 2w + 10
     field mut t = 0;
