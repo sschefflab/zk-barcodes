@@ -11,9 +11,10 @@ usage() {
     echo "  -r, --rows N         Barcode rows (default: 3)"
     echo "  -c, --cols N         Barcode columns (default: 2)"
     echo "  -e, --ec N           Error correction level (default: 1)"
-    echo "  -W, --width N        Target image width in pixels"
-    echo "  -H, --height N       Target image height in pixels"
-    echo "  --image-mode MODE    Image mode for witness extraction: hd (default) or sd"
+    echo "  -W, --width N        Target image width in pixels (mutually exclusive with --image-mode)"
+    echo "  -H, --height N       Target image height in pixels (mutually exclusive with --image-mode)"
+    echo "  --image-mode MODE    Image mode: hd (1080x720, default), sd (640x480), or small (192x144)"
+    echo "                       Implies --width and --height; mutually exclusive with -W/-H"
     echo "  -h, --help           Show this help"
     echo ""
     echo "Examples:"
@@ -22,7 +23,6 @@ usage() {
     echo "  $0 --rows 15 --cols 8 --ec 2 --width 1080 --height 720"
     echo "  $0 -r 10 -c 5 -e 2 -W 1920 -H 1080 -d my-witness"
     echo "  $0 --image-mode sd"
-    echo "  $0 --width 640 --height 480 --image-mode sd"
 }
 
 # Defaults
@@ -49,6 +49,23 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
+# Validate mutual exclusivity of --image-mode and --width/--height
+if [ -n "$IMAGE_MODE" ] && { [ -n "$IMG_WIDTH" ] || [ -n "$IMG_HEIGHT" ]; }; then
+    echo "Error: --image-mode is mutually exclusive with --width/--height"
+    echo "Use --image-mode to set both dimensions, or set them manually with --width/--height"
+    exit 1
+fi
+
+# Derive width/height from image mode
+if [ -n "$IMAGE_MODE" ]; then
+    case "$IMAGE_MODE" in
+        hd)    IMG_WIDTH=1080; IMG_HEIGHT=720 ;;
+        sd)    IMG_WIDTH=640;  IMG_HEIGHT=480 ;;
+        small) IMG_WIDTH=192;  IMG_HEIGHT=144 ;;
+        *)  echo "Error: Unknown image mode '$IMAGE_MODE'. Valid modes: hd, sd, small"; exit 1 ;;
+    esac
+fi
+
 # Build filename suffix for image dimensions
 IMG_SUFFIX=""
 if [ -n "$IMG_WIDTH" ] && [ -n "$IMG_HEIGHT" ]; then
@@ -73,7 +90,9 @@ MOD=7237005577332262213973186563042994240857116359379907606001950938285454250989
 echo "Test Witness Generation"
 echo "======================"
 echo "Parameters: ROWS=$ROWS, COLS=$COLS, EC=$EC, WITNESS_DIR=$WITNESS_DIR"
-if [ -n "$IMG_WIDTH" ] || [ -n "$IMG_HEIGHT" ]; then
+if [ -n "$IMAGE_MODE" ]; then
+    echo "Image mode: $IMAGE_MODE (${IMG_WIDTH}x${IMG_HEIGHT})"
+elif [ -n "$IMG_WIDTH" ] || [ -n "$IMG_HEIGHT" ]; then
     echo "Image size: ${IMG_WIDTH:-auto}x${IMG_HEIGHT:-auto}"
 fi
 echo ""
