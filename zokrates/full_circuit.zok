@@ -1,0 +1,107 @@
+// Entire PDF417 decoding verifier circuit
+
+from "./binarize.zok" import binarize;
+from "./block_measurement.zok" import BlockLookup, block_measurement;
+from "./block_measurement_const.zok" import L, TABLE_LEN;
+from "./make_words.zok" import compute_words;
+from "./make_codewords.zok" import check_codewords_and_garbage, T;
+from "./error_correction.zok" import BarcodeStats, RowIndicatorVars, PolynomialResult, check_barcode_stats, check_error_correction;
+from "./data_size.zok" import check_num_cw;
+from "./char_lookup.zok" import TableState;
+from "./codewords_to_chars.zok" import codewords_to_chars;
+from "EMBED" import u32_to_field;
+
+def full_circuit<R, C, G_R, G_B, G_NB, G_M, G_LOGM, WB_B, WB_NB, WB_M, WB_LOGM, WB_CW, G_CW, RW, W> (
+    field[R][C] image,
+    field[R][C] bin_image,
+    // block_measurement inputs
+    field[R][C] well_behaved,
+    field[R] wb_inds,
+    field[R] wb_ind_counts,
+    field[G_R][C] garbage_image,
+    field[G_R] garbage_inds,
+    field num_zero_rows,
+    BlockLookup[R][C/L] wb_lookups,
+    field[R][WB_NB] wb_blocks,
+    field[R][C/L][L] wb_baseB_decomps,
+    BlockLookup[G_R][C/L] g_lookups,
+    field[G_R][G_NB] g_blocks,
+    field[G_R][C/L][L] g_baseB_decomps,
+    field[TABLE_LEN][6] wb_chunk_lookup_table,
+    field[WB_M][2] wb_powers_of_b,
+    field[WB_B] wb_range_check_table,
+    field[TABLE_LEN][6] g_chunk_lookup_table,
+    field[G_M][2] g_powers_of_b,
+    field[G_B] g_range_check_table,
+    // make_words inputs
+    field[R][WB_CW][8] wb_normalized_blocks,
+    field[G_R][G_CW][8] g_normalized_blocks,
+    // check_codewords_and_garbage inputs
+    field[R][WB_CW] words_with_dummies,
+    field[T] wb_disjoint_set_poly_f,
+    field[R*WB_CW] wb_disjoint_set_poly_g,
+    field[R][WB_CW] ext_codewords,
+    field[W] codewords,
+    field[RW] left_row_inds,
+    field[G_R] garbage_words,
+    field[G_R] garbage_word_index,
+    field[T] garbage_disjoint_set_poly_f,
+    field[G_R] garbage_disjoint_set_poly_g,
+    // error correction and decoding
+    RowIndicatorVars row_indc,
+    field[W] corrected_codewords,
+    PolynomialResult[512] poly_witness,
+    BarcodeStats stats,
+    TableState[2*W] char_table_states,
+    field[2*W] chars
+) -> bool {
+    assert(binarize(image, bin_image));
+
+    assert(block_measurement::<R,C,G_R, WB_B, WB_NB, WB_M, WB_LOGM, G_B, G_NB, G_M, G_LOGM>(
+        bin_image,
+        well_behaved,
+        wb_inds,
+        wb_ind_counts,
+        garbage_image,
+        garbage_inds,
+        num_zero_rows,
+        wb_lookups,
+        wb_blocks,
+        wb_baseB_decomps,
+        g_lookups,
+        g_blocks,
+        g_baseB_decomps,
+        wb_chunk_lookup_table,
+        wb_powers_of_b,
+        wb_range_check_table,
+        g_chunk_lookup_table,
+        g_powers_of_b,
+        g_range_check_table
+    ));
+
+    field[R][WB_CW] words = compute_words(wb_blocks, wb_normalized_blocks);
+    field[G_R][G_CW] garbage_rows = compute_words(g_blocks, g_normalized_blocks);
+
+    assert(check_codewords_and_garbage(
+        words,
+        words_with_dummies,
+        wb_disjoint_set_poly_f,
+        wb_disjoint_set_poly_g,
+        ext_codewords,
+        codewords,
+        left_row_inds,
+        garbage_rows,
+        garbage_words,
+        garbage_word_index,
+        garbage_disjoint_set_poly_f,
+        garbage_disjoint_set_poly_g
+    ));
+
+    assert(check_barcode_stats(row_indc, stats, left_row_inds));
+    assert(check_error_correction(codewords, corrected_codewords, stats.num_ec_codewords, poly_witness));
+
+    assert(check_num_cw(corrected_codewords, stats.num_rows, stats.num_cols, stats.num_ec_codewords));
+
+    assert(codewords_to_chars(corrected_codewords, char_table_states, stats.num_ec_codewords, chars));
+    return(true); // always returns true
+}
