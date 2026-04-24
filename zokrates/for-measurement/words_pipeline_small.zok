@@ -1,0 +1,44 @@
+from "../make_words.zok" import compute_words;
+from "../make_codewords.zok" import check_codewords_and_garbage, T;
+from "../block_measurement_const.zok" import WB_NB_SMALL, WB_CW_SMALL, G_NB_SMALL, G_CW_SMALL;
+
+// NOTE: it is important that all four of these parameters match what was used to generate the witness in order for the proof to go through!
+const u32 R = 144;
+const u32 G_R = 89;
+const u32 RW = 90;         // max number of logical barcode rows
+const u32 W = 2700;
+
+def main(
+    private field[R][WB_NB_SMALL] wb_blocks,
+    private field[G_R][G_NB_SMALL] g_blocks,
+    private field[R][WB_CW_SMALL][8] wb_normalized_blocks,
+    private field[G_R][G_CW_SMALL][8] g_normalized_blocks,
+    private field[R][WB_CW_SMALL] words_with_dummies,
+    field[T] wb_disjoint_set_poly_f,
+    private field[R*WB_CW_SMALL] wb_disjoint_set_poly_g,
+    private field[R][WB_CW_SMALL] ext_codewords,
+    private field[W] codewords,
+    private field[RW] left_row_inds,
+    private field[G_R] garbage_words,
+    private field[G_R] garbage_word_index,
+    field[T] garbage_disjoint_set_poly_f,
+    private field[G_R] garbage_disjoint_set_poly_g
+) {
+    field[R][WB_CW_SMALL] words = compute_words(wb_blocks, wb_normalized_blocks);
+    field[G_R][G_CW_SMALL] garbage_rows = compute_words(g_blocks, g_normalized_blocks);
+
+    assert(check_codewords_and_garbage::<R, RW, WB_CW_SMALL, G_R, G_CW_SMALL, W>(
+        words,
+        words_with_dummies,
+        wb_disjoint_set_poly_f,
+        wb_disjoint_set_poly_g,
+        ext_codewords,
+        codewords,
+        left_row_inds,
+        garbage_rows,
+        garbage_words,
+        garbage_word_index,
+        garbage_disjoint_set_poly_f,
+        garbage_disjoint_set_poly_g
+    ));
+}
