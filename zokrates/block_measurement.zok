@@ -408,7 +408,7 @@ const field[G_B] G_RANGE_CHECK_TABLE = RANGE_0_1081;
 
 const u32 R = 32;
 const u32 C = 360;
-const u32 G_R = 10;
+const u32 G_R = 31;
 
 def main(
     // The full binary image and the split into well-behaved / garbage rows
