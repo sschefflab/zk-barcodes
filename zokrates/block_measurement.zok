@@ -406,6 +406,7 @@ def block_measurement<R,C,G_R, WB_B, WB_NB, WB_M, WB_LOGM, G_B, G_NB, G_M, G_LOG
 const field[WB_B] WB_RANGE_CHECK_TABLE = RANGE_0_105;
 const field[G_B] G_RANGE_CHECK_TABLE = RANGE_0_1081;
 
+// NOTE: it is important that all three of these constants match test image / witness gen or the proof will not verify!
 const u32 R = 32;
 const u32 C = 360;
 const u32 G_R = 31;
