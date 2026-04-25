@@ -92,7 +92,7 @@ struct PolynomialResult {
 }
 
 // Expects codewords and corrected_codewords to be left-padded with zeros to fit length W
-def check_error_correction<W>(field[W] codewords, field[W] corrected_codewords, field num_ec_codewords, PolynomialResult[512] poly_witness) -> bool {
+def check_error_correction<W,MAX_EC>(field[W] codewords, field[W] corrected_codewords, field num_ec_codewords, PolynomialResult[MAX_EC] poly_witness) -> bool {
     // sparsity check: 2w + 10
     field mut t = 0;
     for u32 k in 0..W {
@@ -107,7 +107,7 @@ def check_error_correction<W>(field[W] codewords, field[W] corrected_codewords, 
 
     bool mut zero_syndromes = true;
     // possible error correction levels are [0,8]. Need i's in range [1, 2**(ec_level+1)]. Note the closed interval, hence the range to 513 instead of 512
-    for u32 i in 1..513 {
+    for u32 i in 1..MAX_EC+1 {
         // Polynomial evaluation at eval point 3^i mod 929
         // powers[j] = (3^i)^(W-1-j) mod 929 = POWERS_OF_3_MOD_929[(i*(W-1-j)) % 928]
         // Since i and j are compile-time constants, (i*(W-1-j)) % 928 is computed at compile time
@@ -143,12 +143,13 @@ def check_error_correction<W>(field[W] codewords, field[W] corrected_codewords, 
 // test function
 const u32 R = 90;
 const u32 W = 2700;
+const u32 MAX_EC = 512;
 
 def main(
     // private RowIndicatorVars row_indc,
     // private field[R] left_row_inds,
     private BarcodeStats stats,
-    private PolynomialResult[512] poly_witness,
+    private PolynomialResult[MAX_EC] poly_witness,
     private field[W] codewords,
     private field[W] corrected_codewords
 ) -> () {

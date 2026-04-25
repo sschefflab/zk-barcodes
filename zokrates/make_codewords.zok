@@ -265,8 +265,8 @@ def check_codewords_and_garbage<WB_R, WB_RW, WB_CW, G_R, G_CW, W>(
 const u32 R = 32;
 const u32 CW = 35;
 const u32 W = 2700;
-const u32 RW = 90; // the number of logical barcode rows. Should be 90.
-const u32 G_R = 89;
+const u32 RW = 90; // the max number of logical barcode rows. Should be 90.
+const u32 G_R = 89; // the max number of garbage rows. Should be RW - 1 = 89
 const u32 G_CW = 135;
 
 def main(

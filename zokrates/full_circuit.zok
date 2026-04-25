@@ -11,7 +11,7 @@ from "./char_lookup.zok" import TableState;
 from "./codewords_to_chars.zok" import codewords_to_chars;
 from "EMBED" import u32_to_field;
 
-def full_circuit<R, C, G_R, G_B, G_NB, G_M, G_LOGM, WB_B, WB_NB, WB_M, WB_LOGM, WB_CW, G_CW, RW, W> (
+def full_circuit<R, C, G_R, G_B, G_NB, G_M, G_LOGM, WB_B, WB_NB, WB_M, WB_LOGM, WB_CW, G_CW, RW, MAX_EC, W> (
     field[R][C] image,
     field[R][C] bin_image,
     // block_measurement inputs
@@ -50,7 +50,7 @@ def full_circuit<R, C, G_R, G_B, G_NB, G_M, G_LOGM, WB_B, WB_NB, WB_M, WB_LOGM, 
     // error correction and decoding
     RowIndicatorVars row_indc,
     field[W] corrected_codewords,
-    PolynomialResult[512] poly_witness,
+    PolynomialResult[MAX_EC] poly_witness,
     BarcodeStats stats,
     TableState[2*W] char_table_states,
     field[2*W] chars

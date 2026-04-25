@@ -16,6 +16,7 @@ const u32 N = R * C;      // total number of pixels
 const field[WB_B] WB_RANGE_CHECK_TABLE = RANGE_0_105;
 const field[G_B] G_RANGE_CHECK_TABLE = RANGE_0_1081;
 
+const u32 MAX_EC = 512;
 const u32 W = 2700;         // total number of codewords
 const u32 RW = 90;         // max number of logical barcode rows possible (should be 90)
 
@@ -52,7 +53,7 @@ def main(
     // error correction and decoding
     private RowIndicatorVars row_indc,
     private field[W] corrected_codewords,
-    private PolynomialResult[512] poly_witness,
+    private PolynomialResult[MAX_EC] poly_witness,
     private BarcodeStats stats,
     private TableState[2*W] char_table_states,
     private field[2*W] chars
