@@ -24,7 +24,7 @@ def check_char_split(field codeword, field c1, field c2) -> bool {
 }
 
 // The input chars array should have no null characters. If that assumption does not hold, we will need to modify this code.
-def codewords_to_chars<W>(field[W] corrected_codewords, TableState[2*W] table_states, field num_ec_codewords, field[2*W] chars) -> bool {
+def codewords_to_chars<W,EC_CW>(field[W] corrected_codewords, TableState[2*W] table_states, field num_ec_codewords, field[EC_CW] ec_cw_range, field[2*W] chars) -> bool {
     bool mut correct_char_split = true;
     assert(table_states[0].this_table == 0);
     
@@ -63,7 +63,7 @@ def codewords_to_chars<W>(field[W] corrected_codewords, TableState[2*W] table_st
             back_idx +1 // otherwise, we don't care about this result - set it to something always greater than back_idx
         };
 
-        bool always_true = diff_lookup(to_compare, back_idx, RANGE_1_513); // always returns true, but does an assert inside
+        bool always_true = diff_lookup(to_compare, back_idx, ec_cw_range); // always returns true, but does an assert inside
         
         // Don't try to decode error correction codewords, pads, or higher-degree terms that are zero
         (bool, field, field, field) decode = if (!is_ec_cw) {
@@ -120,5 +120,5 @@ def codewords_to_chars<W>(field[W] corrected_codewords, TableState[2*W] table_st
 const u32 W = 2700;
 
 def main(private field[W] corrected_codewords, private TableState[2*W] char_table_states, private BarcodeStats stats, private field[2*W] chars) {
-    assert(codewords_to_chars(corrected_codewords, char_table_states, stats.num_ec_codewords, chars));
+    assert(codewords_to_chars(corrected_codewords, char_table_states, stats.num_ec_codewords, RANGE_1_513, chars));
 }

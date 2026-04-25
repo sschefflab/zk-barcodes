@@ -4,7 +4,14 @@
 
 from "EMBED" import value_in_array, value_in_array_tuple, u32_to_field, unpack;
 from "./utils.zok" import diff_lookup, check_bit_decomp;
-from "./const_range_check.zok" import RANGE_0_3, RANGE_0_30, RANGE_1_513, RANGE_EC_LEVEL, RANGE_NUM_ROWS, RANGE_NUM_COLS, POWERS_OF_TWO, GF_929, POWERS_OF_3_MOD_929;
+from "./const_range_check.zok" import RANGE_0_3, RANGE_0_30, RANGE_1_513, RANGE_EC_LEVEL, RANGE_NUM_ROWS, POWERS_OF_TWO, GF_929, POWERS_OF_3_MOD_929;
+
+struct BarcodeRanges<RW, EC, EC_CW> {
+    field[EC+1] ec_level_range;
+    field[RW-2] num_rows_range;
+    field[EC_CW] ec_cw_range;
+    field[EC+2][2] powers_of_two;
+}
 
 struct BarcodeStats {
      field num_rows;
@@ -50,10 +57,11 @@ def check_division_algorithm_quotient_bit_decomp<Q,B>(field y, field x, field q,
     return(check_division_algorithm_inner(y, x, q, r, range_check_table));
 }
 
-def check_barcode_stats<R>(
+def check_barcode_stats<R,EC,EC_CW>(
     RowIndicatorVars row_indc,
     BarcodeStats stats,
-    field[R] left_row_inds
+    field[R] left_row_inds,
+    BarcodeRanges<R,EC,EC_CW> ranges
 ) -> bool {
     // table lookups end up being way cheaper in constraints than ZoKrates comparisons
 
@@ -68,8 +76,8 @@ def check_barcode_stats<R>(
     field dr = row_indc.r3 - 3 * stats.ec_level;
     bool div_alg_r = check_division_algorithm_quotient_range_check(stats.num_rows - 1, row_indc.r0, 3, dr, RANGE_0_3, GF_929);
 
-    assert(value_in_array(stats.ec_level, RANGE_EC_LEVEL));
-    assert(value_in_array(stats.num_rows, RANGE_NUM_ROWS));
+    assert(value_in_array(stats.ec_level, ranges.ec_level_range));
+    assert(value_in_array(stats.num_rows, ranges.num_rows_range));
     // don't need to separately check RANGE_NUM_COLS - it is checked in div_alg6 above
 
 
@@ -78,7 +86,7 @@ def check_barcode_stats<R>(
     assert(row_indc.l3 == left_row_inds[1]);
     assert(row_indc.l6 == left_row_inds[2]);
 
-    assert(value_in_array_tuple([stats.ec_level+1, stats.num_ec_codewords], POWERS_OF_TWO));
+    assert(value_in_array_tuple([stats.ec_level+1, stats.num_ec_codewords], ranges.powers_of_two));
 
     return(div_alg0 && div_alg3 && div_alg6 && div_alg_r);
 }
@@ -92,7 +100,7 @@ struct PolynomialResult {
 }
 
 // Expects codewords and corrected_codewords to be left-padded with zeros to fit length W
-def check_error_correction<W,MAX_EC>(field[W] codewords, field[W] corrected_codewords, field num_ec_codewords, PolynomialResult[MAX_EC] poly_witness) -> bool {
+def check_error_correction<R,W,QBITS,EC,EC_CW>(field[W] codewords, field[W] corrected_codewords, field num_ec_codewords, PolynomialResult[EC_CW] poly_witness, BarcodeRanges<R,EC,EC_CW> ranges) -> bool {
     // sparsity check: 2w + 10
     field mut t = 0;
     for u32 k in 0..W {
@@ -102,12 +110,12 @@ def check_error_correction<W,MAX_EC>(field[W] codewords, field[W] corrected_code
     }
 
     field sparsity = num_ec_codewords - 2*t - 4;
-    bool[9] bits = unpack(sparsity);
+    bool[EC+1] bits = unpack(sparsity);
     bool sufficiently_sparse = check_bit_decomp(sparsity, bits);
 
     bool mut zero_syndromes = true;
     // possible error correction levels are [0,8]. Need i's in range [1, 2**(ec_level+1)]. Note the closed interval, hence the range to 513 instead of 512
-    for u32 i in 1..MAX_EC+1 {
+    for u32 i in 1..EC_CW+1 {
         // Polynomial evaluation at eval point 3^i mod 929
         // powers[j] = (3^i)^(W-1-j) mod 929 = POWERS_OF_3_MOD_929[(i*(W-1-j)) % 928]
         // Since i and j are compile-time constants, (i*(W-1-j)) % 928 is computed at compile time
@@ -120,7 +128,7 @@ def check_error_correction<W,MAX_EC>(field[W] codewords, field[W] corrected_code
         PolynomialResult poly_result = poly_witness[i-1];
 
         // 22 bits is sufficient here as the upper bound on the quotient should be 929*2700. (Upper bound on sum_pre_mod is 929*929*2700.)
-        bool correct_eval = check_division_algorithm_quotient_bit_decomp::<929,22>(sum_pre_mod, poly_result.result_quotient, 929, poly_result.result, GF_929);
+        bool correct_eval = check_division_algorithm_quotient_bit_decomp::<929,QBITS>(sum_pre_mod, poly_result.result_quotient, 929, poly_result.result, GF_929);
         bool zero_syndrome = correct_eval && (poly_result.result == 0);
 
         field i_f = u32_to_field(i);
@@ -131,7 +139,7 @@ def check_error_correction<W,MAX_EC>(field[W] codewords, field[W] corrected_code
         } else {
             num_ec_codewords
         };
-        bool always_true = diff_lookup(i_f, to_compare, RANGE_1_513); // this function always returns true but does an assert inside
+        bool always_true = diff_lookup(i_f, to_compare, ranges.ec_cw_range); // this function always returns true but does an assert inside
         
         zero_syndromes = zero_syndromes && (!poly_result.should_be_zero || zero_syndrome);
         
@@ -143,18 +151,21 @@ def check_error_correction<W,MAX_EC>(field[W] codewords, field[W] corrected_code
 // test function
 const u32 R = 90;
 const u32 W = 2700;
-const u32 MAX_EC = 512;
+const u32 QBITS = 22; // ceil(log2(929*W))
+const u32 EC = 8;
+const u32 EC_CW = 512; // 2**(EC+1)
 
 def main(
-    // private RowIndicatorVars row_indc,
-    // private field[R] left_row_inds,
+    private RowIndicatorVars row_indc,
+    private field[R] left_row_inds,    
     private BarcodeStats stats,
-    private PolynomialResult[MAX_EC] poly_witness,
+    private PolynomialResult[EC_CW] poly_witness,
     private field[W] codewords,
     private field[W] corrected_codewords
 ) -> () {
-    // bool ok_stats = check_barcode_stats(row_indc, stats, left_row_inds);
-    // assert(ok_stats);
-    bool ok_ec = check_error_correction(codewords, corrected_codewords, stats.num_ec_codewords, poly_witness);
+    BarcodeRanges<R,EC,EC_CW> ranges = BarcodeRanges { ec_level_range : RANGE_EC_LEVEL, num_rows_range : RANGE_NUM_ROWS, ec_cw_range : RANGE_1_513, powers_of_two : POWERS_OF_TWO };
+    bool ok_stats = check_barcode_stats::<R,EC,EC_CW>(row_indc, stats, left_row_inds, ranges);
+    assert(ok_stats);
+    bool ok_ec = check_error_correction::<R,W,QBITS,EC,EC_CW>(codewords, corrected_codewords, stats.num_ec_codewords, poly_witness, ranges);
     assert(ok_ec);
 }

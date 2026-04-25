@@ -2,9 +2,9 @@
 
 from "./block_measurement_const.zok" import L, WB_B, WB_NB, WB_M, WB_LOGM, WB_CW, WB_POWERS_OF_B, WB_CHUNK_LOOKUP_TABLE, G_B, G_NB, G_M, G_LOGM, G_CW, G_POWERS_OF_B, G_CHUNK_LOOKUP_TABLE;
 from "./block_measurement.zok" import BlockLookup, block_measurement;
-from "./const_range_check.zok" import RANGE_0_105, RANGE_0_1081;
+from "./const_range_check.zok" import RANGE_0_105, RANGE_0_1081, RANGE_1_513, RANGE_EC_LEVEL, RANGE_NUM_ROWS, POWERS_OF_TWO;
 from "./make_codewords.zok" import T;
-from "./error_correction.zok" import BarcodeStats, RowIndicatorVars, PolynomialResult;
+from "./error_correction.zok" import BarcodeRanges, BarcodeStats, RowIndicatorVars, PolynomialResult;
 from "./char_lookup.zok" import TableState;
 from "./full_circuit.zok" import full_circuit;
 
@@ -16,8 +16,12 @@ const u32 N = R * C;      // total number of pixels
 const field[WB_B] WB_RANGE_CHECK_TABLE = RANGE_0_105;
 const field[G_B] G_RANGE_CHECK_TABLE = RANGE_0_1081;
 
-const u32 MAX_EC = 512;
+const u32 EC = 8;
+const u32 EC_CW = 512;
+
 const u32 W = 2700;         // total number of codewords
+const u32 QBITS = 22;
+
 const u32 RW = 90;         // max number of logical barcode rows possible (should be 90)
 
 def main(
@@ -53,12 +57,14 @@ def main(
     // error correction and decoding
     private RowIndicatorVars row_indc,
     private field[W] corrected_codewords,
-    private PolynomialResult[MAX_EC] poly_witness,
+    private PolynomialResult[EC_CW] poly_witness,
     private BarcodeStats stats,
     private TableState[2*W] char_table_states,
     private field[2*W] chars
 ) {
-  assert(full_circuit::<R, C, G_R, G_B, G_NB, G_M, G_LOGM, WB_B, WB_NB, WB_M, WB_LOGM, WB_CW, G_CW, RW, W>(
+    BarcodeRanges<RW,EC,EC_CW> ranges = BarcodeRanges { ec_level_range : RANGE_EC_LEVEL, num_rows_range : RANGE_NUM_ROWS, ec_cw_range : RANGE_1_513, powers_of_two : POWERS_OF_TWO };
+
+     assert(full_circuit::<R, C, G_R, G_B, G_NB, G_M, G_LOGM, WB_B, WB_NB, WB_M, WB_LOGM, WB_CW, G_CW, RW, W, EC, EC_CW, QBITS>(
     image,
     bin_image,
     // block_measurement inputs
@@ -95,6 +101,7 @@ def main(
     garbage_disjoint_set_poly_f,
     garbage_disjoint_set_poly_g,
     // error correction and decoding
+    ranges,
     row_indc,
     corrected_codewords,
     poly_witness,
