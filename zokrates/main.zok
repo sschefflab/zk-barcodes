@@ -30,7 +30,7 @@ def main(
     // block_measurement inputs
     private field[R][C] well_behaved,
     private field[R] wb_inds,
-    private field[R] wb_ind_counts,
+    private field[R] ind_counts,
     private field[G_R][C] garbage_image,
     private field[G_R] garbage_inds,
     private field num_zero_rows,
@@ -70,7 +70,7 @@ def main(
     // block_measurement inputs
     well_behaved,
     wb_inds,
-    wb_ind_counts,
+    ind_counts,
     garbage_image,
     garbage_inds,
     num_zero_rows,

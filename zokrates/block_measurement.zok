@@ -297,7 +297,7 @@ def check_garbage_split<R,C,G_R>(
     field[R][C] bin_pixels,
     field[R][C] well_behaved,
     field[R] wb_inds,
-    field[R] wb_ind_counts,
+    field[R] ind_counts,
     field[G_R][C] garbage,
     field[G_R] garbage_inds,
     field num_zero_rows
@@ -323,7 +323,7 @@ def check_garbage_split<R,C,G_R>(
 
     for u32 i in 0..R {
         field i_f = u32_to_field(i);
-        field term = wb_ind_counts[i] / (alpha + i_f + beta * bin_img_rows[i]);
+        field term = ind_counts[i] / (alpha + i_f + beta * bin_img_rows[i]);
         lhs = lhs + term;
     }
 
@@ -345,7 +345,7 @@ def block_measurement<R,C,L,TABLE_LEN,G_R, WB_B, WB_NB, WB_M, WB_LOGM, G_B, G_NB
     field[R][C] bin_image,
     field[R][C] well_behaved,
     field[R] wb_inds,
-    field[R] wb_ind_counts,
+    field[R] ind_counts,
     field[G_R][C] garbage,
     field[G_R] garbage_inds,
     field num_zero_rows,
@@ -391,7 +391,7 @@ def block_measurement<R,C,L,TABLE_LEN,G_R, WB_B, WB_NB, WB_M, WB_LOGM, G_B, G_NB
         bin_image,
         well_behaved,
         wb_inds,
-        wb_ind_counts,
+        ind_counts,
         garbage,
         garbage_inds,
         num_zero_rows
@@ -416,7 +416,7 @@ def main(
     private field[R][C] bin_image,
     private field[R][C] well_behaved,
     private field[R] wb_inds,
-    private field[R] wb_ind_counts,
+    private field[R] ind_counts,
     private field[G_R][C] garbage_image,
     private field[G_R] garbage_inds,
     private field num_zero_rows,
@@ -433,7 +433,7 @@ def main(
         bin_image,
         well_behaved,
         wb_inds,
-        wb_ind_counts,
+        ind_counts,
         garbage_image,
         garbage_inds,
         num_zero_rows,
