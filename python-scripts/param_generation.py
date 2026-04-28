@@ -11,9 +11,9 @@ IMAGE_HEIGHT = 720  # how tall the image is in pixels
 MAX_NUM_ROWS = 90  # the max number of logical barcode rows the barcode may have
 MAX_NUM_COLS = 30  # the max number of data columns the barcode may have
 MAX_EC_LEVEL = 8  # the max error correction level the barcode may use
+L = 10  # Chunk size - must be a factor of IMAGE_WIDTH so that IMAGE_WIDTH / L is an integer.
 
-# A constant that we use for all input sizes - the width, in pixels of one "chunk" for block measurement
-L = 10
+
 table_len = 2**L
 
 garbage_rows = MAX_NUM_ROWS - 1  # the max number of garbage rows the barcode may have
@@ -28,7 +28,7 @@ garbage_col_words = ceil(IMAGE_WIDTH / 8)
 
 garbage_powers_of_b = [(i, garbage_b**i) for i in range(garbage_m)]
 garbage_chunk_lookup = generate_pixels_and_blocks(
-    garbage_b
+    garbage_b, L
 )  # a complicated lookup table of data about possible chunks of size L for garbage chunks. Look at this function definition for the details.
 
 # Same constants as above, but for well-behaved rows
@@ -50,7 +50,7 @@ wb_logm = ceil(log2(wb_m))
 wb_col_words = ceil(wb_nb / 8)
 
 wb_powers_of_b = [(i, wb_b**i) for i in range(wb_m)]
-wb_chunk_lookup = generate_pixels_and_blocks(wb_b)
+wb_chunk_lookup = generate_pixels_and_blocks(wb_b, L)
 
 max_words = MAX_NUM_ROWS * MAX_NUM_COLS  # maximum number of words in the barcode
 

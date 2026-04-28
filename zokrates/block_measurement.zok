@@ -39,7 +39,7 @@ def encode(BlockLookup lookup) -> field[6] {
 }
 
 // requires that C be divisible by L
-def check_chunks<C>(
+def check_chunks<C,L,TABLE_LEN>(
     field[C] bin_pixels,
     BlockLookup[C/L] lookups,
     field[TABLE_LEN][6] table
@@ -65,15 +65,15 @@ def check_chunks<C>(
     return(correct_blocks);
 }
 
-struct ProcessedChunks<C> {
+struct ProcessedChunks<C,L> {
     field[C/L] block_chunks;
     field[C/L] all_nb;
 }
 
-def process_chunks<C,M>(
+def process_chunks<C,L,M>(
     BlockLookup[C/L] lookups,
     field[M][2] powers_of_B
-) -> ProcessedChunks<C> {
+) -> ProcessedChunks<C,L> {
     u32 num_chunks = C/L;
 
     // Step 2 - Initialization
@@ -127,7 +127,7 @@ def process_chunks<C,M>(
     all_nb[last] = all_nb[last] + 1;
 
 
-    ProcessedChunks<C> result = ProcessedChunks { block_chunks : block_chunks, all_nb : all_nb };
+    ProcessedChunks<C,L> result = ProcessedChunks { block_chunks : block_chunks, all_nb : all_nb };
     return(result);
 
 }
@@ -166,7 +166,7 @@ def power_from_bit_decomp<LOGM>(
     return(result);
 }
 
-def check_consistency<C,B,NB,M,LOGM>(
+def check_consistency<C,L,B,NB,M,LOGM>(
     field[NB] blocks,
     field[C/L] block_chunks,
     field[C/L] all_nb,
@@ -214,7 +214,7 @@ def check_consistency<C,B,NB,M,LOGM>(
     return(result_f == result_g && correct_baseb_decomp);
 }
 
-def check_blocks<R,C,B,NB,M,LOGM>(
+def check_blocks<R,C,L,TABLE_LEN,B,NB,M,LOGM>(
     field[R][C] bin_pixels,
     BlockLookup[R][C/L] lookups,
     field[TABLE_LEN][6] chunk_lookup_table,
@@ -232,7 +232,7 @@ def check_blocks<R,C,B,NB,M,LOGM>(
     for u32 r in 0..R {
         correct_chunks = correct_chunks && check_chunks(bin_pixels[r], lookups[r], chunk_lookup_table);
 
-        ProcessedChunks<C> processed = process_chunks::<C,M>(lookups[r], powers_of_B);
+        ProcessedChunks<C,L> processed = process_chunks::<C,L,M>(lookups[r], powers_of_B);
         block_chunks[r] = processed.block_chunks;
         all_nb[r] = processed.all_nb;
     }
@@ -240,7 +240,7 @@ def check_blocks<R,C,B,NB,M,LOGM>(
     // check consistency of all rows, each generating its own verifier challenge
     bool mut consistent = true;
     for u32 r in 0..R {
-        consistent = consistent && check_consistency::<C,B,NB,M,LOGM>(blocks[r], block_chunks[r], all_nb[r], baseB_decomps[r], range_check_table);
+        consistent = consistent && check_consistency::<C,L,B,NB,M,LOGM>(blocks[r], block_chunks[r], all_nb[r], baseB_decomps[r], range_check_table);
     }
 
     return(correct_chunks && consistent);
@@ -340,7 +340,7 @@ def check_garbage_split<R,C,G_R>(
     return(lhs == rhs);
 }
 
-def block_measurement<R,C,G_R, WB_B, WB_NB, WB_M, WB_LOGM, G_B, G_NB, G_M, G_LOGM>(
+def block_measurement<R,C,L,TABLE_LEN,G_R, WB_B, WB_NB, WB_M, WB_LOGM, G_B, G_NB, G_M, G_LOGM>(
     // The full binary image and the split into well-behaved / garbage rows
     field[R][C] bin_image,
     field[R][C] well_behaved,
@@ -367,7 +367,7 @@ def block_measurement<R,C,G_R, WB_B, WB_NB, WB_M, WB_LOGM, G_B, G_NB, G_M, G_LOG
     field[G_M][2] g_powers_of_b,
     field[G_B] g_range_check_table    
 ) -> bool {
-    bool wb_blocks_ok = check_blocks::<R,C,WB_B,WB_NB,WB_M,WB_LOGM>(
+    bool wb_blocks_ok = check_blocks::<R,C,L,TABLE_LEN,WB_B,WB_NB,WB_M,WB_LOGM>(
         well_behaved,
         wb_lookups,
         wb_chunk_lookup_table,
@@ -377,7 +377,7 @@ def block_measurement<R,C,G_R, WB_B, WB_NB, WB_M, WB_LOGM, G_B, G_NB, G_M, G_LOG
         wb_range_check_table
     );
 
-    bool g_blocks_ok = check_blocks::<G_R,C,G_B,G_NB,G_M,G_LOGM>(
+    bool g_blocks_ok = check_blocks::<G_R,C,L,TABLE_LEN,G_B,G_NB,G_M,G_LOGM>(
         garbage,
         g_lookups,
         g_chunk_lookup_table,
@@ -429,7 +429,7 @@ def main(
     private field[G_R][G_NB] g_blocks,
     private field[G_R][C/L][L] g_baseB_decomps
 ) {
-    assert(block_measurement::<R,C,G_R, WB_B, WB_NB, WB_M, WB_LOGM, G_B, G_NB, G_M, G_LOGM>(
+    assert(block_measurement::<R,C,L,TABLE_LEN,G_R, WB_B, WB_NB, WB_M, WB_LOGM, G_B, G_NB, G_M, G_LOGM>(
         bin_image,
         well_behaved,
         wb_inds,

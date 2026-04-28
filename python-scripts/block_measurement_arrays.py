@@ -4,14 +4,12 @@
 Generate tables needed for lookups for block measurement.
 """
 
-L = 10
 
-
-def generate_powers_of_B(B):
+def generate_powers_of_B(B, L):
     return [[i, B**i] for i in range(0, L)]
 
 
-def generate_pixels_and_blocks(B):
+def generate_pixels_and_blocks(B, L):
     table = []
     for i in range(0, 2**L):
         c = i
@@ -44,18 +42,17 @@ def generate_pixels_and_blocks(B):
 
 
 if __name__ == "__main__":
-    # 65, 640 and wb and garbage for sd images
-    # 105, 1081 are the same for hd images
-    for B in [25, 65, 105, 193, 640, 1081]:
-        print(f"=== B = {B} ===")
+    # (B, L) pairs: HD uses L=10, SD uses L=10, SMALL uses L=8
+    for B, L in [(25, 8), (65, 10), (105, 10), (193, 8), (640, 10), (1081, 10)]:
+        print(f"=== B = {B}, L = {L} ===")
         print()
 
-        powers_of_B = generate_powers_of_B(B)
+        powers_of_B = generate_powers_of_B(B, L)
         print("POWERS_OF_B:")
         print(powers_of_B)
         print()
 
-        pixels_and_blocks = generate_pixels_and_blocks(B)
+        pixels_and_blocks = generate_pixels_and_blocks(B, L)
         print("PIXELS_AND_BLOCKS:")
         print(pixels_and_blocks)
         print()

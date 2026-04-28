@@ -28,7 +28,7 @@ def main(
     private field[G_R][G_NB] g_blocks,
     private field[G_R][C/L][L] g_baseB_decomps
 ) {
-    assert(block_measurement::<R,C,G_R, WB_B, WB_NB, WB_M, WB_LOGM, G_B, G_NB, G_M, G_LOGM>(
+    assert(block_measurement::<R,C,L,TABLE_LEN,G_R, WB_B, WB_NB, WB_M, WB_LOGM, G_B, G_NB, G_M, G_LOGM>(
         bin_image,
         well_behaved,
         wb_inds,
