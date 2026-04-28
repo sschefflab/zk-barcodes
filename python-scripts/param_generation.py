@@ -16,8 +16,6 @@ MAX_EC_LEVEL = 8  # the max error correction level the barcode may use
 L = 10
 table_len = 2**L
 
-num_chunks = ceil(IMAGE_WIDTH / L)  # the number of block measurement chunks per row
-
 garbage_rows = MAX_NUM_ROWS - 1  # the max number of garbage rows the barcode may have
 
 garbage_b = IMAGE_WIDTH + 1  # the base used for chunk encoding garbage blocks.
