@@ -11,7 +11,7 @@ const u32 TABLE_LEN = 1024; // 2^L
 const u32 WB_B = 105; // min 17*5 = 85 modules in a row, 1080 / 85 = 13 pixels/module, 8 modules in max bar for max 104 pixels per block; base is max+1
 
 // NB = number of blocks per row
-const u32 WB_NB = 273; // 8 blocks per data column + 32 blocks for start and row indicators + 9 blocks for stop. Max 30 data columns = 281 blocks
+const u32 WB_NB = 273; // 8 blocks per data column + 24 blocks for start and row indicators + 9 blocks for stop. Max 30 data columns = 273 blocks
 
 const u32 WB_M = 3; // max blocks per chunk = ceil( 10 / (1080 / 273)) = 
 const u32 WB_LOGM = 2; // ceil(log2(WB_M))
