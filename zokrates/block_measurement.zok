@@ -38,7 +38,6 @@ def encode(BlockLookup lookup) -> field[6] {
     return([lookup.binary_enc, lookup.baseB_enc, lookup.remainder, lookup.num_blocks, lookup.num_blocks_is_odd, lookup.remainder_is_black]);
 }
 
-// requires that C be divisible by L
 def check_chunks<C,NC>(
     field[C] bin_pixels,
     BlockLookup[NC] lookups,
@@ -50,7 +49,13 @@ def check_chunks<C,NC>(
         field[L] expanded_chunk = [0; L];
         
         for u32 j in 0..L {
-            expanded_chunk[j] = bin_pixels[i*L + j];
+            u32 ind = i*L + j;
+            field pixel = if ind >= C {
+                0
+            } else {
+                bin_pixels[i*L + j]
+            };
+            expanded_chunk[j] = pixel;
         }
 
         field binary_chunk = pixels_to_binary(expanded_chunk); // this is no constraints because we already know the pixels are binary values
@@ -400,7 +405,7 @@ def block_measurement<R,C,NC,G_R, WB_B, WB_NB, WB_M, WB_LOGM, G_B, G_NB, G_M, G_
 const field[WB_B] WB_RANGE_CHECK_TABLE = RANGE_0_105;
 const field[G_B] G_RANGE_CHECK_TABLE = RANGE_0_1081;
 
-// NOTE: it is important that all three of these constants match test image / witness gen or the proof will not verify!
+// NOTE: it is important that all of these constants match test image / witness gen or the proof will not verify!
 const u32 R = 32;
 const u32 C = 365;
 const u32 NC = 37;
