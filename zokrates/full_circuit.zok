@@ -11,7 +11,7 @@ from "./char_lookup.zok" import TableState;
 from "./codewords_to_chars.zok" import codewords_to_chars;
 from "EMBED" import u32_to_field;
 
-def full_circuit<R, C, G_R, G_B, G_NB, G_M, G_LOGM, WB_B, WB_NB, WB_M, WB_LOGM, WB_CW, G_CW, RW, W, EC, EC_CW, QBITS> (
+def full_circuit<R, C, NC, G_R, G_B, G_NB, G_M, G_LOGM, WB_B, WB_NB, WB_M, WB_LOGM, WB_CW, G_CW, RW, W, EC, EC_CW, QBITS> (
     field[R][C] image,
     field[R][C] bin_image,
     // block_measurement inputs
@@ -21,12 +21,12 @@ def full_circuit<R, C, G_R, G_B, G_NB, G_M, G_LOGM, WB_B, WB_NB, WB_M, WB_LOGM, 
     field[G_R][C] garbage_image,
     field[G_R] garbage_inds,
     field num_zero_rows,
-    BlockLookup[R][C/L] wb_lookups,
+    BlockLookup[R][NC] wb_lookups,
     field[R][WB_NB] wb_blocks,
-    field[R][C/L][L] wb_baseB_decomps,
-    BlockLookup[G_R][C/L] g_lookups,
+    field[R][NC][L] wb_baseB_decomps,
+    BlockLookup[G_R][NC] g_lookups,
     field[G_R][G_NB] g_blocks,
-    field[G_R][C/L][L] g_baseB_decomps,
+    field[G_R][NC][L] g_baseB_decomps,
     field[TABLE_LEN][6] wb_chunk_lookup_table,
     field[WB_M][2] wb_powers_of_b,
     field[WB_B] wb_range_check_table,
@@ -58,7 +58,7 @@ def full_circuit<R, C, G_R, G_B, G_NB, G_M, G_LOGM, WB_B, WB_NB, WB_M, WB_LOGM, 
 ) -> bool {
     assert(binarize(image, bin_image));
 
-    assert(block_measurement::<R,C,G_R, WB_B, WB_NB, WB_M, WB_LOGM, G_B, G_NB, G_M, G_LOGM>(
+    assert(block_measurement::<R, C, NC, G_R, WB_B, WB_NB, WB_M, WB_LOGM, G_B, G_NB, G_M, G_LOGM>(
         bin_image,
         well_behaved,
         wb_inds,

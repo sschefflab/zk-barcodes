@@ -1,4 +1,4 @@
-from "../block_measurement_const.zok" import L, TABLE_LEN, WB_B_SMALL, WB_NB_SMALL, WB_M_SMALL, WB_LOGM_SMALL, WB_POWERS_OF_B_SMALL, WB_CHUNK_LOOKUP_TABLE_SMALL, G_B_SMALL, G_NB_SMALL, G_M_SMALL, G_LOGM_SMALL, G_POWERS_OF_B_SMALL, G_CHUNK_LOOKUP_TABLE_SMALL;
+from "../block_measurement_const.zok" import L, TABLE_LEN, NC_SMALL, WB_B_SMALL, WB_NB_SMALL, WB_M_SMALL, WB_LOGM_SMALL, WB_POWERS_OF_B_SMALL, WB_CHUNK_LOOKUP_TABLE_SMALL, G_B_SMALL, G_NB_SMALL, G_M_SMALL, G_LOGM_SMALL, G_POWERS_OF_B_SMALL, G_CHUNK_LOOKUP_TABLE_SMALL;
 from "../const_range_check.zok" import RANGE_0_25, RANGE_0_193;
 from "../block_measurement.zok" import block_measurement, BlockLookup;
 
@@ -21,15 +21,15 @@ def main(
     private field[G_R] garbage_inds,
     private field num_zero_rows,
     // Well-behaved block checking metadata
-    private BlockLookup[R][C/L] wb_lookups,
+    private BlockLookup[R][NC_SMALL] wb_lookups,
     private field[R][WB_NB_SMALL] wb_blocks,
-    private field[R][C/L][L] wb_baseB_decomps,
+    private field[R][NC_SMALL][L] wb_baseB_decomps,
     // Garbage block checking metadata
-    private BlockLookup[G_R][C/L] g_lookups,
+    private BlockLookup[G_R][NC_SMALL] g_lookups,
     private field[G_R][G_NB_SMALL] g_blocks,
-    private field[G_R][C/L][L] g_baseB_decomps
+    private field[G_R][NC_SMALL][L] g_baseB_decomps
 ) {
-    assert(block_measurement::<R,C,G_R, WB_B_SMALL, WB_NB_SMALL, WB_M_SMALL, WB_LOGM_SMALL, G_B_SMALL, G_NB_SMALL, G_M_SMALL, G_LOGM_SMALL>(
+    assert(block_measurement::<R,C,NC_SMALL,G_R, WB_B_SMALL, WB_NB_SMALL, WB_M_SMALL, WB_LOGM_SMALL, G_B_SMALL, G_NB_SMALL, G_M_SMALL, G_LOGM_SMALL>(
         bin_image,
         well_behaved,
         wb_inds,

@@ -6,7 +6,8 @@ const u32 TABLE_LEN = 1024; // 2^L
 
 //// HD CONSTANTS ////
 
-// Block measurement constants
+const u32 NC = 108;
+
 // B = max block length in pixels (used as base for encoding and range check table size)
 const u32 WB_B = 105; // min 17*5 = 85 modules in a row, 1080 / 85 = 13 pixels/module, 8 modules in max bar for max 104 pixels per block; base is max+1
 
@@ -2099,6 +2100,8 @@ const field[TABLE_LEN][6] G_CHUNK_LOOKUP_TABLE = [
 
 //// SD CONSTANTS ////
 
+const u32 NC_SD = 64;
+
 const u32 WB_B_SD = 65; // ceil(640 / 85) * 8 + 1
 const u32 WB_NB_SD = 273; // same as HD
 const u32 WB_M_SD = 5; // max blocks per chunk = ceil(10/(640/273))
@@ -4189,6 +4192,8 @@ const field[TABLE_LEN][6] G_CHUNK_LOOKUP_TABLE_SD = [
 
 
 //// SMALL CONSTANTS ////
+
+const u32 NC_SMALL = 20;
 
 const u32 WB_B_SMALL = 25; // ceil(192 / 85) * 8 + 1
 const u32 WB_NB_SMALL = 273; // same as HD

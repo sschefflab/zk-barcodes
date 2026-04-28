@@ -1,4 +1,4 @@
-from "../block_measurement_const.zok" import L, TABLE_LEN, WB_B_SD, WB_NB_SD, WB_M_SD, WB_LOGM_SD, WB_POWERS_OF_B_SD, WB_CHUNK_LOOKUP_TABLE_SD, G_B_SD, G_NB_SD, G_M_SD, G_LOGM_SD, G_POWERS_OF_B_SD, G_CHUNK_LOOKUP_TABLE_SD;
+from "../block_measurement_const.zok" import L, TABLE_LEN, NC_SD, WB_B_SD, WB_NB_SD, WB_M_SD, WB_LOGM_SD, WB_POWERS_OF_B_SD, WB_CHUNK_LOOKUP_TABLE_SD, G_B_SD, G_NB_SD, G_M_SD, G_LOGM_SD, G_POWERS_OF_B_SD, G_CHUNK_LOOKUP_TABLE_SD;
 from "../const_range_check.zok" import RANGE_0_65, RANGE_0_641;
 from "../block_measurement.zok" import block_measurement, BlockLookup;
 
@@ -21,15 +21,15 @@ def main(
     private field[G_R] garbage_inds,
     private field num_zero_rows,
     // Well-behaved block checking metadata
-    private BlockLookup[R][C/L] wb_lookups,
+    private BlockLookup[R][NC_SD] wb_lookups,
     private field[R][WB_NB_SD] wb_blocks,
-    private field[R][C/L][L] wb_baseB_decomps,
+    private field[R][NC_SD][L] wb_baseB_decomps,
     // Garbage block checking metadata
-    private BlockLookup[G_R][C/L] g_lookups,
+    private BlockLookup[G_R][NC_SD] g_lookups,
     private field[G_R][G_NB_SD] g_blocks,
-    private field[G_R][C/L][L] g_baseB_decomps
+    private field[G_R][NC_SD][L] g_baseB_decomps
 ) {
-    assert(block_measurement::<R,C,G_R, WB_B_SD, WB_NB_SD, WB_M_SD, WB_LOGM_SD, G_B_SD, G_NB_SD, G_M_SD, G_LOGM_SD>(
+    assert(block_measurement::<R,C,NC_SD,G_R, WB_B_SD, WB_NB_SD, WB_M_SD, WB_LOGM_SD, G_B_SD, G_NB_SD, G_M_SD, G_LOGM_SD>(
         bin_image,
         well_behaved,
         wb_inds,
