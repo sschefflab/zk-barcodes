@@ -4,6 +4,7 @@
 from "./utils.zok" import diff_lookup;
 from "./const_range_check.zok" import RANGE_0_432;
 
+// TODO: change words to use cluster and E_i values from page 81 of the spec. Change table lookup to also use this.
 def compute_word<WW>(field[8] blocks, field[8] normalized_blocks, field[2*WW] block_width_lookup) -> field {
     bool mut zero_block = false;
     for u32 i in 0..8 {
@@ -51,7 +52,7 @@ def compute_word<WW>(field[8] blocks, field[8] normalized_blocks, field[2*WW] bl
         };
 
         // lower_bound < middle <= upper_bound
-        bool is_true1 = diff_lookup(middle, lower_bound, block_width_lookup[1..]);
+        bool is_true1 = diff_lookup(middle, lower_bound, block_width_lookup[1..]); // TODO: this lower bound doesn't always hold! But we can't just get rid of it, or the prover can inflate block sizes behind this.
         bool is_true2 = diff_lookup(upper_bound, middle, block_width_lookup);
 
         module_sum = module_sum + normalized_blocks[i];
