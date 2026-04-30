@@ -11,6 +11,8 @@ const u32 TABLE_LEN = 1024; // 2^L
 // B = max block length in pixels (used as base for encoding and range check table size)
 const u32 WB_B = 105; // min 17*5 = 85 modules in a row, 1080 / 85 = 13 pixels/module, 8 modules in max bar for max 104 pixels per block; base is max+1
 
+const u32 WB_WW = 216; // word width - ceil(1080 / 5), where 5 is the minimum number of words per row
+
 // NB = number of blocks per row
 const u32 WB_NB = 273; // 8 blocks per data column + 24 blocks for start and row indicators + 9 blocks for stop. Max 30 data columns = 273 blocks
 
@@ -20,6 +22,7 @@ const u32 WB_LOGM = 2; // ceil(log2(WB_M))
 const u32 WB_CW = 35; // ceil(WB_NB / 8)
 
 const u32 G_B = 1081;
+const u32 G_WW = 1080; // same as image width
 const u32 G_NB = 1080; // B - 1
 const u32 G_M = 10; // same as L
 const u32 G_LOGM = 4; // ceil(log2(G_M))
@@ -2104,12 +2107,14 @@ const u32 L_SD = 10;
 const u32 TABLE_LEN_SD = 1024; // 2^L
 
 const u32 WB_B_SD = 65; // ceil(640 / 85) * 8 + 1
+const u32 WB_WW_SD = 128;
 const u32 WB_NB_SD = 273; // same as HD
 const u32 WB_M_SD = 5; // max blocks per chunk = ceil(10/(640/273))
 const u32 WB_LOGM_SD = 3; // ceil(log2(WB_M_SD))
 const u32 WB_CW_SD = 35; // same as HD - property of pdf417 barcode
 
 const u32 G_B_SD = 641;
+const u32 G_WW_SD = 640; // same as image width
 const u32 G_NB_SD = 640; // B - 1
 const u32 G_M_SD = 10; // same as L
 const u32 G_LOGM_SD = 4; // ceil(log2(G_M_SD))
@@ -4198,12 +4203,14 @@ const u32 L_SMALL = 8;
 const u32 TABLE_LEN_SMALL = 256; // 2^L
 
 const u32 WB_B_SMALL = 25; // ceil(192 / 85) * 8 + 1
+const u32 WB_WW_SMALL = 39;
 const u32 WB_NB_SMALL = 273; // same as HD
 const u32 WB_M_SMALL = 8; // min(ceil(8/(192/273)), 8)
 const u32 WB_LOGM_SMALL = 3; // ceil(log2(WB_M_SMALL))
 const u32 WB_CW_SMALL = 35; // same as HD - property of pdf417 barcode
 
 const u32 G_B_SMALL = 193;
+const u32 G_WW_SMALL = 192; // same as image width
 const u32 G_NB_SMALL = 192; // B - 1
 const u32 G_M_SMALL = 8; // same as L_SMALL
 const u32 G_LOGM_SMALL = 3; // ceil(log2(G_M_SMALL))

@@ -21,6 +21,8 @@ garbage_rows = MAX_NUM_ROWS - 1  # the max number of garbage rows the barcode ma
 garbage_b = IMAGE_WIDTH + 1  # the base used for chunk encoding garbage blocks.
 # It is computed as the max number of pixels in a block plus 1.
 
+garbage_ww = 1080  # garbage word width - maximum width of a word (bsbsbsbs) in pixels
+
 garbage_m = L  # the max number of blocks that may be in a block measurement chunk
 garbage_nb = IMAGE_WIDTH  # the max number of blocks that may be in a garbage row
 garbage_logm = ceil(log2(garbage_m))
@@ -37,6 +39,10 @@ wb_b = (
     ceil(IMAGE_WIDTH / 85) * 8 + 1
 )  # minimum 17*5 = 85 modules in a row, regardless of barcode size.
 # Divide into image_width to get pixels/module, multiply by 8 to get pixels in max block, add 1.
+
+wb_ww = ceil(
+    IMAGE_WIDTH / 5
+)  # well-behaved word width - maximum width of a codeword in pixels
 
 wb_nb = (
     8 * MAX_NUM_COLS + 24 + 9

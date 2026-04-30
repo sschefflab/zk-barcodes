@@ -10,7 +10,7 @@ from "./char_lookup.zok" import TableState;
 from "./codewords_to_chars.zok" import codewords_to_chars;
 from "EMBED" import u32_to_field;
 
-def full_circuit<R, C, L, TABLE_LEN, G_R, G_B, G_NB, G_M, G_LOGM, WB_B, WB_NB, WB_M, WB_LOGM, WB_CW, G_CW, RW, W, EC, EC_CW, QBITS> (
+def full_circuit<R, C, L, TABLE_LEN, G_R, G_B, G_WW, G_NB, G_M, G_LOGM, WB_B, WB_WW, WB_NB, WB_M, WB_LOGM, WB_CW, G_CW, RW, W, EC, EC_CW, QBITS> (
     field[R][C] image,
     field[R][C] bin_image,
     // block_measurement inputs
@@ -32,8 +32,8 @@ def full_circuit<R, C, L, TABLE_LEN, G_R, G_B, G_NB, G_M, G_LOGM, WB_B, WB_NB, W
     field[TABLE_LEN][6] g_chunk_lookup_table,
     field[G_M][2] g_powers_of_b,
     field[G_B] g_range_check_table,
-    field[2*WB_B] wb_words_range_table,
-    field[2*G_B] g_words_range_table,
+    field[2*WB_WW] wb_words_range_table,
+    field[2*G_WW] g_words_range_table,
     // make_words inputs
     field[R][WB_CW][8] wb_normalized_blocks,
     field[G_R][G_CW][8] g_normalized_blocks,
@@ -81,8 +81,8 @@ def full_circuit<R, C, L, TABLE_LEN, G_R, G_B, G_NB, G_M, G_LOGM, WB_B, WB_NB, W
         g_range_check_table
     ));
 
-    field[R][WB_CW] words = compute_words::<R, WB_B, WB_NB, WB_CW>(wb_blocks, wb_normalized_blocks, wb_words_range_table);
-    field[G_R][G_CW] garbage_rows = compute_words::<G_R, G_B, G_NB, G_CW>(g_blocks, g_normalized_blocks, g_words_range_table);
+    field[R][WB_CW] words = compute_words::<R, WB_WW, WB_NB, WB_CW>(wb_blocks, wb_normalized_blocks, wb_words_range_table);
+    field[G_R][G_CW] garbage_rows = compute_words::<G_R, G_WW, G_NB, G_CW>(g_blocks, g_normalized_blocks, g_words_range_table);
 
     assert(check_codewords_and_garbage(
         words,

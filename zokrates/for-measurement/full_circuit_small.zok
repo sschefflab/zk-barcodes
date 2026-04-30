@@ -1,8 +1,8 @@
 // Entire PDF417 decoding verifier circuit
 
-from "../block_measurement_const.zok" import L_SMALL, TABLE_LEN_SMALL, WB_B_SMALL, WB_NB_SMALL, WB_M_SMALL, WB_LOGM_SMALL, WB_CW_SMALL, WB_POWERS_OF_B_SMALL, WB_CHUNK_LOOKUP_TABLE_SMALL, G_B_SMALL, G_NB_SMALL, G_M_SMALL, G_LOGM_SMALL, G_CW_SMALL, G_POWERS_OF_B_SMALL, G_CHUNK_LOOKUP_TABLE_SMALL;
+from "../block_measurement_const.zok" import L_SMALL, TABLE_LEN_SMALL, WB_B_SMALL, WB_NB_SMALL, WB_M_SMALL, WB_LOGM_SMALL, WB_CW_SMALL, WB_POWERS_OF_B_SMALL, WB_CHUNK_LOOKUP_TABLE_SMALL, WB_WW_SMALL, G_B_SMALL, G_NB_SMALL, G_M_SMALL, G_LOGM_SMALL, G_CW_SMALL, G_POWERS_OF_B_SMALL, G_CHUNK_LOOKUP_TABLE_SMALL, G_WW_SMALL;
 from "../block_measurement.zok" import BlockLookup, block_measurement;
-from "../const_range_check.zok" import RANGE_0_25, RANGE_0_193, RANGE_0_50, RANGE_0_386, RANGE_1_513, RANGE_EC_LEVEL, RANGE_NUM_ROWS, POWERS_OF_TWO;
+from "../const_range_check.zok" import RANGE_0_25, RANGE_0_193, RANGE_0_78, RANGE_0_384, RANGE_1_513, RANGE_EC_LEVEL, RANGE_NUM_ROWS, POWERS_OF_TWO;
 from "../make_codewords.zok" import T;
 from "../error_correction.zok" import BarcodeRanges, BarcodeStats, RowIndicatorVars, PolynomialResult;
 from "../char_lookup.zok" import TableState;
@@ -15,8 +15,8 @@ const u32 N = R * C;      // total number of pixels
 
 const field[WB_B_SMALL] WB_RANGE_CHECK_TABLE = RANGE_0_25;
 const field[G_B_SMALL] G_RANGE_CHECK_TABLE = RANGE_0_193;
-const field[2*WB_B_SMALL] WB_WORDS_RANGE_TABLE = RANGE_0_50;
-const field[2*G_B_SMALL] G_WORDS_RANGE_TABLE = RANGE_0_386;
+const field[2*WB_WW_SMALL] WB_WORDS_RANGE_TABLE = RANGE_0_78;
+const field[2*G_WW_SMALL] G_WORDS_RANGE_TABLE = RANGE_0_384;
 
 const u32 W = R * WB_CW_SMALL;  // total number of codewords
 const u32 RW = 90;         // max number of logical barcode rows possible (should be 90)
@@ -64,7 +64,7 @@ def main(
 ) {
   BarcodeRanges<RW,EC,EC_CW> ranges = BarcodeRanges { ec_level_range : RANGE_EC_LEVEL, num_rows_range : RANGE_NUM_ROWS, ec_cw_range : RANGE_1_513, powers_of_two : POWERS_OF_TWO };
 
-  assert(full_circuit::<R, C, L_SMALL, TABLE_LEN_SMALL, G_R, G_B_SMALL, G_NB_SMALL, G_M_SMALL, G_LOGM_SMALL, WB_B_SMALL, WB_NB_SMALL, WB_M_SMALL, WB_LOGM_SMALL, WB_CW_SMALL, G_CW_SMALL, RW, W, EC, EC_CW, QBITS>(
+  assert(full_circuit::<R, C, L_SMALL, TABLE_LEN_SMALL, G_R, G_B_SMALL, G_WW_SMALL, G_NB_SMALL, G_M_SMALL, G_LOGM_SMALL, WB_B_SMALL, WB_WW_SMALL, WB_NB_SMALL, WB_M_SMALL, WB_LOGM_SMALL, WB_CW_SMALL, G_CW_SMALL, RW, W, EC, EC_CW, QBITS>(
     image,
     bin_image,
     // block_measurement inputs
