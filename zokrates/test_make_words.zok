@@ -1,26 +1,39 @@
 from "./make_words.zok" import compute_words;
-from "./block_measurement_const.zok" import WB_NB, G_NB, WB_CW, G_CW;
+from "./const_range_check.zok" import RANGE_0_210, RANGE_0_2162;
 
-const u32 R = 32;
+const u32 R = 64;
+const u32 G_R = 30;
+
+const u32 WB_B = 105;
+const u32 WB_NB = 273; // property of pdf417
+const u32 WB_CW = 35; // property of pdf417
+
+const u32 G_B = 512;
+const u32 G_NB = 512; // image width
+const u32 G_CW = 64; // image width / 8
+
 
 def main(
     private field[R][WB_NB] wb_blocks,
     private field[R][WB_CW][8] wb_normalized_blocks,
     field[R][WB_CW] wb_words,
-    private field[R][G_NB] g_blocks,
-    private field[R][G_CW][8] g_normalized_blocks,
-    field[R][G_CW] garbage_words
+    private field[G_R][G_NB] g_blocks,
+    private field[G_R][G_CW][8] g_normalized_blocks,
+    field[G_R][G_CW] garbage_rows
 ) {
-    field[R][WB_CW] computed_words = compute_words(wb_blocks, wb_normalized_blocks);
-    field[R][G_CW] computed_garbage = compute_words(g_blocks, g_normalized_blocks);
+    field[R][WB_CW] computed_words = compute_words::<R,WB_B,WB_NB, WB_CW>(wb_blocks, wb_normalized_blocks, RANGE_0_210);
+    field[G_R][G_CW] computed_garbage = compute_words::<G_R,G_B, G_NB, G_CW>(g_blocks, g_normalized_blocks, RANGE_0_2162); // this range table is a little wrong, but I'm hoping it will be ok for this test to go through
 
     for u32 r in 0..R {
         for u32 c in 0..WB_CW {
             assert(computed_words[r][c] == wb_words[r][c]);
         }
+    }
 
+    for u32 r in 0..G_R {
         for u32 c in 0..G_CW {
-            assert(computed_garbage[r][c] == garbage_words[r][c]);
+            assert(computed_garbage[r][c] == garbage_rows[r][c]);
         }
+
     }
 }

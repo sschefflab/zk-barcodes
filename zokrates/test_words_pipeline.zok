@@ -1,12 +1,13 @@
 from "./make_words.zok" import compute_words;
 from "./make_codewords.zok" import check_codewords_and_garbage, T;
-from "./block_measurement_const.zok" import WB_NB, WB_CW, G_NB, G_CW;
+from "./block_measurement_const.zok" import WB_B, G_B, WB_NB, WB_CW, G_NB, G_CW;
+from "./const_range_check.zok" import RANGE_0_210, RANGE_0_2162;
 
-// NOTE: it is important that all four of these parameters match what was used to generate the witness in order for the proof to go through!
-const u32 R = 32;
-const u32 G_R = 31;
-const u32 RW = 90;         // max number of logical barcode rows
-const u32 W = 2700;
+// NOTE: it is important that ALL of thee parameters match what was used to generate the witness in order for the proof to go through! The ones listed here and the imported ones.
+const u32 R = 64;
+const u32 G_R = 30;
+const u32 RW = 31;         // max number of logical barcode rows
+const u32 W = 930;
 
 def main(
     private field[R][WB_NB] wb_blocks,
@@ -24,8 +25,8 @@ def main(
     field[T] garbage_disjoint_set_poly_f,
     private field[G_R] garbage_disjoint_set_poly_g
 ) {
-    field[R][WB_CW] words = compute_words(wb_blocks, wb_normalized_blocks);
-    field[G_R][G_CW] garbage_rows = compute_words(g_blocks, g_normalized_blocks);
+    field[R][WB_CW] words = compute_words::<R, WB_B, WB_NB, WB_CW>(wb_blocks, wb_normalized_blocks, RANGE_0_210);
+    field[G_R][G_CW] garbage_rows = compute_words::<G_R, G_B, G_NB, G_CW>(g_blocks, g_normalized_blocks, RANGE_0_2162);
 
     assert(check_codewords_and_garbage::<R, RW, WB_CW, G_R, G_CW, W>(
         words,
