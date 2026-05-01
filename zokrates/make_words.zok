@@ -4,71 +4,53 @@
 from "./utils.zok" import diff_lookup;
 from "./const_range_check.zok" import RANGE_0_432;
 
-// TODO: change words to use cluster and E_i values from page 81 of the spec. Change table lookup to also use this.
-def compute_word<WW>(field[8] blocks, field[8] normalized_blocks, field[2*WW] block_width_lookup) -> field {
+def compute_word<WW>(field[8] blocks, field[6] normalized_widths, field[2*WW] block_width_lookup) -> field {
     bool mut zero_block = false;
+    field mut pixel_total = 0;
     for u32 i in 0..8 {
         zero_block = zero_block || (blocks[i] == 0);
+        pixel_total = pixel_total + blocks[i];
     }
 
-    field[8] mut pixel_sums = [0; 8];
-    for u32 i in 1..8 {
-        pixel_sums[i] = pixel_sums[i-1] + blocks[i-1];        
+    field[6] mut widths = [0; 6];
+    for u32 i in 1..7 {
+        widths[i-1] = blocks[i] + blocks[i-1];
     }
-    field pixel_total = pixel_sums[7] + blocks[7];
-    
-    // Verify that normalized_blocks is the correct sampleBitCounts normalization of blocks.
-    //
-    // sampleBitCounts places 17 evenly-spaced sample points across [0, pixel_total]:
-    //   sampleIndex(m) ≈ pixel_total*(2m+1)/34   (midpoint of the m-th equal slot)
-    // Each sample point is assigned to whichever bar it falls inside, giving each bar
-    // a module count (its entry in normalized_blocks).
-    //
-    // Bar i starts being counted at module m when:
-    //   - at module m:   pixel_sums[i] <= pixel_total*(2m+1)/34  → bar index advances
-    //   - at module m-1: pixel_sums[i] >  pixel_total*(2m-1)/34  → hadn't advanced yet
-    //
-    // At loop iteration i, module_sum = sum(normalized_blocks[0..i]) = m, so:
-    //   pixel_total*(2*module_sum - 1) < 34*pixel_sums[i] <= pixel_total*(2*module_sum + 1)
-    //
-    // The range width is 2*pixel_total, so WW = max(pixel_total) bounds the lookup table.
-    // For zero-padded dummy blocks we skip the check with trivially-true dummy bounds.
-    field mut module_sum = normalized_blocks[0];
-    for u32 i in 1..8 {
-        assert(!zero_block || normalized_blocks[i] == 0);
 
-        field middle = 34*pixel_sums[i];
+    for u32 i in 0..6 {
+        assert(!zero_block || normalized_widths[i] == 0);
+
+        field middle = 34*widths[i];
 
         field lower_bound = if (zero_block) {
             middle - 1 // dummy: always satisfies middle > lower_bound
         } else {
-            pixel_total*(2*module_sum - 1)
+            pixel_total*(2*normalized_widths[i] - 1)
         };
 
         field upper_bound = if (zero_block) {
             middle + 1 // dummy: always satisfies middle <= upper_bound
         } else {
-            pixel_total*(2*module_sum + 1)
+            pixel_total*(2*normalized_widths[i] + 1)
         };
 
-        // lower_bound < middle <= upper_bound
-        bool is_true1 = diff_lookup(middle, lower_bound, block_width_lookup[1..]); // TODO: this lower bound doesn't always hold! But we can't just get rid of it, or the prover can inflate block sizes behind this.
-        bool is_true2 = diff_lookup(upper_bound, middle, block_width_lookup);
-
-        module_sum = module_sum + normalized_blocks[i];
+        // lower_bound <= middle < upper_bound
+        // diff_lookup always returns true, but it does an assert inside
+        bool is_true1 = diff_lookup(middle, lower_bound, block_width_lookup);
+        bool is_true2 = diff_lookup(upper_bound, middle, block_width_lookup[1..]);
     }
-    assert(module_sum == 17 || zero_block && module_sum == 0);
-
+    
     field mut word = 0;
-    for u32 i in 0..8 {
-        word = word + normalized_blocks[i] * 10**(7-i);
+    // The largest possible width is 12, so we encode base-13
+    for u32 i in 0..6 {
+        word = word + normalized_widths[i] * 13**i;
     }
 
     return(word);
 }
 
-def compute_words_per_row<WW,NB,CW>(field[NB] blocks, field[CW][8] normalized_blocks, field[2*WW] lookup) -> field[CW] {
-    field[CW][8] mut grouped_blocks = [[0; 8]; CW];
+def compute_words_per_row<WW,NB,CW>(field[NB] blocks, field[CW][6] normalized_widths, field[2*WW] lookup) -> field[CW] {
+    field[CW][8] mut grouped_blocks = [[0; 8]; CW]; // still 8 raw blocks per word
     for u32 i in 0..CW {
         for u32 j in 0..8 {
             field grouped_block = if (8*(i+1) > NB) { // if this chunk is partial, zero it out
@@ -82,16 +64,16 @@ def compute_words_per_row<WW,NB,CW>(field[NB] blocks, field[CW][8] normalized_bl
 
     field[CW] mut words = [0; CW];
     for u32 i in 0..CW {
-        words[i] = compute_word::<WW>(grouped_blocks[i], normalized_blocks[i], lookup);
+        words[i] = compute_word::<WW>(grouped_blocks[i], normalized_widths[i], lookup);
     }
 
     return(words);
 }
 
-def compute_words<R, WW, NB,CW>(field[R][NB] blocks, field[R][CW][8] normalized_blocks, field[2*WW] lookup) -> field[R][CW] {
+def compute_words<R, WW, NB,CW>(field[R][NB] blocks, field[R][CW][6] normalized_widths, field[2*WW] lookup) -> field[R][CW] {
     field[R][CW] mut words = [[0; CW]; R];
     for u32 r in 0..R {
-        words[r] = compute_words_per_row::<WW,NB,CW>(blocks[r], normalized_blocks[r], lookup);
+        words[r] = compute_words_per_row::<WW,NB,CW>(blocks[r], normalized_widths[r], lookup);
     }
     return(words);
 }
@@ -102,6 +84,6 @@ const u32 WW = 216;
 const u32 NB = 273;
 const u32 CW = 35;
 
-def main(private field[R][NB] blocks, private field[R][CW][8] normalized_blocks) -> field[R][CW] {
-    return(compute_words::<R,WW,NB,CW>(blocks, normalized_blocks, RANGE_0_432));
+def main(private field[R][NB] blocks, private field[R][CW][6] normalized_widths) -> field[R][CW] {
+    return(compute_words::<R,WW,NB,CW>(blocks, normalized_widths, RANGE_0_432));
 }

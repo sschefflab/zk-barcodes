@@ -10,7 +10,7 @@ from "./not_in_table.zok" import disjoint_sets;
 
 const field DUMMY = 919;
 const field KNOWN_GARBAGE = 1;
-const u32 T = 2789; // the number of decodable words (bsbsbsbs patterns)
+const u32 T = 2789; // the number of decodable words (six width )
 
 def check_dummies<CW>(field[CW] words, field[CW] words_with_dummies) -> bool {
     bool mut correct = true;
