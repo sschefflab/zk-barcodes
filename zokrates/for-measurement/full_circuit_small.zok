@@ -41,8 +41,8 @@ def main(
     private field[G_R][G_NB_SMALL] g_blocks,
     private field[G_R][C/L_SMALL][L_SMALL] g_baseB_decomps,
     // make_words inputs
-    private field[R][WB_CW_SMALL][8] wb_normalized_blocks,
-    private field[G_R][G_CW_SMALL][8] g_normalized_blocks,
+    private field[R][WB_CW_SMALL][6] wb_normalized_widths,
+    private field[G_R][G_CW_SMALL][6] g_normalized_widths,
     // check_codewords_and_garbage inputs
     private field[R][WB_CW_SMALL] words_with_dummies,
     field[T] wb_disjoint_set_poly_f,
@@ -89,8 +89,8 @@ def main(
     WB_WORDS_RANGE_TABLE,
     G_WORDS_RANGE_TABLE,
     // make_words inputs
-    wb_normalized_blocks,
-    g_normalized_blocks,
+    wb_normalized_widths,
+    g_normalized_widths,
     // check_codewords_and_garbage inputs
     words_with_dummies,
     wb_disjoint_set_poly_f,

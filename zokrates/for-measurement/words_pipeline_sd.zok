@@ -12,8 +12,8 @@ const u32 W = 2700;
 def main(
     private field[R][WB_NB_SD] wb_blocks,
     private field[G_R][G_NB_SD] g_blocks,
-    private field[R][WB_CW_SD][8] wb_normalized_blocks,
-    private field[G_R][G_CW_SD][8] g_normalized_blocks,
+    private field[R][WB_CW_SD][6] wb_normalized_widths,
+    private field[G_R][G_CW_SD][6] g_normalized_widths,
     private field[R][WB_CW_SD] words_with_dummies,
     field[T] wb_disjoint_set_poly_f,
     private field[R*WB_CW_SD] wb_disjoint_set_poly_g,
@@ -25,8 +25,8 @@ def main(
     field[T] garbage_disjoint_set_poly_f,
     private field[G_R] garbage_disjoint_set_poly_g
 ) {
-    field[R][WB_CW_SD] words = compute_words::<R, WB_WW_SD, WB_NB_SD, WB_CW_SD>(wb_blocks, wb_normalized_blocks, RANGE_0_256);
-    field[G_R][G_CW_SD] garbage_rows = compute_words::<G_R, G_WW_SD, G_NB_SD, G_CW_SD>(g_blocks, g_normalized_blocks, RANGE_0_1280);
+    field[R][WB_CW_SD] words = compute_words::<R, WB_WW_SD, WB_NB_SD, WB_CW_SD>(wb_blocks, wb_normalized_widths, RANGE_0_256);
+    field[G_R][G_CW_SD] garbage_rows = compute_words::<G_R, G_WW_SD, G_NB_SD, G_CW_SD>(g_blocks, g_normalized_widths, RANGE_0_1280);
 
     assert(check_codewords_and_garbage::<R, RW, WB_CW_SD, G_R, G_CW_SD, W>(
         words,

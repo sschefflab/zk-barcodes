@@ -35,8 +35,8 @@ def full_circuit<R, C, L, TABLE_LEN, G_R, G_B, G_WW, G_NB, G_M, G_LOGM, WB_B, WB
     field[2*WB_WW] wb_words_range_table,
     field[2*G_WW] g_words_range_table,
     // make_words inputs
-    field[R][WB_CW][8] wb_normalized_blocks,
-    field[G_R][G_CW][8] g_normalized_blocks,
+    field[R][WB_CW][6] wb_normalized_widths,
+    field[G_R][G_CW][6] g_normalized_widths,
     // check_codewords_and_garbage inputs
     field[R][WB_CW] words_with_dummies,
     field[T] wb_disjoint_set_poly_f,
@@ -81,8 +81,8 @@ def full_circuit<R, C, L, TABLE_LEN, G_R, G_B, G_WW, G_NB, G_M, G_LOGM, WB_B, WB
         g_range_check_table
     ));
 
-    field[R][WB_CW] words = compute_words::<R, WB_WW, WB_NB, WB_CW>(wb_blocks, wb_normalized_blocks, wb_words_range_table);
-    field[G_R][G_CW] garbage_rows = compute_words::<G_R, G_WW, G_NB, G_CW>(g_blocks, g_normalized_blocks, g_words_range_table);
+    field[R][WB_CW] words = compute_words::<R, WB_WW, WB_NB, WB_CW>(wb_blocks, wb_normalized_widths, wb_words_range_table);
+    field[G_R][G_CW] garbage_rows = compute_words::<G_R, G_WW, G_NB, G_CW>(g_blocks, g_normalized_widths, g_words_range_table);
 
     assert(check_codewords_and_garbage(
         words,
