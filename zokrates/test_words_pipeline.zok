@@ -1,14 +1,23 @@
 from "./make_words.zok" import compute_words;
 from "./make_codewords.zok" import check_codewords_and_garbage, T;
-from "./block_measurement_const.zok" import WB_B, G_B, WB_NB, WB_CW, G_NB, G_CW;
-from "./block_measurement_const.zok" import WB_WW, G_WW;
-from "./const_range_check.zok" import RANGE_0_432, RANGE_0_2160;
+from "./block_measurement_const.zok" import WB_B, G_B;
+from "./const_range_check.zok" import RANGE_0_206, RANGE_0_2160;
 
 // NOTE: it is important that ALL of thee parameters match what was used to generate the witness in order for the proof to go through! The ones listed here and the imported ones.
-const u32 R = 64;
+const u32 R = 32;
 const u32 G_R = 30;
+
 const u32 RW = 31;         // max number of logical barcode rows
 const u32 W = 930;
+
+const u32 WB_WW = 103; // next available WW above ceil(360/5)=72
+const u32 WB_NB = 273; // property of pdf417
+const u32 WB_CW = 35; // property of pdf417
+
+const u32 G_WW = 360; // image width
+const u32 G_NB = 360; // image width
+const u32 G_CW = 45; // image width / 8
+
 
 def main(
     private field[R][WB_NB] wb_blocks,
@@ -26,7 +35,7 @@ def main(
     field[T] garbage_disjoint_set_poly_f,
     private field[G_R] garbage_disjoint_set_poly_g
 ) {
-    field[R][WB_CW] words = compute_words::<R, WB_WW, WB_NB, WB_CW>(wb_blocks, wb_normalized_widths, RANGE_0_432);
+    field[R][WB_CW] words = compute_words::<R, WB_WW, WB_NB, WB_CW>(wb_blocks, wb_normalized_widths, RANGE_0_206);
     field[G_R][G_CW] garbage_rows = compute_words::<G_R, G_WW, G_NB, G_CW>(g_blocks, g_normalized_widths, RANGE_0_2160);
 
     assert(check_codewords_and_garbage::<R, RW, WB_CW, G_R, G_CW, W>(
