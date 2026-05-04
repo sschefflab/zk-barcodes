@@ -1,6 +1,10 @@
-from "../error_correction.zok" import BarcodeStats, PolynomialResult, check_error_correction;
+from "../error_correction.zok" import BarcodeRanges, BarcodeStats, PolynomialResult, check_error_correction;
+from "../const_range_check.zok" import RANGE_1_513, RANGE_EC_LEVEL, RANGE_NUM_ROWS, POWERS_OF_TWO;
 
 const u32 RW = 90;
+const u32 QBITS = 22; // ceil(log2(929*W))
+const u32 EC = 8;
+const u32 EC_CW = 512; // 2**(EC+1)
 const u32 W = 2700;
 
 def main(
@@ -9,5 +13,6 @@ def main(
     private field[W] codewords,
     private field[W] corrected_codewords
 ) {
-    assert(check_error_correction(codewords, corrected_codewords, stats.num_ec_codewords, poly_witness));
+    BarcodeRanges<RW,EC,EC_CW> ranges = BarcodeRanges { ec_level_range : RANGE_EC_LEVEL, num_rows_range : RANGE_NUM_ROWS, ec_cw_range : RANGE_1_513, powers_of_two : POWERS_OF_TWO };
+    assert(check_error_correction::<RW,W,QBITS,EC,EC_CW>(codewords, corrected_codewords, stats.num_ec_codewords, poly_witness, ranges));
 }

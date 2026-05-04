@@ -7,6 +7,7 @@ Generates a PDF417 barcode image with specified rows, columns, and error correct
 
 import argparse
 import sys
+from math import floor
 
 try:
     import pdf417gen
@@ -43,9 +44,9 @@ def calculate_data_needed(num_rows, num_cols, ec_level):
             f"Need at least {k + 1} total codewords, but only have {total_codewords}."
         )
 
-    # In Text Compaction mode, approximately 2 characters per codeword
-    # Add some buffer for safety
-    chars_needed = data_codewords_needed * 2
+    # In Text Compaction mode, <= 2 characters per codeword
+    # Divide by 1.3 to account for switch/latch codes (empirically this seems to give the right number of rows for this data)
+    chars_needed = floor((data_codewords_needed * 2) / 1.3)
 
     return chars_needed, data_codewords_needed
 
@@ -174,34 +175,20 @@ def generate_pdf417_barcode(
     # If target dimensions are specified, pick the largest integer scale that fits,
     # then do a small bilinear resize to hit the exact target dimensions.
     if target_width is not None or target_height is not None:
-        base = pdf417gen.render_image(codes, scale=1, ratio=3, padding=padding)
-        base_w, base_h = base.size
-
-        # Error if target is smaller than the scale=1 barcode (would require downsampling)
-        if target_width is not None and target_width < base_w:
-            raise ValueError(
-                f"Target width {target_width} is smaller than the minimum barcode "
-                f"width {base_w}. Downsampling would distort barcode patterns."
-            )
-        if target_height is not None and target_height < base_h:
-            raise ValueError(
-                f"Target height {target_height} is smaller than the minimum barcode "
-                f"height {base_h}. Downsampling would distort barcode patterns."
-            )
-
         # Compute max integer scale that fits within the target on each specified axis
-        scale_candidates = []
         if target_width is not None:
-            scale_candidates.append(target_width // base_w)
+            num_modules = 17 * (num_cols + 4)
+            scale = target_width // num_modules
+            if scale < 1:
+                raise ValueError("too much data for barcode size - scale < 1")
+
         if target_height is not None:
-            scale_candidates.append(target_height // base_h)
-        scale = max(1, min(scale_candidates))
+            ratio = target_height // (num_rows * scale)
+            if ratio < 1:
+                raise ValueError("too much data for barcode size - ratio < 1")
 
-        out_w = target_width if target_width is not None else base_w * scale
-        out_h = target_height if target_height is not None else base_h * scale
-
-        image = pdf417gen.render_image(codes, scale=scale, ratio=3, padding=padding)
-        image = image.resize((out_w, out_h), Image.BILINEAR)
+        image = pdf417gen.render_image(codes, scale=scale, ratio=ratio, padding=padding)
+        image = image.resize((target_width, target_height), Image.LANCZOS)
     else:
         image = pdf417gen.render_image(codes, scale=scale, ratio=3, padding=padding)
 
