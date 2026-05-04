@@ -29,13 +29,13 @@ Running
 import pytest
 
 from helpers import (
+    REPO_ROOT,
     WITNESSES_DIR,
-    ZOK_DIR,
     compile_and_setup,
     prove_and_verify,
 )
 
-ZOK_FILE = ZOK_DIR / "binarize.zok"
+ZOK_FILE = REPO_ROOT / "tests" / "zok_wrappers" / "test_binarize.zok"
 W_DIR = WITNESSES_DIR / "binarize"
 
 

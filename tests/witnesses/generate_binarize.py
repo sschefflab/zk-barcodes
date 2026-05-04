@@ -19,7 +19,8 @@ from helpers import json_to_witness
 OUT = Path(__file__).parent / "binarize"
 OUT.mkdir(exist_ok=True)
 
-R, C = 32, 360
+# Must match the constants in tests/zok_wrappers/test_binarize.zok
+R, C = 4, 8
 
 
 def uniform(image_val: int, bin_val: int) -> dict:
