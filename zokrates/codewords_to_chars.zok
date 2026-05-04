@@ -25,7 +25,6 @@ def check_char_split(field codeword, field c1, field c2) -> bool {
 
 // The input chars array should have no null characters. If that assumption does not hold, we will need to modify this code.
 def codewords_to_chars<W,EC_CW>(field[W] corrected_codewords, TableState[2*W] table_states, field num_ec_codewords, field[EC_CW] ec_cw_range, field[2*W] chars) -> bool {
-    bool mut correct_char_split = true;
     assert(table_states[0].this_table == 0);
     
     TableState mut prev_table_state = ZERO_TABLE_STATE;
@@ -82,7 +81,7 @@ def codewords_to_chars<W,EC_CW>(field[W] corrected_codewords, TableState[2*W] ta
             (true, 0, 0, 0) // we already checked the ec codewords states
         };
 
-        correct_char_split = correct_char_split && decode.0;
+        assert(decode.0); // correct_char_split
         interpreted_chars[2*i] = decode.1;
         interpreted_chars[2*i + 1] = decode.2;
         num_sld_states = num_sld_states + decode.3;
@@ -113,7 +112,7 @@ def codewords_to_chars<W,EC_CW>(field[W] corrected_codewords, TableState[2*W] ta
 
     bool correct_chars = result1 == result2;
     
-    return(correct_char_split && correct_sld_states && correct_chars);
+    return(correct_sld_states && correct_chars);
 }
 
 // test function

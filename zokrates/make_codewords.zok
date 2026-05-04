@@ -12,15 +12,13 @@ const field DUMMY = 919;
 const field KNOWN_GARBAGE = 1;
 const u32 T = 2789; // the number of decodable words (six width )
 
+// always returns true, but does an assert inside
 def check_dummies<CW>(field[CW] words, field[CW] words_with_dummies) -> bool {
-    bool mut correct = true;
-    
     for u32 i in 0..CW {
-        bool word_correct = ((words_with_dummies[i] * (words[i] - words_with_dummies[i])) == 0);
-        correct = correct && word_correct;
+        assert((words_with_dummies[i] * (words[i] - words_with_dummies[i])) == 0);
     }
 
-    return(correct);
+    return(true);
 }
 
 // This should operate on the "well-behaved" rows of the image.
@@ -37,9 +35,8 @@ def check_codewords<R, RW, CW, W>(
     field[W] codewords, // expected to be left-padded with zeros to meet length W
     field[RW] left_row_inds
 ) -> bool {
-    bool mut dummies_ok = true;
     for u32 r in 0..R {
-        dummies_ok = dummies_ok && check_dummies(words[r], words_with_dummies[r]);
+        bool always_true = check_dummies(words[r], words_with_dummies[r]);
     }
 
     u32 N = R * CW;
@@ -49,7 +46,6 @@ def check_codewords<R, RW, CW, W>(
 
     field[N] mut garbage = [ KNOWN_GARBAGE; N ];
 
-    bool mut cw_ok = true;
     for u32 i in 0..R {
         bool mut no_start = false;
         bool mut found_stop = false;
@@ -88,7 +84,7 @@ def check_codewords<R, RW, CW, W>(
             };
             no_start = no_start || acc_no_start;
 
-            bool acc = if (j == 0) {
+            bool cw_ok = if (j == 0) {
                 (curr_word_or_dummy == START || curr_word_or_dummy == ZERO)
             } else {
                 if (no_start || found_stop) {
@@ -98,7 +94,7 @@ def check_codewords<R, RW, CW, W>(
                 }
             };
 
-            cw_ok = cw_ok && acc;
+            assert(cw_ok);
 
             // set found_stop flag appropriately
             bool acc_found_stop = if (curr_word_or_dummy == STOP) {
@@ -136,7 +132,7 @@ def check_codewords<R, RW, CW, W>(
                 if (cw_idx == 0) {
                     DUMMY // this is the start - we haven't set anything yet. Just set it to the DUMMY value it already is.
                 } else {
-                    cw_and_dummies[cw_idx - 1]
+                    cw_and_dummies[idx_to_set]
                 }
             };
 
@@ -210,7 +206,7 @@ def check_codewords<R, RW, CW, W>(
 
     bool row_inds_consistent = result1 == result2;
 
-    return(dummies_ok && cw_ok && garbage_ok && codewords_consistent && row_inds_consistent);
+    return(garbage_ok && codewords_consistent && row_inds_consistent);
 }
 
 def check_garbage<G_R, G_CW>(

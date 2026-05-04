@@ -186,7 +186,6 @@ def check_consistency<C,L,B,NB,M,LOGM>(
         result_f = result_f + blocks[b] * powers_of_beta[b];
     }
 
-    bool mut correct_baseb_decomp = true;
     field mut outer_power = 1;
     field mut result_g = 0;
     for u32 i in 0..num_chunks {
@@ -199,7 +198,7 @@ def check_consistency<C,L,B,NB,M,LOGM>(
             baseB_sum = baseB_sum + baseB_decomp[j] * b_f**j;
             assert(value_in_array(baseB_decomp[j], range_check_table));
         }
-        correct_baseb_decomp = correct_baseb_decomp && (baseB_sum == block_chunks[i]);
+        assert(baseB_sum == block_chunks[i]);
         
         // compute the polynomial
         field mut sum = 0;
@@ -211,7 +210,7 @@ def check_consistency<C,L,B,NB,M,LOGM>(
         outer_power = outer_power * power_from_bit_decomp::<LOGM>(beta, all_nb[i]);
     }
 
-    return(result_f == result_g && correct_baseb_decomp);
+    return(result_f == result_g);
 }
 
 def check_blocks<R,C,L,TABLE_LEN,B,NB,M,LOGM>(
@@ -222,15 +221,14 @@ def check_blocks<R,C,L,TABLE_LEN,B,NB,M,LOGM>(
     field[R][NB] blocks,
     field[R][C/L][L] baseB_decomps,
     field[B] range_check_table
-) -> bool {
+) -> bool { // always returns true
     u32 num_chunks = C/L;
-    bool mut correct_chunks = true;
 
     // lookup and process all chunks
     field[R][num_chunks] mut block_chunks = [ [0; num_chunks]; R];
     field[R][num_chunks] mut all_nb = [ [0; num_chunks]; R];
     for u32 r in 0..R {
-        correct_chunks = correct_chunks && check_chunks(bin_pixels[r], lookups[r], chunk_lookup_table);
+        assert(check_chunks(bin_pixels[r], lookups[r], chunk_lookup_table));
 
         ProcessedChunks<C,L> processed = process_chunks::<C,L,M>(lookups[r], powers_of_B);
         block_chunks[r] = processed.block_chunks;
@@ -238,12 +236,11 @@ def check_blocks<R,C,L,TABLE_LEN,B,NB,M,LOGM>(
     }
 
     // check consistency of all rows, each generating its own verifier challenge
-    bool mut consistent = true;
     for u32 r in 0..R {
-        consistent = consistent && check_consistency::<C,L,B,NB,M,LOGM>(blocks[r], block_chunks[r], all_nb[r], baseB_decomps[r], range_check_table);
+        assert(check_consistency::<C,L,B,NB,M,LOGM>(blocks[r], block_chunks[r], all_nb[r], baseB_decomps[r], range_check_table));
     }
 
-    return(correct_chunks && consistent);
+    return(true);
 }
 
 // always returns true, but does an assert inside
