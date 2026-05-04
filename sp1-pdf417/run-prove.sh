@@ -20,8 +20,9 @@ done
 [[ -z "$IMAGE" || -z "$ITERATIONS" ]] && usage
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+IMAGE="$(cd "$(dirname "$IMAGE")" && pwd)/$(basename "$IMAGE")"
 IMAGE_BASENAME="$(basename "$IMAGE" | sed 's/\.[^.]*$//')"
-LOG_FILE="$SCRIPT_DIR/prove-output-${IMAGE_BASENAME}-$(date +%Y%m%d-%H%M%S).log"
+LOG_FILE="$SCRIPT_DIR/proof-runs/prove-output-${IMAGE_BASENAME}-$(date +%Y%m%d-%H%M%S).log"
 
 echo "Running $ITERATIONS prove iteration(s) for image: $IMAGE"
 echo "Output log: $LOG_FILE"
@@ -33,7 +34,13 @@ for i in $(seq 1 "$ITERATIONS"); do
     (cd "$SCRIPT_DIR/script" && RUST_LOG=info cargo run --release -- --prove --image "$IMAGE") \
         2>&1 | tee -a "$LOG_FILE"
 
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Iteration $i complete" | tee -a "$LOG_FILE"
+    if [[ "$(uname)" == "Darwin" ]]; then
+        PROOF_SIZE=$(stat -f%z "$SCRIPT_DIR/script/proof.bin" 2>/dev/null || echo "proof.bin not found")
+    else
+        PROOF_SIZE=$(stat -c%s "$SCRIPT_DIR/script/proof.bin" 2>/dev/null || echo "proof.bin not found")
+    fi
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Iteration $i complete | proof.bin size: ${PROOF_SIZE} bytes" | tee -a "$LOG_FILE"
 done
 
+rm -f "$SCRIPT_DIR/script/proof.bin"
 echo "Done. Full output written to: $LOG_FILE"
