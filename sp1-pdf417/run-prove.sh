@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Find gnutime across platforms
+if command -v gtime &>/dev/null; then
+    gnu-time() { gtime --verbose "$@"; }
+else
+    gnu-time() { /usr/bin/time --verbose "$@"; }
+fi
+
 usage() {
     echo "Usage: $0 --image <path> --iterations <n>"
     exit 1
@@ -31,7 +38,7 @@ for i in $(seq 1 "$ITERATIONS"); do
     echo "--- Iteration $i of $ITERATIONS ---" >> "$LOG_FILE"
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting iteration $i" | tee -a "$LOG_FILE"
 
-    (cd "$SCRIPT_DIR/script" && RUST_LOG=info cargo run --release -- --prove --image "$IMAGE") \
+    (cd "$SCRIPT_DIR/script" && RUST_LOG=info gnu-time cargo run --release -- --prove --image "$IMAGE") \
         2>&1 | tee -a "$LOG_FILE"
 
     if [[ "$(uname)" == "Darwin" ]]; then
