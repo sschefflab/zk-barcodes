@@ -2120,7 +2120,6 @@ const u32 G_M_SD = 10; // same as L
 const u32 G_LOGM_SD = 4; // ceil(log2(G_M_SD))
 const u32 G_CW_SD = 80; // 640 / 8
 
-// TODO: regernate with B=65
 const field[5][2] WB_POWERS_OF_B_SD = [
     [0, 1],
     [1, 65],
