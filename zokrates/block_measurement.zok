@@ -1,9 +1,9 @@
 // Measure the length of blocks in pixels
 
 from "./utils.zok" import check_bit_decomp, flatten_array, diff_lookup;
-from "./const_range_check.zok" import RANGE_1_513, RANGE_0_105, RANGE_0_1081;
+from "./const_range_check.zok" import RANGE_1_513;
 from "EMBED" import value_in_array, value_in_array_tuple, sample_challenge, u32_to_field, unpack;
-from "./block_measurement_const.zok" import L, TABLE_LEN, WB_B, WB_NB, WB_M, WB_LOGM, WB_POWERS_OF_B, WB_CHUNK_LOOKUP_TABLE, G_B, G_NB, G_M, G_LOGM, G_POWERS_OF_B, G_CHUNK_LOOKUP_TABLE;
+from "./params.zok" import L, TABLE_LEN, WB_B, WB_NB, WB_M, WB_LOGM, WB_POWERS_OF_B, WB_CHUNK_LOOKUP_TABLE, G_B, G_NB, G_M, G_LOGM, G_POWERS_OF_B, G_CHUNK_LOOKUP_TABLE, RANGE_0_WB_B, RANGE_0_G_B;
 
 // base-B values representing a series of blocks
 type Blocks = field;
@@ -403,8 +403,8 @@ def block_measurement<R,C,L,TABLE_LEN,G_R, WB_B, WB_NB, WB_M, WB_LOGM, G_B, G_NB
 // test function
 
 // Range check tables
-const field[WB_B] WB_RANGE_CHECK_TABLE = RANGE_0_105;
-const field[G_B] G_RANGE_CHECK_TABLE = RANGE_0_1081;
+const field[WB_B] WB_RANGE_CHECK_TABLE = RANGE_0_WB_B;
+const field[G_B] G_RANGE_CHECK_TABLE = RANGE_0_G_B;
 
 // NOTE: it is important that all three of these constants match test image / witness gen or the proof will not verify!
 const u32 R = 32;
