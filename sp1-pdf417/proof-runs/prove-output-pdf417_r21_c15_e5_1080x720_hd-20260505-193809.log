@@ -1,0 +1,325 @@
+--- Iteration 1 of 5 ---
+[2026-05-05 19:38:09] Starting iteration 1
+warning: profiles for the non root package will be ignored, specify profiles at the workspace root:
+package:   /home/kmerrill/zk-barcodes/sp1-pdf417/vendor/rxing/Cargo.toml
+workspace: /home/kmerrill/zk-barcodes/sp1-pdf417/Cargo.toml
+warning: value assigned to `rs` is never read
+   --> vendor/rxing/src/common/cpp_essentials/pattern.rs:695:9
+    |
+695 |         rs[*mi as usize] -= err as f32;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: maybe it is overwritten before being read?
+    = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+   --> vendor/rxing/src/oned/cpp/one_d_reader.rs:450:23
+    |
+450 |     pub fn new(hints: &DecodeHints) -> ODReader {
+    |                       ^^^^^^^^^^^^     ^^^^^^^^ the same lifetime is hidden here
+    |                       |
+    |                       the lifetime is elided here
+    |
+    = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+    = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+    |
+450 |     pub fn new(hints: &DecodeHints) -> ODReader<'_> {
+    |                                                ++++
+
+warning: `rxing` (lib) generated 2 warnings (run `cargo fix --lib -p rxing` to apply 1 suggestion)
+warning: pdf417-script@0.1.0: rustc +succinct --version: "rustc 1.93.0-dev\n"
+warning: pdf417-script@0.1.0: pdf417-program built at 2026-04-20 02:00:15
+    Finished `release` profile [optimized] target(s) in 0.47s
+     Running `/home/kmerrill/zk-barcodes/sp1-pdf417/target/release/pdf417 --prove --image /home/kmerrill/zk-barcodes/test-witness/pdf417_r21_c15_e5_1080x720_hd.png`
+[2m2026-05-05T19:38:10.257474Z[0m [32m INFO[0m initializing cpu prover
+[2m2026-05-05T19:38:26.303829Z[0m [32m INFO[0m starting proof generation [3mmode[0m[2m=[0mCore
+stderr: WARNING: Using insecure random number generator.
+[2m2026-05-05T20:27:55.675155Z[0m [32m INFO[0m [1mprove[0m: close [3mtime.busy[0m[2m=[0m100ms [3mtime.idle[0m[2m=[0m2969s [2m[3mmode[0m[2m=[0mCore[0m
+Successfully generated proof!
+Successfully verified proof!
+Proven barcode text: PDF417 barcode data: Block0000 Block0001 Block0002 Block0003 Block0004 Block0005 Block0006 Block0007 Block0008 Block0009 Block0010 Block0011 Block0012 Block0013 Block0014 Block0015 Block0016 Block0017 Block0018 Block0019 Block0020 Block0021 Block0022 Block0023 Block0024 Block0025 Block0026 Block0027 Block0028 Block0029 Block0030 Block0031 Block0032 Block0033 Block0034 Block0035 Blo
+	Command being timed: "cargo run --release -- --prove --image /home/kmerrill/zk-barcodes/test-witness/pdf417_r21_c15_e5_1080x720_hd.png"
+	User time (seconds): 150083.61
+	System time (seconds): 15148.38
+	Percent of CPU this job got: 5442%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 50:35.72
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 128982460
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 1525093176
+	Voluntary context switches: 82720611
+	Involuntary context switches: 87890523
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 283328
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+[2026-05-05 20:28:45] Iteration 1 complete | proof.bin size: 144861491 bytes
+--- Iteration 2 of 5 ---
+[2026-05-05 20:28:45] Starting iteration 2
+warning: profiles for the non root package will be ignored, specify profiles at the workspace root:
+package:   /home/kmerrill/zk-barcodes/sp1-pdf417/vendor/rxing/Cargo.toml
+workspace: /home/kmerrill/zk-barcodes/sp1-pdf417/Cargo.toml
+warning: value assigned to `rs` is never read
+   --> vendor/rxing/src/common/cpp_essentials/pattern.rs:695:9
+    |
+695 |         rs[*mi as usize] -= err as f32;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: maybe it is overwritten before being read?
+    = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+   --> vendor/rxing/src/oned/cpp/one_d_reader.rs:450:23
+    |
+450 |     pub fn new(hints: &DecodeHints) -> ODReader {
+    |                       ^^^^^^^^^^^^     ^^^^^^^^ the same lifetime is hidden here
+    |                       |
+    |                       the lifetime is elided here
+    |
+    = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+    = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+    |
+450 |     pub fn new(hints: &DecodeHints) -> ODReader<'_> {
+    |                                                ++++
+
+warning: `rxing` (lib) generated 2 warnings (run `cargo fix --lib -p rxing` to apply 1 suggestion)
+warning: pdf417-script@0.1.0: rustc +succinct --version: "rustc 1.93.0-dev\n"
+warning: pdf417-script@0.1.0: pdf417-program built at 2026-04-20 02:00:15
+    Finished `release` profile [optimized] target(s) in 0.47s
+     Running `/home/kmerrill/zk-barcodes/sp1-pdf417/target/release/pdf417 --prove --image /home/kmerrill/zk-barcodes/test-witness/pdf417_r21_c15_e5_1080x720_hd.png`
+[2m2026-05-05T20:28:46.006471Z[0m [32m INFO[0m initializing cpu prover
+[2m2026-05-05T20:29:02.213460Z[0m [32m INFO[0m starting proof generation [3mmode[0m[2m=[0mCore
+stderr: WARNING: Using insecure random number generator.
+[2m2026-05-05T21:17:50.664598Z[0m [32m INFO[0m [1mprove[0m: close [3mtime.busy[0m[2m=[0m115ms [3mtime.idle[0m[2m=[0m2928s [2m[3mmode[0m[2m=[0mCore[0m
+Successfully generated proof!
+Successfully verified proof!
+Proven barcode text: PDF417 barcode data: Block0000 Block0001 Block0002 Block0003 Block0004 Block0005 Block0006 Block0007 Block0008 Block0009 Block0010 Block0011 Block0012 Block0013 Block0014 Block0015 Block0016 Block0017 Block0018 Block0019 Block0020 Block0021 Block0022 Block0023 Block0024 Block0025 Block0026 Block0027 Block0028 Block0029 Block0030 Block0031 Block0032 Block0033 Block0034 Block0035 Blo
+	Command being timed: "cargo run --release -- --prove --image /home/kmerrill/zk-barcodes/test-witness/pdf417_r21_c15_e5_1080x720_hd.png"
+	User time (seconds): 153810.53
+	System time (seconds): 15847.68
+	Percent of CPU this job got: 5662%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 49:56.23
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 131389308
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 1530560740
+	Voluntary context switches: 89786142
+	Involuntary context switches: 110919464
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 283336
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+[2026-05-05 21:18:41] Iteration 2 complete | proof.bin size: 144861491 bytes
+--- Iteration 3 of 5 ---
+[2026-05-05 21:18:41] Starting iteration 3
+warning: profiles for the non root package will be ignored, specify profiles at the workspace root:
+package:   /home/kmerrill/zk-barcodes/sp1-pdf417/vendor/rxing/Cargo.toml
+workspace: /home/kmerrill/zk-barcodes/sp1-pdf417/Cargo.toml
+warning: value assigned to `rs` is never read
+   --> vendor/rxing/src/common/cpp_essentials/pattern.rs:695:9
+    |
+695 |         rs[*mi as usize] -= err as f32;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: maybe it is overwritten before being read?
+    = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+   --> vendor/rxing/src/oned/cpp/one_d_reader.rs:450:23
+    |
+450 |     pub fn new(hints: &DecodeHints) -> ODReader {
+    |                       ^^^^^^^^^^^^     ^^^^^^^^ the same lifetime is hidden here
+    |                       |
+    |                       the lifetime is elided here
+    |
+    = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+    = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+    |
+450 |     pub fn new(hints: &DecodeHints) -> ODReader<'_> {
+    |                                                ++++
+
+warning: `rxing` (lib) generated 2 warnings (run `cargo fix --lib -p rxing` to apply 1 suggestion)
+warning: pdf417-script@0.1.0: rustc +succinct --version: "rustc 1.93.0-dev\n"
+warning: pdf417-script@0.1.0: pdf417-program built at 2026-04-20 02:00:15
+    Finished `release` profile [optimized] target(s) in 0.47s
+     Running `/home/kmerrill/zk-barcodes/sp1-pdf417/target/release/pdf417 --prove --image /home/kmerrill/zk-barcodes/test-witness/pdf417_r21_c15_e5_1080x720_hd.png`
+[2m2026-05-05T21:18:42.251038Z[0m [32m INFO[0m initializing cpu prover
+[2m2026-05-05T21:18:58.336836Z[0m [32m INFO[0m starting proof generation [3mmode[0m[2m=[0mCore
+stderr: WARNING: Using insecure random number generator.
+[2m2026-05-05T22:10:55.495483Z[0m [32m INFO[0m [1mprove[0m: close [3mtime.busy[0m[2m=[0m109ms [3mtime.idle[0m[2m=[0m3117s [2m[3mmode[0m[2m=[0mCore[0m
+Successfully generated proof!
+Successfully verified proof!
+Proven barcode text: PDF417 barcode data: Block0000 Block0001 Block0002 Block0003 Block0004 Block0005 Block0006 Block0007 Block0008 Block0009 Block0010 Block0011 Block0012 Block0013 Block0014 Block0015 Block0016 Block0017 Block0018 Block0019 Block0020 Block0021 Block0022 Block0023 Block0024 Block0025 Block0026 Block0027 Block0028 Block0029 Block0030 Block0031 Block0032 Block0033 Block0034 Block0035 Blo
+	Command being timed: "cargo run --release -- --prove --image /home/kmerrill/zk-barcodes/test-witness/pdf417_r21_c15_e5_1080x720_hd.png"
+	User time (seconds): 143617.61
+	System time (seconds): 13752.80
+	Percent of CPU this job got: 4942%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 53:04.17
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 146095628
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 1522281445
+	Voluntary context switches: 71266670
+	Involuntary context switches: 44351302
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 283328
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+[2026-05-05 22:11:45] Iteration 3 complete | proof.bin size: 144861491 bytes
+--- Iteration 4 of 5 ---
+[2026-05-05 22:11:45] Starting iteration 4
+warning: profiles for the non root package will be ignored, specify profiles at the workspace root:
+package:   /home/kmerrill/zk-barcodes/sp1-pdf417/vendor/rxing/Cargo.toml
+workspace: /home/kmerrill/zk-barcodes/sp1-pdf417/Cargo.toml
+warning: value assigned to `rs` is never read
+   --> vendor/rxing/src/common/cpp_essentials/pattern.rs:695:9
+    |
+695 |         rs[*mi as usize] -= err as f32;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: maybe it is overwritten before being read?
+    = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+   --> vendor/rxing/src/oned/cpp/one_d_reader.rs:450:23
+    |
+450 |     pub fn new(hints: &DecodeHints) -> ODReader {
+    |                       ^^^^^^^^^^^^     ^^^^^^^^ the same lifetime is hidden here
+    |                       |
+    |                       the lifetime is elided here
+    |
+    = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+    = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+    |
+450 |     pub fn new(hints: &DecodeHints) -> ODReader<'_> {
+    |                                                ++++
+
+warning: `rxing` (lib) generated 2 warnings (run `cargo fix --lib -p rxing` to apply 1 suggestion)
+warning: pdf417-script@0.1.0: rustc +succinct --version: "rustc 1.93.0-dev\n"
+warning: pdf417-script@0.1.0: pdf417-program built at 2026-04-20 02:00:15
+    Finished `release` profile [optimized] target(s) in 0.46s
+     Running `/home/kmerrill/zk-barcodes/sp1-pdf417/target/release/pdf417 --prove --image /home/kmerrill/zk-barcodes/test-witness/pdf417_r21_c15_e5_1080x720_hd.png`
+[2m2026-05-05T22:11:46.432092Z[0m [32m INFO[0m initializing cpu prover
+[2m2026-05-05T22:12:02.492601Z[0m [32m INFO[0m starting proof generation [3mmode[0m[2m=[0mCore
+stderr: WARNING: Using insecure random number generator.
+[2m2026-05-05T23:00:48.417003Z[0m [32m INFO[0m [1mprove[0m: close [3mtime.busy[0m[2m=[0m106ms [3mtime.idle[0m[2m=[0m2926s [2m[3mmode[0m[2m=[0mCore[0m
+Successfully generated proof!
+Successfully verified proof!
+Proven barcode text: PDF417 barcode data: Block0000 Block0001 Block0002 Block0003 Block0004 Block0005 Block0006 Block0007 Block0008 Block0009 Block0010 Block0011 Block0012 Block0013 Block0014 Block0015 Block0016 Block0017 Block0018 Block0019 Block0020 Block0021 Block0022 Block0023 Block0024 Block0025 Block0026 Block0027 Block0028 Block0029 Block0030 Block0031 Block0032 Block0033 Block0034 Block0035 Blo
+	Command being timed: "cargo run --release -- --prove --image /home/kmerrill/zk-barcodes/test-witness/pdf417_r21_c15_e5_1080x720_hd.png"
+	User time (seconds): 154983.84
+	System time (seconds): 16177.74
+	Percent of CPU this job got: 5717%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 49:53.39
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 128564904
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 1530959677
+	Voluntary context switches: 92407465
+	Involuntary context switches: 117246920
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 283336
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+[2026-05-05 23:01:39] Iteration 4 complete | proof.bin size: 144861491 bytes
+--- Iteration 5 of 5 ---
+[2026-05-05 23:01:39] Starting iteration 5
+warning: profiles for the non root package will be ignored, specify profiles at the workspace root:
+package:   /home/kmerrill/zk-barcodes/sp1-pdf417/vendor/rxing/Cargo.toml
+workspace: /home/kmerrill/zk-barcodes/sp1-pdf417/Cargo.toml
+warning: value assigned to `rs` is never read
+   --> vendor/rxing/src/common/cpp_essentials/pattern.rs:695:9
+    |
+695 |         rs[*mi as usize] -= err as f32;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: maybe it is overwritten before being read?
+    = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+   --> vendor/rxing/src/oned/cpp/one_d_reader.rs:450:23
+    |
+450 |     pub fn new(hints: &DecodeHints) -> ODReader {
+    |                       ^^^^^^^^^^^^     ^^^^^^^^ the same lifetime is hidden here
+    |                       |
+    |                       the lifetime is elided here
+    |
+    = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+    = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+    |
+450 |     pub fn new(hints: &DecodeHints) -> ODReader<'_> {
+    |                                                ++++
+
+warning: `rxing` (lib) generated 2 warnings (run `cargo fix --lib -p rxing` to apply 1 suggestion)
+warning: pdf417-script@0.1.0: rustc +succinct --version: "rustc 1.93.0-dev\n"
+warning: pdf417-script@0.1.0: pdf417-program built at 2026-04-20 02:00:15
+    Finished `release` profile [optimized] target(s) in 0.48s
+     Running `/home/kmerrill/zk-barcodes/sp1-pdf417/target/release/pdf417 --prove --image /home/kmerrill/zk-barcodes/test-witness/pdf417_r21_c15_e5_1080x720_hd.png`
+[2m2026-05-05T23:01:39.856212Z[0m [32m INFO[0m initializing cpu prover
+[2m2026-05-05T23:01:55.975518Z[0m [32m INFO[0m starting proof generation [3mmode[0m[2m=[0mCore
+stderr: WARNING: Using insecure random number generator.
+[2m2026-05-05T23:51:37.320867Z[0m [32m INFO[0m [1mprove[0m: close [3mtime.busy[0m[2m=[0m125ms [3mtime.idle[0m[2m=[0m2981s [2m[3mmode[0m[2m=[0mCore[0m
+Successfully generated proof!
+Successfully verified proof!
+Proven barcode text: PDF417 barcode data: Block0000 Block0001 Block0002 Block0003 Block0004 Block0005 Block0006 Block0007 Block0008 Block0009 Block0010 Block0011 Block0012 Block0013 Block0014 Block0015 Block0016 Block0017 Block0018 Block0019 Block0020 Block0021 Block0022 Block0023 Block0024 Block0025 Block0026 Block0027 Block0028 Block0029 Block0030 Block0031 Block0032 Block0033 Block0034 Block0035 Blo
+	Command being timed: "cargo run --release -- --prove --image /home/kmerrill/zk-barcodes/test-witness/pdf417_r21_c15_e5_1080x720_hd.png"
+	User time (seconds): 148579.44
+	System time (seconds): 14806.23
+	Percent of CPU this job got: 5359%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 50:48.50
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 134240040
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 1521155686
+	Voluntary context switches: 79106527
+	Involuntary context switches: 78945989
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 283328
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+[2026-05-05 23:52:27] Iteration 5 complete | proof.bin size: 144861491 bytes
