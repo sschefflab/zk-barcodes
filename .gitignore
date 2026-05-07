@@ -27,6 +27,7 @@ python-scripts/venv/
 python-scripts/.venv/
 python-scripts/__pycache__/
 python-scripts/*.png
+tests/__pycache__
 
 # SP1 test images and big proofs
 sp1-pdf417/script/test-images
