@@ -61,7 +61,7 @@ usage() {
 
 # ── Defaults ──────────────────────────────────────────────────────────────────
 INPUT_IMAGE=""
-OUTPUT_DIR="witness-out"
+OUTPUT_DIR="test-witness"
 PARAMS_FILE=""
 ROWS=""
 COLS=""
