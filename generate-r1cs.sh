@@ -10,6 +10,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Get the input file from argument or default to main.zok
 INPUT_FILE="${1:-${SCRIPT_DIR}/${ZOKRATES_DIR}/main.zok}"
+COMMIT_INPUT="${2:-}"  # optional: name of input to sort to front for external commitment
 
 # Resolve to absolute path
 INPUT_FILE="$(cd "$(dirname "$INPUT_FILE")" && pwd)/$(basename "$INPUT_FILE")"
@@ -32,11 +33,16 @@ cd "${SCRIPT_DIR}/external/circ"
 
 ./driver.py -b
 
-./target/release/examples/circ "${INPUT_FILE}" --language zsharp-curly r1cs \
+COMMIT_FLAG=""
+[ -n "$COMMIT_INPUT" ] && COMMIT_FLAG="--r1cs-commit-input $COMMIT_INPUT"
+
+./target/release/examples/circ "${INPUT_FILE}" --language zsharp-curly $COMMIT_FLAG r1cs \
     --action setup \
     --proof-impl dorian \
+    --pfcurve curve25519 \
     --prover-key "${SCRIPT_DIR}/${ZOKRATES_DIR}/bin/${BASENAME}_P" \
     --verifier-key "${SCRIPT_DIR}/${ZOKRATES_DIR}/bin/${BASENAME}_V" \
+    --pp "${SCRIPT_DIR}/${ZOKRATES_DIR}/bin/${BASENAME}_PP" \
 
 # ./target/release/examples/r1cs_inspect "../../${ZOKRATES_DIR}/bin/${BASENAME}_P" > "../../${ZOKRATES_DIR}/bin/${BASENAME}_r1cs"
 

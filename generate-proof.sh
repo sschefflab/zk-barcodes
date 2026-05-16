@@ -2,6 +2,16 @@
 
 WITNESS_JSON="$1"
 ZOK_FILE="$2"
+COMMIT_INPUT=""
+
+# Parse optional flags
+shift 2 2>/dev/null || true
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --commit-input) COMMIT_INPUT="$2"; shift 2 ;;
+        *) echo "Unknown option: $1"; TO_EXIT=1; shift ;;
+    esac
+done
 
 ZOKRATES_DIR="zokrates"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -59,7 +69,8 @@ if [ ! -f "${WITNESS_VIN}" ]; then
 fi
 # Print usage and exit if there were any errors
 if [ $TO_EXIT -eq 1 ]; then
-    echo "Usage: $0 <witness.json> </path/to/file.zok>"
+    echo "Usage: $0 <witness.json> </path/to/file.zok> [--commit-input <input_name>]"
+    echo "Example: $0 test-witness/w.json zokrates/main.zok --commit-input image"
     exit 1
 fi
 
@@ -71,24 +82,29 @@ ZOK_BASENAME=$(basename "$ZOK_FILE" .zok)
 export RSMT2_CVC4_CMD=cvc5
 
 cd "${SCRIPT_DIR}/external/circ"
-./driver.py -F zok zokc r1cs bellman smt
+./driver.py -F zok zokc r1cs spartan bellman smt
 
 ./driver.py -b
 
-./target/release/examples/circ "${ZOK_FILE}" --language zsharp-curly r1cs \
+COMMIT_FLAG=""
+[ -n "$COMMIT_INPUT" ] && COMMIT_FLAG="--r1cs-commit-input $COMMIT_INPUT"
+
+./target/release/examples/circ "${ZOK_FILE}" --language zsharp-curly $COMMIT_FLAG r1cs \
     --action setup \
     --proof-impl dorian \
+    --pfcurve curve25519 \
     --prover-key "${SCRIPT_DIR}/${ZOKRATES_DIR}/bin/${ZOK_BASENAME}_P" \
-    --verifier-key "${SCRIPT_DIR}/${ZOKRATES_DIR}/bin/${ZOK_BASENAME}_V"
+    --verifier-key "${SCRIPT_DIR}/${ZOKRATES_DIR}/bin/${ZOK_BASENAME}_V" \
+    --pp "${SCRIPT_DIR}/${ZOKRATES_DIR}/bin/${ZOK_BASENAME}_PP"
 
-gnu-time ./target/release/examples/zk --action prove \
-    --proof-impl dorian \
+gnu-time ./target/release/examples/zk_commit --action prove $COMMIT_FLAG \
     --prover-key "${SCRIPT_DIR}/${ZOKRATES_DIR}/bin/${ZOK_BASENAME}_P" \
+    --pp "${SCRIPT_DIR}/${ZOKRATES_DIR}/bin/${ZOK_BASENAME}_PP" \
     --inputs "${WITNESS_PIN}" \
     --proof "${SCRIPT_DIR}/${ZOKRATES_DIR}/bin/${ZOK_BASENAME}.pi"
 
-gnu-time ./target/release/examples/zk --action verify \
-    --proof-impl dorian \
+gnu-time ./target/release/examples/zk_commit --action verify $COMMIT_FLAG \
     --verifier-key "${SCRIPT_DIR}/${ZOKRATES_DIR}/bin/${ZOK_BASENAME}_V" \
+    --pp "${SCRIPT_DIR}/${ZOKRATES_DIR}/bin/${ZOK_BASENAME}_PP" \
     --inputs "${WITNESS_VIN}" \
     --proof "${SCRIPT_DIR}/${ZOKRATES_DIR}/bin/${ZOK_BASENAME}.pi"
