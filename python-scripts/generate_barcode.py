@@ -120,8 +120,10 @@ def generate_pdf417_barcode(
     scale=3,
     padding=0,
     text_style="mixed",
-    target_width=None,
-    target_height=None,
+    image_width=None,
+    image_height=None,
+    barcode_width=None,
+    barcode_height=None,
 ):
     """
     Generate a PDF417 barcode with specific rows, columns, and error correction.
@@ -131,11 +133,13 @@ def generate_pdf417_barcode(
         num_cols (int): Number of columns (1-30)
         ec_level (int): Error correction level (0-8)
         output_filename (str): Output image filename
-        scale (int): Scale factor for the image (ignored if target_width or target_height set)
-        padding (int): Padding/quiet zone around barcode in pixels
+        scale (int): Scale factor for the image (ignored if image/barcode dimensions set)
+        padding (int): Padding/quiet zone around barcode in pixels (ignored in canvas mode)
         text_style (str): Style of generated text data
-        target_width (int): Desired output image width in pixels (exact, overrides scale)
-        target_height (int): Desired output image height in pixels (exact, overrides scale)
+        image_width (int): Exact output canvas width in pixels
+        image_height (int): Exact output canvas height in pixels
+        barcode_width (int): Target barcode width in pixels (best-fit integer scale)
+        barcode_height (int): Target barcode height in pixels (best-fit integer ratio)
 
     Returns:
         PIL.Image: The generated barcode image
@@ -162,8 +166,6 @@ def generate_pdf417_barcode(
     print(f"  Rows: {num_rows}")
     print(f"  Columns: {num_cols}")
     print(f"  Error Correction Level: {ec_level}")
-    print(f"  Scale: {scale}")
-    print(f"  Padding: {padding} pixels")
     print(f"  Text style: {text_style}")
     print(f"  Generated data length: {len(data)} characters")
     print(f"  Estimated data codewords: {data_codewords}")
@@ -172,32 +174,53 @@ def generate_pdf417_barcode(
     # Encode the data
     codes = pdf417gen.encode(data, columns=num_cols, security_level=ec_level)
 
-    # If target dimensions are specified, pick the largest integer scale that fits,
-    # then do a small bilinear resize to hit the exact target dimensions.
-    if target_width is not None or target_height is not None:
-        # Compute max integer scale that fits within the target on each specified axis
-        if target_width is not None:
-            num_modules = 17 * (num_cols + 4)
-            scale = target_width // num_modules
-            if scale < 1:
-                raise ValueError("too much data for barcode size - scale < 1")
+    canvas_mode = image_width is not None or image_height is not None or \
+                  barcode_width is not None or barcode_height is not None
 
-        if target_height is not None:
-            ratio = target_height // (num_rows * scale)
-            if ratio < 1:
-                raise ValueError("too much data for barcode size - ratio < 1")
+    if canvas_mode:
+        if image_width is None or image_height is None:
+            raise ValueError("--image-width and --image-height must both be specified in canvas mode")
+        if barcode_width is None or barcode_height is None:
+            raise ValueError("--barcode-width and --barcode-height must both be specified in canvas mode")
 
-        image = pdf417gen.render_image(codes, scale=scale, ratio=ratio, padding=padding)
-        image = image.resize((target_width, target_height), Image.LANCZOS)
+        num_modules = 17 * (num_cols + 4)
+        scale = max(1, round(barcode_width / num_modules))
+        ratio = max(1, round(barcode_height / (num_rows * scale)))
+
+        barcode = pdf417gen.render_image(codes, scale=scale, ratio=ratio, padding=0)
+        bw, bh = barcode.size
+
+        if bw > image_width or bh > image_height:
+            raise ValueError(
+                f"Rendered barcode ({bw}x{bh}) exceeds canvas ({image_width}x{image_height}). "
+                f"Reduce barcode target dimensions or increase canvas size."
+            )
+
+        canvas = Image.new("L", (image_width, image_height), color=255)
+        paste_x = (image_width - bw) // 2
+        paste_y = (image_height - bh) // 2
+        canvas.paste(barcode, (paste_x, paste_y))
+
+        print(f"  Scale: {scale}, Ratio: {ratio}")
+        print(f"  Rendered barcode size: {bw}x{bh} pixels")
+        print(f"  Canvas size: {image_width}x{image_height} pixels")
+        print(f"  Barcode offset: ({paste_x}, {paste_y})")
+        print(f"  Circuit crop coordinates:")
+        print(f"    R_START={paste_y}, R_END={paste_y + bh}")
+        print(f"    C_START={paste_x}, C_END={paste_x + bw}")
+
+        canvas.save(output_filename)
+        print(f"\nBarcode saved to: {output_filename}")
+        print(f"Image size: {image_width}x{image_height} pixels")
+        return canvas
     else:
+        print(f"  Scale: {scale}")
+        print(f"  Padding: {padding} pixels")
         image = pdf417gen.render_image(codes, scale=scale, ratio=3, padding=padding)
-
-    # Save the image
-    image.save(output_filename)
-    print(f"\nBarcode saved to: {output_filename}")
-    print(f"Image size: {image.size[0]}x{image.size[1]} pixels")
-
-    return image
+        image.save(output_filename)
+        print(f"\nBarcode saved to: {output_filename}")
+        print(f"Image size: {image.size[0]}x{image.size[1]} pixels")
+        return image
 
 
 def main():
@@ -210,7 +233,7 @@ Examples:
   %(prog)s -r 15 -c 10 -e 4 -o my_barcode.png
   %(prog)s --rows 20 --cols 8 --ec 3 --scale 5 --padding 20
   %(prog)s -r 10 -c 5 -e 2 --text-style upper --padding 0
-  %(prog)s -r 15 -c 10 -e 2 --width 1080 --height 720
+  %(prog)s -r 15 -c 10 -e 2 --image-width 1080 --image-height 720 --barcode-width 900 --barcode-height 600
 
 Text Styles (all valid in Text Compaction mode):
   mixed:  Mix of upper, lower, digits, punctuation (default)
@@ -270,16 +293,28 @@ Error Correction Levels:
         help="Style of generated text data (default: mixed)",
     )
     parser.add_argument(
-        "--width",
+        "--image-width",
         type=int,
         default=None,
-        help="Target output image width in pixels (overrides --scale)",
+        help="Exact output canvas width in pixels",
     )
     parser.add_argument(
-        "--height",
+        "--image-height",
         type=int,
         default=None,
-        help="Target output image height in pixels (overrides --scale)",
+        help="Exact output canvas height in pixels",
+    )
+    parser.add_argument(
+        "--barcode-width",
+        type=int,
+        default=None,
+        help="Target barcode width in pixels (best-fit; requires --image-width/height)",
+    )
+    parser.add_argument(
+        "--barcode-height",
+        type=int,
+        default=None,
+        help="Target barcode height in pixels (best-fit; requires --image-width/height)",
     )
 
     args = parser.parse_args()
@@ -298,8 +333,10 @@ Error Correction Levels:
             scale=args.scale,
             padding=args.padding,
             text_style=args.text_style,
-            target_width=args.width,
-            target_height=args.height,
+            image_width=args.image_width,
+            image_height=args.image_height,
+            barcode_width=args.barcode_width,
+            barcode_height=args.barcode_height,
         )
         print("\n✓ Success!")
 

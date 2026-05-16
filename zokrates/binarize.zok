@@ -3,11 +3,13 @@
 from "EMBED" import value_in_array;
 from "./const_range_check" import RANGE_0_128 as table;
 
-def binarize<R,C>(field[R][C] image, field[R][C] bin_image) -> bool {
-    for u32 r in 0..R {
-        for u32 c in 0..C {
-            assert(bin_image[r][c]*(1-bin_image[r][c]) == 0);
-            field to_lookup = image[r][c] - 128 * (1 - bin_image[r][c]); // if bin_image = 0, lookup image[i] - 128. Else, lookup image[i]
+def binarize<IR, IC, R,C, R_START, C_START>(field[IR][IC] image, field[R][C] bin_image) -> bool {
+    for u32 r in R_START..(R_START + R) {
+        for u32 c in C_START..(C_START + C) {
+            u32 bin_r = r - R_START;
+            u32 bin_c = c - C_START;
+            assert(bin_image[bin_r][bin_c]*(1-bin_image[bin_r][bin_c]) == 0);
+            field to_lookup = image[r][c] - 128 * (1 - bin_image[bin_r][bin_c]); // if bin_image = 0, lookup image[i] - 128. Else, lookup image[i]
             assert(value_in_array(to_lookup, table));
         }
     }
@@ -16,9 +18,13 @@ def binarize<R,C>(field[R][C] image, field[R][C] bin_image) -> bool {
 }
 
 // test main function
+const u32 IR = 64;
+const u32 IC = 720;
 const u32 R = 32;
 const u32 C = 360;
+const u32 R_START = 16;
+const u32 C_START = 180;
 
 def main(private field[R][C] image, private field[R][C] bin_image) -> () {
-    assert(binarize(image, bin_image));
+    assert(binarize::<IR, IC, R, C, R_START, C_START>(image, bin_image));
 }

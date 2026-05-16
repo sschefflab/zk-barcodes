@@ -8,10 +8,14 @@ from "../error_correction.zok" import BarcodeRanges, BarcodeStats, RowIndicatorV
 from "../char_lookup.zok" import TableState;
 from "../full_circuit.zok" import full_circuit;
 
-const u32 R = 144;          // number of pixel rows
+const u32 IR = 144;         // full image rows
+const u32 IC = 192;         // full image cols
+const u32 R = 20;           // barcode crop rows
+const u32 C = 188;          // barcode crop cols
+const u32 R_START = 62;
+const u32 C_START = 2;
 const u32 G_R = 89;         // number of garbage rows (should be 89)
-const u32 C = 192;          // pixels per row
-const u32 N = R * C;      // total number of pixels
+const u32 N = IR * IC;      // total number of pixels
 
 const field[WB_B_SMALL] WB_RANGE_CHECK_TABLE = RANGE_0_25;
 const field[G_B_SMALL] G_RANGE_CHECK_TABLE = RANGE_0_193;
@@ -25,7 +29,7 @@ const u32 EC_CW = 512;
 const u32 QBITS = 22;
 
 def main(
-    private field[R][C] image,
+    private field[IR][IC] image,
     private field[R][C] bin_image,
     // block_measurement inputs
     private field[R][C] well_behaved,
@@ -64,7 +68,7 @@ def main(
 ) {
   BarcodeRanges<RW,EC,EC_CW> ranges = BarcodeRanges { ec_level_range : RANGE_EC_LEVEL, num_rows_range : RANGE_NUM_ROWS, ec_cw_range : RANGE_1_513, powers_of_two : POWERS_OF_TWO };
 
-  assert(full_circuit::<R, C, L_SMALL, TABLE_LEN_SMALL, G_R, G_B_SMALL, G_WW_SMALL, G_NB_SMALL, G_M_SMALL, G_LOGM_SMALL, WB_B_SMALL, WB_WW_SMALL, WB_NB_SMALL, WB_M_SMALL, WB_LOGM_SMALL, WB_CW_SMALL, G_CW_SMALL, RW, W, EC, EC_CW, QBITS>(
+  assert(full_circuit::<IR, IC, R, C, R_START, C_START, L_SMALL, TABLE_LEN_SMALL, G_R, G_B_SMALL, G_WW_SMALL, G_NB_SMALL, G_M_SMALL, G_LOGM_SMALL, WB_B_SMALL, WB_WW_SMALL, WB_NB_SMALL, WB_M_SMALL, WB_LOGM_SMALL, WB_CW_SMALL, G_CW_SMALL, RW, W, EC, EC_CW, QBITS>(
     image,
     bin_image,
     // block_measurement inputs

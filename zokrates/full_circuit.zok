@@ -10,8 +10,8 @@ from "./char_lookup.zok" import TableState;
 from "./codewords_to_chars.zok" import codewords_to_chars;
 from "EMBED" import u32_to_field;
 
-def full_circuit<R, C, L, TABLE_LEN, G_R, G_B, G_WW, G_NB, G_M, G_LOGM, WB_B, WB_WW, WB_NB, WB_M, WB_LOGM, WB_CW, G_CW, RW, W, EC, EC_CW, QBITS> (
-    field[R][C] image,
+def full_circuit<IR, IC, R, C, R_START, C_START, L, TABLE_LEN, G_R, G_B, G_WW, G_NB, G_M, G_LOGM, WB_B, WB_WW, WB_NB, WB_M, WB_LOGM, WB_CW, G_CW, RW, W, EC, EC_CW, QBITS> (
+    field[IR][IC] image,
     field[R][C] bin_image,
     // block_measurement inputs
     field[R][C] well_behaved,
@@ -57,7 +57,7 @@ def full_circuit<R, C, L, TABLE_LEN, G_R, G_B, G_WW, G_NB, G_M, G_LOGM, WB_B, WB
     TableState[2*W] char_table_states,
     field[2*W] chars
 ) -> bool {
-    assert(binarize(image, bin_image));
+    assert(binarize::<IR, IC, R, C, R_START, C_START>(image, bin_image));
 
     assert(block_measurement::<R,C,L,TABLE_LEN,G_R, WB_B, WB_NB, WB_M, WB_LOGM, G_B, G_NB, G_M, G_LOGM>(
         bin_image,
@@ -107,3 +107,4 @@ def full_circuit<R, C, L, TABLE_LEN, G_R, G_B, G_WW, G_NB, G_M, G_LOGM, WB_B, WB
     assert(codewords_to_chars(corrected_codewords, char_table_states, stats.num_ec_codewords, ranges.ec_cw_range, chars));
     return(true); // always returns true
 }
+

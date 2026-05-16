@@ -1,8 +1,12 @@
 from "../binarize.zok" import binarize;
 
-const u32 R = 720;
-const u32 C = 1080;
+const u32 IR = 720;
+const u32 IC = 1080;
+const u32 R = 90;
+const u32 C = 580;
+const u32 R_START = 315;
+const u32 C_START = 250;
 
-def main(private field[R][C] image, private field[R][C] bin_image) -> () {
-    assert(binarize(image, bin_image));
+def main(private field[IR][IC] image, private field[R][C] bin_image) -> () {
+    assert(binarize::<IR, IC, R, C, R_START, C_START>(image, bin_image));
 }
