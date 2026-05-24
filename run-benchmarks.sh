@@ -13,6 +13,7 @@ MAX_ROWS=90
 MAX_COLS=30
 MAX_EC_LEVEL=8
 CHUNK_SIZE=10
+NUM_ITERATIONS=5
 
 ROWS=15
 COLS=13
@@ -148,6 +149,7 @@ export RSMT2_CVC4_CMD=cvc5
     echo "max_ec_level:     $MAX_EC_LEVEL"
     echo "chunk_size:       $CHUNK_SIZE"
     echo "circuit:          $ZOK_BASENAME"
+    echo "num_iterations:   $NUM_ITERATIONS"
     echo "---"
 } > "$MEASUREMENT_FILE"
 
@@ -168,30 +170,34 @@ echo "Step 4: Compiling circuit and running trusted setup..."
 echo "✓ Setup complete"
 echo ""
 
-# ── Step 5: Prove and verify ──────────────────────────────────────────────────
-echo "Step 5: Generating proof..."
-(
-    cd external/circ
-    gnu-time ./target/release/examples/zk_commit --action prove \
-        --prover-key  "$(pwd)/../../zokrates/bin/${ZOK_BASENAME}_P" \
-        --pp           "$(pwd)/../../zokrates/bin/${ZOK_BASENAME}_PP" \
-        --inputs      "$WITNESS_PIN" \
-        --proof        "$(pwd)/../../zokrates/bin/${ZOK_BASENAME}.pi"
-) 2>&1 | tee -a "$MEASUREMENT_FILE"
-echo "✓ Proof generated"
-echo ""
+# ── Step 5: Prove and verify (repeated NUM_ITERATIONS times) ─────────────────
+for i in $(seq 1 "$NUM_ITERATIONS"); do
+    echo "Step 5 (iteration $i/$NUM_ITERATIONS): Generating proof..."
+    echo "=== prove iteration $i ===" >> "$MEASUREMENT_FILE"
+    (
+        cd external/circ
+        gnu-time ./target/release/examples/zk_commit --action prove \
+            --prover-key  "$(pwd)/../../zokrates/bin/${ZOK_BASENAME}_P" \
+            --pp           "$(pwd)/../../zokrates/bin/${ZOK_BASENAME}_PP" \
+            --inputs      "$WITNESS_PIN" \
+            --proof        "$(pwd)/../../zokrates/bin/${ZOK_BASENAME}.pi"
+    ) 2>&1 | tee -a "$MEASUREMENT_FILE"
+    echo "✓ Proof generated"
+    echo ""
 
-echo "Step 5 (verify): Verifying proof..."
-(
-    cd external/circ
-    gnu-time ./target/release/examples/zk_commit --action verify \
-        --verifier-key "$(pwd)/../../zokrates/bin/${ZOK_BASENAME}_V" \
-        --pp           "$(pwd)/../../zokrates/bin/${ZOK_BASENAME}_PP" \
-        --inputs      "$WITNESS_VIN" \
-        --proof        "$(pwd)/../../zokrates/bin/${ZOK_BASENAME}.pi"
-) 2>&1 | tee -a "$MEASUREMENT_FILE"
-echo "✓ Proof verified"
-echo ""
+    echo "Step 5 (iteration $i/$NUM_ITERATIONS, verify): Verifying proof..."
+    echo "=== verify iteration $i ===" >> "$MEASUREMENT_FILE"
+    (
+        cd external/circ
+        gnu-time ./target/release/examples/zk_commit --action verify \
+            --verifier-key "$(pwd)/../../zokrates/bin/${ZOK_BASENAME}_V" \
+            --pp           "$(pwd)/../../zokrates/bin/${ZOK_BASENAME}_PP" \
+            --inputs      "$WITNESS_VIN" \
+            --proof        "$(pwd)/../../zokrates/bin/${ZOK_BASENAME}.pi"
+    ) 2>&1 | tee -a "$MEASUREMENT_FILE"
+    echo "✓ Proof verified"
+    echo ""
+done
 
 echo "========================================"
 echo "✓ Benchmark complete — results in $MEASUREMENT_FILE"
