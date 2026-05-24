@@ -1,0 +1,10 @@
+from "../../test-witness/params.zok" import R_W as RW, W;
+from "../error_correction.zok" import BarcodeStats, RowIndicatorVars, check_barcode_stats;
+
+def main(
+    private RowIndicatorVars row_indc,
+    private field[RW] left_row_inds,
+    private BarcodeStats stats
+) {
+    assert(check_barcode_stats(row_indc, stats, left_row_inds));
+}

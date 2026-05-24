@@ -1,0 +1,10 @@
+from "../../test-witness/params.zok" import W;
+from "../data_size.zok" import check_num_cw;
+from "../error_correction.zok" import BarcodeStats;
+
+def main(
+    private field[W] corrected_codewords,
+    private BarcodeStats stats
+) {
+    assert(check_num_cw(corrected_codewords, stats.num_rows, stats.num_cols, stats.num_ec_codewords));
+}

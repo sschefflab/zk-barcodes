@@ -1,0 +1,44 @@
+from "../../test-witness/params.zok" import
+    WB_WW, WB_NB, WB_CW, WB_WORDS_RANGE,
+    G_WW, G_NB, G_CW, G_WORDS_RANGE,
+    R, G_R, R_W as RW, W;
+from "../make_words.zok" import compute_words;
+from "../make_codewords.zok" import check_codewords_and_garbage, T;
+
+const field[2*WB_WW] WB_WORDS_RANGE_TABLE = WB_WORDS_RANGE;
+const field[2*G_WW] G_WORDS_RANGE_TABLE = G_WORDS_RANGE;
+
+def main(
+    private field[R][WB_NB] wb_blocks,
+    private field[G_R][G_NB] g_blocks,
+    private field[R][WB_CW][8] wb_normalized_blocks,
+    private field[G_R][G_CW][8] g_normalized_blocks,
+    private field[R][WB_CW] words_with_dummies,
+    field[T] wb_disjoint_set_poly_f,
+    private field[R*WB_CW] wb_disjoint_set_poly_g,
+    private field[R][WB_CW] ext_codewords,
+    private field[W] codewords,
+    private field[RW] left_row_inds,
+    private field[G_R] garbage_words,
+    private field[G_R] garbage_word_index,
+    field[T] garbage_disjoint_set_poly_f,
+    private field[G_R] garbage_disjoint_set_poly_g
+) {
+    field[R][WB_CW] words = compute_words::<R, WB_WW, WB_NB, WB_CW>(wb_blocks, wb_normalized_blocks, WB_WORDS_RANGE_TABLE);
+    field[G_R][G_CW] garbage_rows = compute_words::<G_R, G_WW, G_NB, G_CW>(g_blocks, g_normalized_blocks, G_WORDS_RANGE_TABLE);
+
+    assert(check_codewords_and_garbage::<R, RW, WB_CW, G_R, G_CW, W>(
+        words,
+        words_with_dummies,
+        wb_disjoint_set_poly_f,
+        wb_disjoint_set_poly_g,
+        ext_codewords,
+        codewords,
+        left_row_inds,
+        garbage_rows,
+        garbage_words,
+        garbage_word_index,
+        garbage_disjoint_set_poly_f,
+        garbage_disjoint_set_poly_g
+    ));
+}
