@@ -183,12 +183,20 @@ def generate_pdf417_barcode(
         if barcode_width is None or barcode_height is None:
             raise ValueError("--barcode-width and --barcode-height must both be specified in canvas mode")
 
-        num_modules = 17 * (num_cols + 4)
-        scale = max(1, round(barcode_width / num_modules))
-        ratio = max(1, round(barcode_height / (num_rows * scale)))
+        num_modules = 17 * (num_cols + 4) + 1  # +1 for PDF417 stop pattern extra module
+        scale = max(1, floor(barcode_width / num_modules))
+        ratio = max(1, floor(barcode_height / (num_rows * scale)))
 
         barcode = pdf417gen.render_image(codes, scale=scale, ratio=ratio, padding=0)
         bw, bh = barcode.size
+
+        # If it still exceeds the canvas (e.g. pdf417gen generated extra rows),
+        # reduce scale by 1 and retry once.
+        if (bw > image_width or bh > image_height) and scale > 1:
+            scale -= 1
+            ratio = max(1, floor(barcode_height / (num_rows * scale)))
+            barcode = pdf417gen.render_image(codes, scale=scale, ratio=ratio, padding=0)
+            bw, bh = barcode.size
 
         if bw > image_width or bh > image_height:
             raise ValueError(

@@ -2,22 +2,25 @@
 
 set -euo pipefail
 
-# ── Hardcoded benchmark parameters ───────────────────────────────────────────
-IMG_WIDTH=1080
-IMG_HEIGHT=720
+# ── Dry-run mode (set DRY_RUN=1 to skip setup/prove/verify and skip writing output file) ──
+DRY_RUN=${DRY_RUN:-0}
 
-TARGET_BARCODE_WIDTH=1000
-TARGET_BARCODE_HEIGHT=700
+# ── Benchmark parameters (overridable via env vars) ───────────────────────────
+IMG_WIDTH=${IMG_WIDTH:-1080}
+IMG_HEIGHT=${IMG_HEIGHT:-720}
 
-MAX_ROWS=90
-MAX_COLS=30
-MAX_EC_LEVEL=8
-CHUNK_SIZE=10
-NUM_ITERATIONS=5
+TARGET_BARCODE_WIDTH=${TARGET_BARCODE_WIDTH:-1000}
+TARGET_BARCODE_HEIGHT=${TARGET_BARCODE_HEIGHT:-700}
 
-ROWS=15
-COLS=13
-EC=5
+MAX_ROWS=${MAX_ROWS:-90}
+MAX_COLS=${MAX_COLS:-30}
+MAX_EC_LEVEL=${MAX_EC_LEVEL:-8}
+CHUNK_SIZE=${CHUNK_SIZE:-10}
+NUM_ITERATIONS=${NUM_ITERATIONS:-5}
+
+ROWS=${ROWS:-15}
+COLS=${COLS:-13}
+EC=${EC:-5}
 
 OUTPUT_DIR="test-witness"
 MOD=7237005577332262213973186563042994240857116359379907606001950938285454250989
@@ -56,6 +59,17 @@ C_START=$(echo "$BARCODE_OUTPUT"        | sed -n 's/.*C_START=\([0-9]*\).*/\1/p'
 echo "Real barcode dimensions : ${REAL_BARCODE_W}x${REAL_BARCODE_H} pixels"
 echo "Crop offset             : R_START=$R_START, C_START=$C_START"
 echo "✓ Barcode generated: $BARCODE_FILE"
+echo ""
+
+# ── Compute chunk size ────────────────────────────────────────────────────────
+CHUNK_SIZE=1
+for f in 10 9 11 8 12 7 13 6 14 5 15 4 3 2; do
+    if (( REAL_BARCODE_W % f == 0 )); then
+        CHUNK_SIZE=$f
+        break
+    fi
+done
+echo "Chunk size              : $CHUNK_SIZE (factor of REAL_BARCODE_W=${REAL_BARCODE_W})"
 echo ""
 
 # ── Step 2: Generate params.zok ───────────────────────────────────────────────
@@ -131,6 +145,13 @@ else
 fi
 
 export RSMT2_CVC4_CMD=cvc5
+
+if [[ "$DRY_RUN" == "1" ]]; then
+    echo "[dry run] Would write measurement file: $MEASUREMENT_FILE"
+    echo "[dry run] Skipping setup, prove, and verify."
+    echo "[dry run] Config: image=${IMG_WIDTH}x${IMG_HEIGHT} max_rows=${MAX_ROWS} max_cols=${MAX_COLS} max_ec=${MAX_EC_LEVEL}"
+    exit 0
+fi
 
 # Write params header to measurement file
 {
