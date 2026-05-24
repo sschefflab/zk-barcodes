@@ -2795,84 +2795,20 @@ PATTERNS = [
 ]
 
 
-def pattern_to_widths(pattern):
-    num = pattern
-    digits = []
-    while num > 0:
-        num, remainder = divmod(num, 10)
-        digits.append(remainder)
-    digits.reverse()
-
-    widths = []
-    for i in range(1, len(digits) - 1):
-        widths.append(digits[i - 1] + digits[i])
-    if pattern > 0:
-        assert len(widths) == 6
-    # Base-13 encoding: tightest safe base for pairwise sums (max value 12 = 6+6).
-    encoded_widths = 0
-    for i in range(len(widths)):
-        encoded_widths += widths[i] * 13**i
-
-    return encoded_widths
-
-
-def make_valid_pairs_array():
-    widths = [pattern_to_widths(pattern) for pattern in PATTERNS]
-    assert len(widths) == len(set(widths)), "width patterns are not unique!"
-    return widths
-
-
 def make_encoded_pairs_array():
-    widths = [pattern_to_widths(pattern) for pattern in PATTERNS]
-    assert len(widths) == len(set(widths))  # all width patterns are unique
     encoded_pairs = []
 
-    for i in range(0, len(widths)):
-        width_pattern = widths[i]
+    for i in range(0, len(PATTERNS)):
+        pattern = PATTERNS[i]
         if i < 2787:
             codeword = i % 929
         else:
             codeword = 919
-        encoded_pairs.append(width_pattern * 929 + codeword)
+        encoded_pairs.append(pattern * 929 + codeword)
 
     return encoded_pairs
 
 
-def make_phf_map():
-    """Outputs a Rust phf_map! literal: width_word_u64 => codeword_index_u32.
-    919 = DUMMY_CW for START, STOP, and ZERO entries."""
-    widths = [pattern_to_widths(pattern) for pattern in PATTERNS]
-    assert len(widths) == len(set(widths)), "width patterns are not unique!"
-    pairs = []
-    for i, width_word in enumerate(widths):
-        codeword = i % 929 if i < 2787 else 919
-        pairs.append(f"    {width_word}u64 => {codeword}u32,")
-    return (
-        "static WIDTH_TO_CODEWORD: phf::Map<u64, u32> = phf::phf_map! {\n"
-        + "\n".join(pairs)
-        + "\n};"
-    )
-
-
-def make_valid_width_words_array():
-    """Outputs a Rust const array of the 2789 codeword width-word encodings
-    (excludes START, STOP, ZERO at the end) for use in the disjoint polynomial."""
-    words = [pattern_to_widths(p) for p in PATTERNS[:2789]]
-    entries = ", ".join(f"{w}u64" for w in words)
-    return f"pub const VALID_WIDTH_WORDS: [u64; 2789] = [{entries}];"
-
-
 if __name__ == "__main__":
-    import sys
-    mode = sys.argv[1] if len(sys.argv) > 1 else "pairs"
-    if mode == "phf":
-        print(make_phf_map())
-    elif mode == "valid_words":
-        print(make_valid_width_words_array())
-    elif mode == "encoded":
-        print(make_encoded_pairs_array())
-    else:
-        widths = make_valid_pairs_array()
-        sep = str(widths).split(",")
-        result = ",\n".join(sep)
-        print(result)
+    result = make_encoded_pairs_array()
+    print(result)

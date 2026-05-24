@@ -14,14 +14,14 @@ const u32 G_CW = 45; // image width / 8
 
 def main(
     private field[R][WB_NB] wb_blocks,
-    private field[R][WB_CW][6] wb_normalized_widths,
+    private field[R][WB_CW][8] wb_normalized_blocks,
     field[R][WB_CW] wb_words
     // private field[G_R][G_NB] g_blocks,
-    // private field[G_R][G_CW][6] g_normalized_widths,
+    // private field[G_R][G_CW][8] g_normalized_blocks,
     // field[G_R][G_CW] garbage_rows
 ) {
-    field[R][WB_CW] computed_words = compute_words::<R,WB_WW,WB_NB, WB_CW>(wb_blocks, wb_normalized_widths, RANGE_0_206);
-    // field[G_R][G_CW] computed_garbage = compute_words::<G_R,G_WW, G_NB, G_CW>(g_blocks, g_normalized_widths, RANGE_0_1024);
+    field[R][WB_CW] computed_words = compute_words::<R,WB_WW,WB_NB, WB_CW>(wb_blocks, wb_normalized_blocks, RANGE_0_206);
+    // field[G_R][G_CW] computed_garbage = compute_words::<G_R,G_WW, G_NB, G_CW>(g_blocks, g_normalized_blocks, RANGE_0_1024);
 
     for u32 r in 0..R {
         for u32 c in 0..WB_CW {
