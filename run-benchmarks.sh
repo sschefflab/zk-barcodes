@@ -118,6 +118,11 @@ ZOK_BASENAME="bench_binarize"
 WITNESS_PIN="$(pwd)/${WITNESS_JSON%.json}.pin"
 WITNESS_VIN="$(pwd)/${WITNESS_JSON%.json}.vin"
 
+TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
+MEASUREMENT_DIR="zokrates/for-measurement/measurements/binarize"
+mkdir -p "$MEASUREMENT_DIR"
+MEASUREMENT_FILE="$MEASUREMENT_DIR/${TIMESTAMP}.txt"
+
 if command -v gtime &>/dev/null; then
     gnu-time() { gtime --verbose "$@"; }
 else
@@ -125,6 +130,26 @@ else
 fi
 
 export RSMT2_CVC4_CMD=cvc5
+
+# Write params header to measurement file
+{
+    echo "host:             $(hostname)"
+    echo "timestamp:        $TIMESTAMP"
+    echo "image:            ${IMG_WIDTH}x${IMG_HEIGHT}"
+    echo "barcode_target:   ${TARGET_BARCODE_WIDTH}x${TARGET_BARCODE_HEIGHT}"
+    echo "barcode_actual:   ${REAL_BARCODE_W}x${REAL_BARCODE_H}"
+    echo "r_start:          $R_START"
+    echo "c_start:          $C_START"
+    echo "rows:             $ROWS"
+    echo "cols:             $COLS"
+    echo "ec:               $EC"
+    echo "max_rows:         $MAX_ROWS"
+    echo "max_cols:         $MAX_COLS"
+    echo "max_ec_level:     $MAX_EC_LEVEL"
+    echo "chunk_size:       $CHUNK_SIZE"
+    echo "circuit:          $ZOK_BASENAME"
+    echo "---"
+} > "$MEASUREMENT_FILE"
 
 # ── Step 4: Compile circuit and run trusted setup ─────────────────────────────
 echo "Step 4: Compiling circuit and running trusted setup..."
@@ -139,7 +164,7 @@ echo "Step 4: Compiling circuit and running trusted setup..."
         --prover-key  "$(pwd)/../../zokrates/bin/${ZOK_BASENAME}_P" \
         --verifier-key "$(pwd)/../../zokrates/bin/${ZOK_BASENAME}_V" \
         --pp           "$(pwd)/../../zokrates/bin/${ZOK_BASENAME}_PP"
-)
+) 2>&1 | tee -a "$MEASUREMENT_FILE"
 echo "✓ Setup complete"
 echo ""
 
@@ -152,7 +177,7 @@ echo "Step 5: Generating proof..."
         --pp           "$(pwd)/../../zokrates/bin/${ZOK_BASENAME}_PP" \
         --inputs      "$WITNESS_PIN" \
         --proof        "$(pwd)/../../zokrates/bin/${ZOK_BASENAME}.pi"
-)
+) 2>&1 | tee -a "$MEASUREMENT_FILE"
 echo "✓ Proof generated"
 echo ""
 
@@ -164,12 +189,12 @@ echo "Step 5 (verify): Verifying proof..."
         --pp           "$(pwd)/../../zokrates/bin/${ZOK_BASENAME}_PP" \
         --inputs      "$WITNESS_VIN" \
         --proof        "$(pwd)/../../zokrates/bin/${ZOK_BASENAME}.pi"
-)
+) 2>&1 | tee -a "$MEASUREMENT_FILE"
 echo "✓ Proof verified"
 echo ""
 
 echo "========================================"
-echo "✓ Benchmark complete"
+echo "✓ Benchmark complete — results in $MEASUREMENT_FILE"
 echo "========================================"
 echo "Files in $OUTPUT_DIR/:"
 ls -lh "$OUTPUT_DIR/"
