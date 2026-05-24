@@ -1,0 +1,6 @@
+from "../../test-witness/params.zok" import IR, IC, R, C, R_START, C_START;
+from "../binarize.zok" import binarize;
+
+def main(private field[IR][IC] image, private field[R][C] bin_image) -> () {
+    assert(binarize::<IR, IC, R, C, R_START, C_START>(image, bin_image));
+}
