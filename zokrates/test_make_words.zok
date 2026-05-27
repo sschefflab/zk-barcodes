@@ -1,27 +1,27 @@
 from "./make_words.zok" import compute_words;
-from "./const_range_check.zok" import RANGE_0_206, RANGE_0_1024;
+from "./const_range_check.zok" import RANGE_0_78, RANGE_0_384;
 
-const u32 R = 32;
-const u32 G_R = 30;
+const u32 R = 140;
+const u32 G_R = 31;
 
 const u32 WB_WW = 103; // next available WW above ceil(360/5)=72
 const u32 WB_NB = 273; // property of pdf417
 const u32 WB_CW = 35; // property of pdf417
 
-const u32 G_WW = 360; // image width
-const u32 G_NB = 360; // image width
-const u32 G_CW = 45; // image width / 8
+const u32 G_WW = 188; // image width
+const u32 G_NB = 188; // image width
+const u32 G_CW = 24; // image width / 8
 
 def main(
     private field[R][WB_NB] wb_blocks,
     private field[R][WB_CW][8] wb_normalized_blocks,
-    field[R][WB_CW] wb_words
-    // private field[G_R][G_NB] g_blocks,
-    // private field[G_R][G_CW][8] g_normalized_blocks,
-    // field[G_R][G_CW] garbage_rows
+    field[R][WB_CW] wb_words,
+    private field[G_R][G_NB] g_blocks,
+    private field[G_R][G_CW][8] g_normalized_blocks,
+    field[G_R][G_CW] garbage_rows
 ) {
-    field[R][WB_CW] computed_words = compute_words::<R,WB_WW,WB_NB, WB_CW>(wb_blocks, wb_normalized_blocks, RANGE_0_206);
-    // field[G_R][G_CW] computed_garbage = compute_words::<G_R,G_WW, G_NB, G_CW>(g_blocks, g_normalized_blocks, RANGE_0_1024);
+    field[R][WB_CW] computed_words = compute_words::<R,WB_WW,WB_NB, WB_CW>(wb_blocks, wb_normalized_blocks, RANGE_0_78);
+    field[G_R][G_CW] computed_garbage = compute_words::<G_R,G_WW, G_NB, G_CW>(g_blocks, g_normalized_blocks, RANGE_0_384);
 
     for u32 r in 0..R {
         for u32 c in 0..WB_CW {
@@ -29,10 +29,10 @@ def main(
         }
     }
 
-    // for u32 r in 0..G_R {
-    //     for u32 c in 0..G_CW {
-    //         assert(computed_garbage[r][c] == garbage_rows[r][c]);
-    //     }
+    for u32 r in 0..G_R {
+        for u32 c in 0..G_CW {
+            assert(computed_garbage[r][c] == garbage_rows[r][c]);
+        }
 
-    // }
+    }
 }

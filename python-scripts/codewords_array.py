@@ -2795,11 +2795,28 @@ PATTERNS = [
 ]
 
 
+BASE = 18
+
+
+def pattern_to_base18(pattern_base10):
+    """Re-encode an 8-digit base-10 pattern as a base-18 integer."""
+    digits = []
+    p = pattern_base10
+    for _ in range(8):
+        digits.append(p % 10)
+        p //= 10
+    digits.reverse()  # most-significant first
+    result = 0
+    for d in digits:
+        result = result * BASE + d
+    return result
+
+
 def make_encoded_pairs_array():
     encoded_pairs = []
 
     for i in range(0, len(PATTERNS)):
-        pattern = PATTERNS[i]
+        pattern = pattern_to_base18(PATTERNS[i])
         if i < 2787:
             codeword = i % 929
         else:

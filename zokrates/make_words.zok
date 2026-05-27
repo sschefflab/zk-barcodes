@@ -2,9 +2,10 @@
 // Normalize blocks, and then combined the normalized blocks into one.
 
 from "./utils.zok" import diff_lookup;
-from "./const_range_check.zok" import RANGE_0_432;
+from "./const_range_check.zok" import RANGE_0_18, RANGE_0_432;
+from "EMBED" import value_in_array;
 
-def compute_word<WW>(field[8] blocks, field[8] normalized_blocks, field[2*WW] block_width_lookup) -> field {
+def check_normalize_blocks<WW>(field[8] blocks, field[8] normalized_blocks, field[2*WW] block_width_lookup) -> bool {
     bool mut zero_block = false;
     for u32 i in 0..8 {
         zero_block = zero_block || (blocks[i] == 0);
@@ -32,8 +33,10 @@ def compute_word<WW>(field[8] blocks, field[8] normalized_blocks, field[2*WW] bl
     //
     // The range width is 2*pixel_total, so WW = max(pixel_total) bounds the lookup table.
     // For zero-padded dummy blocks we skip the check with trivially-true dummy bounds.
+    assert(value_in_array(normalized_blocks[0], RANGE_0_18));
     field mut module_sum = normalized_blocks[0];
     for u32 i in 1..8 {
+        assert(value_in_array(normalized_blocks[i], RANGE_0_18)); // check that normalized values are appropriately ranged and the prover is not causing overflows
         assert(!zero_block || normalized_blocks[i] == 0);
 
         field middle = 34*pixel_sums[i];
@@ -51,19 +54,24 @@ def compute_word<WW>(field[8] blocks, field[8] normalized_blocks, field[2*WW] bl
         };
 
         // lower_bound < middle <= upper_bound
-        bool is_true1 = diff_lookup(middle, lower_bound, block_width_lookup[1..]); // TODO: this lower bound doesn't always hold! But we can't just get rid of it, or the prover can inflate block sizes behind this.
+        bool is_true1 = diff_lookup(middle, lower_bound, block_width_lookup[1..]); // this will hold for normalized_blocks that have 0-width blocks
         bool is_true2 = diff_lookup(upper_bound, middle, block_width_lookup);
 
         module_sum = module_sum + normalized_blocks[i];
     }
-    assert(module_sum == 17 || zero_block && module_sum == 0);
+    return(module_sum == 17 || zero_block && module_sum == 0);
+}
 
+def compute_word<WW> (field[8] blocks, field[8] normalized_blocks, field[2*WW] block_width_lookup) -> field {
+    assert(check_normalize_blocks::<WW>(blocks, normalized_blocks, block_width_lookup));
+    
     field mut word = 0;
     for u32 i in 0..8 {
-        word = word + normalized_blocks[i] * 10**(7-i);
+        word = word + normalized_blocks[i] * 18**(7-i); // use base18 since we check that all normalized values are in the range [0,17]
     }
 
     return(word);
+
 }
 
 def compute_words_per_row<WW,NB,CW>(field[NB] blocks, field[CW][8] normalized_blocks, field[2*WW] lookup) -> field[CW] {

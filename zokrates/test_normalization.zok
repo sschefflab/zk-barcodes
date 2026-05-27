@@ -1,0 +1,35 @@
+// A naive implementation of rxing's sampleBitCounts function in ZoKrates
+// NOT ACTUALLY USED IN CIRCUIT
+
+from "EMBED" import u32_to_field;
+
+def sample_bit_counts(field[8] blocks) -> field[8] {
+    // sum all the pixels in the blocks array
+    field mut pixel_sum = 0;
+    for u32 i in 0..8 {
+        pixel_sum = pixel_sum + blocks[i];
+    }
+
+    field[8] mut result = [0; 8];
+    u32 mut index = 0;
+    field mut sum_prev_pixels = 0;
+
+    // iterate through sample points
+    for u32 i in 0..17 {
+        field i_f = u32_to_field(i);
+        field sample_point = pixel_sum * (2*i_f + 1); // should be divided by 34
+        (field, u32) acc = if (34*(sum_prev_pixels + blocks[index]) <= sample_point) { // multiply the condition by 34 to account for the lack of division
+            (blocks[index], 1)
+        } else {
+            (0, 0)
+        };
+        sum_prev_pixels = sum_prev_pixels + acc.0;
+        index = index + acc.1;
+        result[index] = result[index] + 1;
+    }
+    return(result);
+}
+
+def main() {
+    assert(true);
+}

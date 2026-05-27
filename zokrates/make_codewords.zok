@@ -217,7 +217,6 @@ def check_garbage<G_R, G_CW>(
     field[G_R] garbage_disjoint_set_poly_g
 ) -> bool {
     // Prove garbage_words are in their respective garbage_rows
-    bool words_ok = true;
     for u32 r in 0..G_R {
         field mut equality_check = 0;
         for u32 c in 0..G_CW {
@@ -229,12 +228,12 @@ def check_garbage<G_R, G_CW>(
             };
             equality_check = equality_check + to_add;
         }
-        words_ok = words_ok && (garbage_words[r] == equality_check);
+       assert(garbage_words[r] == equality_check);
     }
 
     // Prove all the garbage words are actually garbage
     bool garbage_is_garbage = disjoint_sets::<G_R, T>(garbage_words, VALID_WORDS, garbage_disjoint_set_poly_f, garbage_disjoint_set_poly_g);
-    return(words_ok && garbage_is_garbage);
+    return(garbage_is_garbage);
 }
 
 // Check codewords as above, but also check that rows pulled out as garbage during block measurement really are garbage.
@@ -252,8 +251,11 @@ def check_codewords_and_garbage<WB_R, WB_RW, WB_CW, G_R, G_CW, W>(
     field[T] garbage_disjoint_set_poly_f,
     field[G_R] garbage_disjoint_set_poly_g
 ) -> bool {
+    // TODO - both of these checks are currently failing. Fix.
     bool wb_ok = check_codewords(words, words_with_dummies, wb_disjoint_set_poly_f, wb_disjoint_set_poly_g, ext_codewords, codewords, left_row_inds);
+    // return(wb_ok);
     bool garbage_ok = check_garbage(garbage_rows, garbage_words, garbage_word_index, garbage_disjoint_set_poly_f, garbage_disjoint_set_poly_g);
+    // return(garbage_ok);
     return(wb_ok && garbage_ok);
 }
 

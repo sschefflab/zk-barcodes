@@ -11,6 +11,10 @@ usage() {
     echo "  -r, --rows N         Barcode rows (default: 3)"
     echo "  -c, --cols N         Barcode columns (default: 2)"
     echo "  -e, --ec N           Error correction level (default: 1)"
+    echo "  --max-rows N         Max rows passed to rxing decoder (default: same as --rows)"
+    echo "  --max-cols N         Max cols passed to rxing decoder (default: same as --cols)"
+    echo "  --max-ec N           Max EC level passed to rxing decoder (default: same as --ec)"
+    echo "  --chunk-size N       Block chunk size in pixels passed to rxing decoder (custom mode only)"
     echo "  -W, --image-width N      Canvas image width in pixels (mutually exclusive with --image-mode)"
     echo "  -H, --image-height N     Canvas image height in pixels (mutually exclusive with --image-mode)"
     echo "  --barcode-width N        Target barcode width in pixels within canvas (requires -W/-H)"
@@ -32,6 +36,10 @@ WITNESS_DIR="test-witness"
 ROWS=3
 COLS=2
 EC=1
+MAX_ROWS=""
+MAX_COLS=""
+MAX_EC=""
+CHUNK_SIZE=""
 IMG_WIDTH=""
 IMG_HEIGHT=""
 BARCODE_WIDTH=""
@@ -45,6 +53,10 @@ while [[ $# -gt 0 ]]; do
         -r|--rows)           ROWS="$2";           shift 2 ;;
         -c|--cols)           COLS="$2";           shift 2 ;;
         -e|--ec)             EC="$2";             shift 2 ;;
+        --max-rows)          MAX_ROWS="$2";       shift 2 ;;
+        --max-cols)          MAX_COLS="$2";       shift 2 ;;
+        --max-ec)            MAX_EC="$2";         shift 2 ;;
+        --chunk-size)        CHUNK_SIZE="$2";     shift 2 ;;
         -W|--image-width)    IMG_WIDTH="$2";      shift 2 ;;
         -H|--image-height)   IMG_HEIGHT="$2";     shift 2 ;;
         --barcode-width)     BARCODE_WIDTH="$2";  shift 2 ;;
@@ -144,7 +156,8 @@ cd external/rxing
 if [ -n "$IMAGE_MODE" ]; then
     RXING_MODE_ARG="--image-mode $IMAGE_MODE"
 elif [ -n "$IMG_WIDTH" ] && [ -n "$IMG_HEIGHT" ]; then
-    RXING_MODE_ARG="--image-mode custom --image-width $IMG_WIDTH --image-height $IMG_HEIGHT --max-rows $ROWS --max-cols $COLS --max-ec-level $EC"
+    RXING_MODE_ARG="--image-mode custom --image-width $IMG_WIDTH --image-height $IMG_HEIGHT --max-rows ${MAX_ROWS:-$ROWS} --max-cols ${MAX_COLS:-$COLS} --max-ec-level ${MAX_EC:-$EC}"
+    [ -n "$CHUNK_SIZE" ] && RXING_MODE_ARG="$RXING_MODE_ARG --chunk-size $CHUNK_SIZE"
     [ -n "$BARCODE_WIDTH" ]  && RXING_MODE_ARG="$RXING_MODE_ARG --barcode-width $BARCODE_WIDTH"
     [ -n "$BARCODE_HEIGHT" ] && RXING_MODE_ARG="$RXING_MODE_ARG --barcode-height $BARCODE_HEIGHT"
 else
@@ -168,11 +181,11 @@ ${PYTHON_BIN} python-scripts/json_to_witness.py \
     --type bin_image=bool \
     --public wb_disjoint_set_poly_f \
     --public garbage_disjoint_set_poly_f \
+    --public wb_words \
+    --public garbage_rows \
     --modulus "$MOD" \
     --pin "$WITNESS_PIN" \
     --vin "$WITNESS_VIN"
-    # --public wb_words \
-    # --public garbage_words \
 if [ $? -ne 0 ]; then
     echo "Error: Failed to convert witness JSON"
     exit 1
