@@ -18,13 +18,13 @@ def binarize<IR, IC, R,C, R_START, C_START>(field[IR][IC] image, field[R][C] bin
 }
 
 // test main function
-const u32 IR = 64;
-const u32 IC = 720;
-const u32 R = 32;
-const u32 C = 360;
-const u32 R_START = 16;
-const u32 C_START = 180;
+const u32 IR = 144;
+const u32 IC = 192;
+const u32 R = 140;
+const u32 C = 188;
+const u32 R_START = 2;
+const u32 C_START = 2;
 
-def main(private field[R][C] image, private field[R][C] bin_image) -> () {
+def main(private field[IR][IC] image, private field[R][C] bin_image) -> () {
     assert(binarize::<IR, IC, R, C, R_START, C_START>(image, bin_image));
 }

@@ -47,7 +47,6 @@ def check_codewords<R, RW, CW, W>(
     field[N] mut garbage = [ KNOWN_GARBAGE; N ];
 
     for u32 i in 0..R {
-        bool mut no_start = false;
         bool mut found_stop = false;
         for u32 j in 0..CW {
             u32 cw_idx = i * CW + j;
@@ -76,18 +75,10 @@ def check_codewords<R, RW, CW, W>(
             
             // this always returns true, but it does an assert inside
             bool lookup = lookup_codeword(curr_word_or_dummy, ext_cw);
-
-            bool acc_no_start = if (j == 0 && curr_word_or_dummy == ZERO) {
-                true
-            } else {
-                false
-            };
-            no_start = no_start || acc_no_start;
-
             bool cw_ok = if (j == 0) {
                 (curr_word_or_dummy == START || curr_word_or_dummy == ZERO)
             } else {
-                if (no_start || found_stop) {
+                if (found_stop) {
                     curr_word_or_dummy == ZERO // all codewords after STOP should be garbage
                 } else {
                     true
@@ -119,7 +110,7 @@ def check_codewords<R, RW, CW, W>(
                 0
             };
 
-            // remove previous codewordd if we just found stop - this is a right row indicator
+            // remove previous codeword if we just found stop - this is a right row indicator
             u32 idx_to_set = if (cw_idx == 0) {
                 0
             } else {
@@ -251,11 +242,8 @@ def check_codewords_and_garbage<WB_R, WB_RW, WB_CW, G_R, G_CW, W>(
     field[T] garbage_disjoint_set_poly_f,
     field[G_R] garbage_disjoint_set_poly_g
 ) -> bool {
-    // TODO - both of these checks are currently failing. Fix.
     bool wb_ok = check_codewords(words, words_with_dummies, wb_disjoint_set_poly_f, wb_disjoint_set_poly_g, ext_codewords, codewords, left_row_inds);
-    // return(wb_ok);
     bool garbage_ok = check_garbage(garbage_rows, garbage_words, garbage_word_index, garbage_disjoint_set_poly_f, garbage_disjoint_set_poly_g);
-    // return(garbage_ok);
     return(wb_ok && garbage_ok);
 }
 
