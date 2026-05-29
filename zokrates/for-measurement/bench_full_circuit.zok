@@ -9,9 +9,9 @@ from "../../test-witness/params.zok" import L, TABLE_LEN,
     RANGE_0_WB_B, RANGE_0_G_B,
     WB_WORDS_RANGE, G_WORDS_RANGE,
     IR, IC, R, C, R_START, C_START,
-    R_W as RW, EC, G_R, W, EC_W as EC_CW, QBITS;
+    R_W as RW, EC, G_R, W, EC_W as EC_CW, QBITS,
+    RANGE_EC_LEVEL, RANGE_NUM_ROWS, EC_CW_RANGE, POWERS_OF_TWO;
 from "../block_measurement.zok" import BlockLookup, block_measurement;
-from "../const_range_check.zok" import RANGE_1_513, RANGE_EC_LEVEL, RANGE_NUM_ROWS, POWERS_OF_TWO;
 from "../make_codewords.zok" import T;
 from "../error_correction.zok" import BarcodeRanges, BarcodeStats, RowIndicatorVars, PolynomialResult;
 from "../char_lookup.zok" import TableState;
@@ -60,7 +60,7 @@ def main(
     private TableState[2*W] char_table_states,
     private field[2*W] chars
 ) {
-    BarcodeRanges<RW,EC,EC_CW> ranges = BarcodeRanges { ec_level_range : RANGE_EC_LEVEL, num_rows_range : RANGE_NUM_ROWS, ec_cw_range : RANGE_1_513, powers_of_two : POWERS_OF_TWO };
+    BarcodeRanges<RW,EC,EC_CW> ranges = BarcodeRanges { ec_level_range : RANGE_EC_LEVEL, num_rows_range : RANGE_NUM_ROWS, ec_cw_range : EC_CW_RANGE, powers_of_two : POWERS_OF_TWO };
 
     assert(full_circuit::<IR, IC, R, C, R_START, C_START, L, TABLE_LEN, G_R, G_B, G_WW, G_NB, G_M, G_LOGM, WB_B, WB_WW, WB_NB, WB_M, WB_LOGM, WB_CW, G_CW, RW, W, EC, EC_CW, QBITS>(
         image,

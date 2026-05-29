@@ -1,10 +1,12 @@
-from "../../test-witness/params.zok" import R_W as RW, W;
-from "../error_correction.zok" import BarcodeStats, RowIndicatorVars, check_barcode_stats;
+from "../../test-witness/params.zok" import R_W as RW, W, EC, EC_W as EC_CW, RANGE_EC_LEVEL, RANGE_NUM_ROWS, EC_CW_RANGE, POWERS_OF_TWO;
+from "../error_correction.zok" import BarcodeRanges, BarcodeStats, RowIndicatorVars, check_barcode_stats;
 
 def main(
     private RowIndicatorVars row_indc,
     private field[RW] left_row_inds,
     private BarcodeStats stats
 ) {
-    assert(check_barcode_stats(row_indc, stats, left_row_inds));
+    BarcodeRanges<RW,EC,EC_CW> ranges = BarcodeRanges { ec_level_range : RANGE_EC_LEVEL, num_rows_range : RANGE_NUM_ROWS, ec_cw_range : EC_CW_RANGE, powers_of_two : POWERS_OF_TWO };
+
+    assert(check_barcode_stats(row_indc, stats, left_row_inds, ranges));
 }

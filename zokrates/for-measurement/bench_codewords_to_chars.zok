@@ -1,4 +1,4 @@
-from "../../test-witness/params.zok" import W;
+from "../../test-witness/params.zok" import W, EC_CW_RANGE;
 from "../error_correction.zok" import BarcodeStats;
 from "../char_lookup.zok" import TableState;
 from "../codewords_to_chars.zok" import codewords_to_chars;
@@ -9,5 +9,5 @@ def main(
     private BarcodeStats stats,
     private field[2*W] chars
 ) {
-    assert(codewords_to_chars(corrected_codewords, char_table_states, stats.num_ec_codewords, chars));
+    assert(codewords_to_chars(corrected_codewords, char_table_states, stats.num_ec_codewords, EC_CW_RANGE, chars));
 }
