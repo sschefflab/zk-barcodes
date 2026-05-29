@@ -5,25 +5,25 @@ set -euo pipefail
 # ── Sweep axes ────────────────────────────────────────────────────────────────
 # Format: "IMG_WIDTHxIMG_HEIGHT:TARGET_WIDTHxTARGET_HEIGHT"
 IMAGE_SIZES=(
-    "1080x720:1080x720"
-    "640x480:640x480"
-    "384x288:384x288"
-    "192x144:192x144"
     "144x48:144x48"
+    "192x144:192x144"
+    "384x288:384x288"
+    "640x480:640x480"
+    "1080x720:1080x720"
     # add more entries here
 )
 
 # Format: "MAX_ROWSxMAX_COLS"
 MAX_ROW_COL_SETS=(
-    "90x30"
-    "60x20"
-    "21x13"
-    "10x6"
     "3x2"
+    "10x6"
+    "21x13"
+    "60x20"
+    "90x30"
     # add more entries here
 )
 
-MAX_EC_LEVELS=(8 5 1 0)
+MAX_EC_LEVELS=(0 1 5 8)
 
 # ── Default actual barcode dimensions (capped by max values) ──────────────────
 DEFAULT_ROWS=21
