@@ -1,0 +1,89 @@
+host:             mentat
+timestamp:        20260529_024958
+image:            192x144
+barcode_target:   192x144
+barcode_actual:   171x140
+r_start:          2
+c_start:          10
+rows:             10
+cols:             6
+ec:               0
+max_rows:         10
+max_cols:         6
+max_ec_level:     0
+chunk_size:       9
+circuit:          bench_block_measurement
+num_iterations:   5
+---
+bellman,r1cs,smt,spartan,zok,zokc
+warning: skipping duplicate package `dorian-t256 v0.9.0 (https://github.com/woopuiyung/Dorian.git?branch=t256#3e3f73b0)`:
+  /home/kmerrill/.cargo/git/checkouts/dorian-821625206728e344/3e3f73b/src/Cargo.toml
+in favor of /home/kmerrill/.cargo/git/checkouts/dorian-821625206728e344/3e3f73b/Cargo.toml
+
+warning: skipping duplicate package `fields v0.1.0 (https://github.com/woopuiyung/Dorian.git?branch=t256#3e3f73b0)`:
+  /home/kmerrill/.cargo/git/checkouts/dorian-821625206728e344/3e3f73b/src/fields/Cargo.toml
+in favor of /home/kmerrill/.cargo/git/checkouts/dorian-821625206728e344/3e3f73b/fields/Cargo.toml
+
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.12s
+warning: skipping duplicate package `dorian-t256 v0.9.0 (https://github.com/woopuiyung/Dorian.git?branch=t256#3e3f73b0)`:
+  /home/kmerrill/.cargo/git/checkouts/dorian-821625206728e344/3e3f73b/src/Cargo.toml
+in favor of /home/kmerrill/.cargo/git/checkouts/dorian-821625206728e344/3e3f73b/Cargo.toml
+
+warning: skipping duplicate package `fields v0.1.0 (https://github.com/woopuiyung/Dorian.git?branch=t256#3e3f73b0)`:
+  /home/kmerrill/.cargo/git/checkouts/dorian-821625206728e344/3e3f73b/src/fields/Cargo.toml
+in favor of /home/kmerrill/.cargo/git/checkouts/dorian-821625206728e344/3e3f73b/fields/Cargo.toml
+
+    Finished `release` profile [optimized + debuginfo] target(s) in 0.12s
+Running: cargo check --tests --examples --benches --bins --features zok,smt,spartan,r1cs,zokc,bellman
+Running: cargo build --release --examples --features zok,smt,spartan,r1cs,zokc,bellman
+Running frontend
+Running IR optimizations
+Running backend
+Running r1cs optimizations 
+Final r1cs: 175497 constraints, 291957 variables, 871468 entries, 2 rounds
+Final Witext steps: 651598, arguments: 1141578
+Running Setup
+  * number_of_constraints 262144
+  * number_of_variables 262144
+  * number_of_inputs 162
+  * number_non-zero_entries_A 238893
+  * number_non-zero_entries_B 368371
+  * number_non-zero_entries_C 264204
+=== prove iteration 1 ===
+Dorian Proving (Curve25519), no external commitment
+Time for inputs_to_wit0 inner 0: 46.4794ms
+Time for inputs_to_wit0 inner 1: 37.491202ms
+Time for inputs_to_wit0: 84.001979ms
+  * NIZKRand::prove00
+  * NIZKRand::prove00 11.627µs
+  * NIZKRand::prove01_commit
+  * NIZKRand::prove01_commit 42.905434ms
+
+thread 'main' panicked at src/ir/term/ext/haboeck.rs:47:13:
+missing needle
+haystack: [-852445544489908907787834991601842223653435337659630454055876526953792037601 (in FieldT::(mod 7237005577332262213973186563042994240857116359379907606001950938285454250989)), -17563101663927004446821731145329320394168021453902506945999081643556137238 (in FieldT::(mod 7237005577332262213973186563042994240857116359379907606001950938285454250989)), -298572728286759075595969429470598446700856364716342618081984387940454333061 (in FieldT::(mod 7237005577332262213973186563042994240857116359379907606001950938285454250989)), 2161269196457357928841706262042820646942558159202083098608216343297730588921 (in FieldT::(mod 7237005577332262213973186563042994240857116359379907606001950938285454250989)), 556548453113773720443073639512979793737906909535874646329923144634148756665 (in FieldT::(mod 7237005577332262213973186563042994240857116359379907606001950938285454250989))], needle: 1628380248570836500638177432305287091398536949509805457304868156988997153277
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+Command exited with non-zero status 101
+	Command being timed: "./target/release/examples/zk_commit --action prove --prover-key /home/kmerrill/zk-barcodes/external/circ/../../zokrates/bin/bench_block_measurement_P --pp /home/kmerrill/zk-barcodes/external/circ/../../zokrates/bin/bench_block_measurement_PP --inputs /home/kmerrill/zk-barcodes/test-witness/witness_r10_c6_e0_192x144.pin --proof /home/kmerrill/zk-barcodes/external/circ/../../zokrates/bin/bench_block_measurement.pi"
+	User time (seconds): 5.07
+	System time (seconds): 0.72
+	Percent of CPU this job got: 240%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:02.41
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 738664
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 318958
+	Voluntary context switches: 1341
+	Involuntary context switches: 1863
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 0
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 101
