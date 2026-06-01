@@ -1,0 +1,481 @@
+host:             mentat
+timestamp:        20260601_031333
+image:            640x480
+barcode_target:   640x480
+barcode_actual:   580x462
+r_start:          9
+c_start:          30
+rows:             21
+cols:             13
+ec:               0
+max_rows:         21
+max_cols:         13
+max_ec_level:     0
+chunk_size:       10
+circuit:          bench_check_error_correction
+num_iterations:   5
+---
+bellman,r1cs,smt,spartan,zok,zokc
+warning: skipping duplicate package `dorian-t256 v0.9.0 (https://github.com/woopuiyung/Dorian.git?branch=t256#3e3f73b0)`:
+  /home/kmerrill/.cargo/git/checkouts/dorian-821625206728e344/3e3f73b/src/Cargo.toml
+in favor of /home/kmerrill/.cargo/git/checkouts/dorian-821625206728e344/3e3f73b/Cargo.toml
+
+warning: skipping duplicate package `fields v0.1.0 (https://github.com/woopuiyung/Dorian.git?branch=t256#3e3f73b0)`:
+  /home/kmerrill/.cargo/git/checkouts/dorian-821625206728e344/3e3f73b/src/fields/Cargo.toml
+in favor of /home/kmerrill/.cargo/git/checkouts/dorian-821625206728e344/3e3f73b/fields/Cargo.toml
+
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.13s
+warning: skipping duplicate package `dorian-t256 v0.9.0 (https://github.com/woopuiyung/Dorian.git?branch=t256#3e3f73b0)`:
+  /home/kmerrill/.cargo/git/checkouts/dorian-821625206728e344/3e3f73b/src/Cargo.toml
+in favor of /home/kmerrill/.cargo/git/checkouts/dorian-821625206728e344/3e3f73b/Cargo.toml
+
+warning: skipping duplicate package `fields v0.1.0 (https://github.com/woopuiyung/Dorian.git?branch=t256#3e3f73b0)`:
+  /home/kmerrill/.cargo/git/checkouts/dorian-821625206728e344/3e3f73b/src/fields/Cargo.toml
+in favor of /home/kmerrill/.cargo/git/checkouts/dorian-821625206728e344/3e3f73b/fields/Cargo.toml
+
+    Finished `release` profile [optimized + debuginfo] target(s) in 0.12s
+Running: cargo check --tests --examples --benches --bins --features smt,zok,zokc,r1cs,bellman,spartan
+Running: cargo build --release --examples --features smt,zok,zokc,r1cs,bellman,spartan
+Running frontend
+Running IR optimizations
+Running backend
+Running r1cs optimizations 
+Final r1cs: 990 constraints, 3136 variables, 5456 entries, 2 rounds
+Final Witext steps: 6166, arguments: 8962
+Running Setup
+  * number_of_constraints 1024
+  * number_of_variables 4096
+  * number_of_inputs 2
+  * number_non-zero_entries_A 1023
+  * number_non-zero_entries_B 2007
+  * number_non-zero_entries_C 2426
+=== prove iteration 1 ===
+Dorian Proving (Curve25519), no external commitment
+Time for inputs_to_wit0 inner 0: 487.909698ms
+Time for inputs_to_wit0 inner 1: 1.37494ms
+Time for inputs_to_wit0: 489.302354ms
+  * NIZKRand::prove00
+  * NIZKRand::prove00 8.833µs
+  * NIZKRand::prove01_commit
+  * NIZKRand::prove01_commit 2.782489ms
+Time for r1cs_to_spartan1,2 (commit): 2.965255ms
+  * NIZKRand::prove1_commit
+    * IR1CSProof::prove1_commit
+      * polycommit
+      * polycommit 2.334114ms
+      * prove_sc_phase_one
+      * prove_sc_phase_one 7.580272ms
+      * prove_sc_phase_two
+        * prove_phase_two inner
+        * prove_phase_two inner 14.838669ms
+      * prove_sc_phase_two 17.080285ms
+      * polyeval
+        * prove_poly_eval_inner2
+          * prove_poly_eval_inner2
+            * prove_poly_eval_inner2
+            * polyeval 16.640783ms
+          * IR1CSProof::prove1_commit 44.658964ms
+          * len_r1cs_sat_proof 16072
+        * NIZKRand::prove1_commit 44.687718ms
+Time for whole prove (commit): 1.013899766s
+Time for Proving (commit): 1.096500602s
+	Command being timed: "./target/release/examples/zk_commit --action prove --prover-key /home/kmerrill/zk-barcodes/external/circ/../../zokrates/bin/bench_check_error_correction_P --pp /home/kmerrill/zk-barcodes/external/circ/../../zokrates/bin/bench_check_error_correction_PP --inputs /home/kmerrill/zk-barcodes/test-witness/witness_r21_c13_e0_640x480.pin --proof /home/kmerrill/zk-barcodes/external/circ/../../zokrates/bin/bench_check_error_correction.pi"
+	User time (seconds): 4.34
+	System time (seconds): 1.19
+	Percent of CPU this job got: 113%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:04.87
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 1555852
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 471767
+	Voluntary context switches: 2087
+	Involuntary context switches: 3360
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 40
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+=== verify iteration 1 ===
+Dorian Verifying (Curve25519), no external commitment
+Time for Process verifier input -- transforming inputs to appropriate form: 6.149µs
+  * NIZKRand::verify_commit
+    * eval_sparse_polys
+    * eval_sparse_polys 5.031235ms
+    * verify_sat_proof
+    * verify_sat_proof 16.269934ms
+  * NIZKRand::verify_commit 21.334268ms
+Time for NIZK::verify_commit: 21.337934ms
+	Command being timed: "./target/release/examples/zk_commit --action verify --verifier-key /home/kmerrill/zk-barcodes/external/circ/../../zokrates/bin/bench_check_error_correction_V --pp /home/kmerrill/zk-barcodes/external/circ/../../zokrates/bin/bench_check_error_correction_PP --inputs /home/kmerrill/zk-barcodes/test-witness/witness_r21_c13_e0_640x480.vin --proof /home/kmerrill/zk-barcodes/external/circ/../../zokrates/bin/bench_check_error_correction.pi"
+	User time (seconds): 0.04
+	System time (seconds): 0.02
+	Percent of CPU this job got: 191%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.03
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 16580
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 4558
+	Voluntary context switches: 344
+	Involuntary context switches: 7
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 0
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+=== prove iteration 2 ===
+Dorian Proving (Curve25519), no external commitment
+Time for inputs_to_wit0 inner 0: 479.788831ms
+Time for inputs_to_wit0 inner 1: 1.326407ms
+Time for inputs_to_wit0: 481.138084ms
+  * NIZKRand::prove00
+  * NIZKRand::prove00 12.609µs
+  * NIZKRand::prove01_commit
+  * NIZKRand::prove01_commit 2.679043ms
+Time for r1cs_to_spartan1,2 (commit): 2.779194ms
+  * NIZKRand::prove1_commit
+    * IR1CSProof::prove1_commit
+      * polycommit
+      * polycommit 1.694952ms
+      * prove_sc_phase_one
+      * prove_sc_phase_one 7.647473ms
+      * prove_sc_phase_two
+        * prove_phase_two inner
+        * prove_phase_two inner 14.190323ms
+      * prove_sc_phase_two 16.575505ms
+      * polyeval
+        * prove_poly_eval_inner2
+          * prove_poly_eval_inner2
+            * prove_poly_eval_inner2
+            * polyeval 16.826112ms
+          * IR1CSProof::prove1_commit 43.804037ms
+          * len_r1cs_sat_proof 16072
+        * NIZKRand::prove1_commit 43.83944ms
+Time for whole prove (commit): 1.00502184s
+Time for Proving (commit): 1.09240849s
+	Command being timed: "./target/release/examples/zk_commit --action prove --prover-key /home/kmerrill/zk-barcodes/external/circ/../../zokrates/bin/bench_check_error_correction_P --pp /home/kmerrill/zk-barcodes/external/circ/../../zokrates/bin/bench_check_error_correction_PP --inputs /home/kmerrill/zk-barcodes/test-witness/witness_r21_c13_e0_640x480.pin --proof /home/kmerrill/zk-barcodes/external/circ/../../zokrates/bin/bench_check_error_correction.pi"
+	User time (seconds): 4.27
+	System time (seconds): 1.21
+	Percent of CPU this job got: 112%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:04.87
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 1555504
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 471587
+	Voluntary context switches: 2098
+	Involuntary context switches: 1462
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 40
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+=== verify iteration 2 ===
+Dorian Verifying (Curve25519), no external commitment
+Time for Process verifier input -- transforming inputs to appropriate form: 5.028µs
+  * NIZKRand::verify_commit
+    * eval_sparse_polys
+    * eval_sparse_polys 5.049282ms
+    * verify_sat_proof
+    * verify_sat_proof 15.914599ms
+  * NIZKRand::verify_commit 20.981848ms
+Time for NIZK::verify_commit: 20.985424ms
+	Command being timed: "./target/release/examples/zk_commit --action verify --verifier-key /home/kmerrill/zk-barcodes/external/circ/../../zokrates/bin/bench_check_error_correction_V --pp /home/kmerrill/zk-barcodes/external/circ/../../zokrates/bin/bench_check_error_correction_PP --inputs /home/kmerrill/zk-barcodes/test-witness/witness_r21_c13_e0_640x480.vin --proof /home/kmerrill/zk-barcodes/external/circ/../../zokrates/bin/bench_check_error_correction.pi"
+	User time (seconds): 0.02
+	System time (seconds): 0.04
+	Percent of CPU this job got: 191%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.03
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 18108
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 4559
+	Voluntary context switches: 354
+	Involuntary context switches: 5
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 0
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+=== prove iteration 3 ===
+Dorian Proving (Curve25519), no external commitment
+Time for inputs_to_wit0 inner 0: 497.371262ms
+Time for inputs_to_wit0 inner 1: 2.78917ms
+Time for inputs_to_wit0: 500.178709ms
+  * NIZKRand::prove00
+  * NIZKRand::prove00 11.257µs
+  * NIZKRand::prove01_commit
+  * NIZKRand::prove01_commit 2.530169ms
+Time for r1cs_to_spartan1,2 (commit): 2.970341ms
+  * NIZKRand::prove1_commit
+    * IR1CSProof::prove1_commit
+      * polycommit
+      * polycommit 2.299562ms
+      * prove_sc_phase_one
+      * prove_sc_phase_one 7.496866ms
+      * prove_sc_phase_two
+        * prove_phase_two inner
+        * prove_phase_two inner 14.43389ms
+      * prove_sc_phase_two 17.310982ms
+      * polyeval
+        * prove_poly_eval_inner2
+          * prove_poly_eval_inner2
+            * prove_poly_eval_inner2
+            * polyeval 16.737579ms
+          * IR1CSProof::prove1_commit 44.878695ms
+          * len_r1cs_sat_proof 16072
+        * NIZKRand::prove1_commit 44.910092ms
+Time for whole prove (commit): 1.02707509s
+Time for Proving (commit): 1.110356971s
+	Command being timed: "./target/release/examples/zk_commit --action prove --prover-key /home/kmerrill/zk-barcodes/external/circ/../../zokrates/bin/bench_check_error_correction_P --pp /home/kmerrill/zk-barcodes/external/circ/../../zokrates/bin/bench_check_error_correction_PP --inputs /home/kmerrill/zk-barcodes/test-witness/witness_r21_c13_e0_640x480.pin --proof /home/kmerrill/zk-barcodes/external/circ/../../zokrates/bin/bench_check_error_correction.pi"
+	User time (seconds): 4.44
+	System time (seconds): 1.14
+	Percent of CPU this job got: 114%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:04.89
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 1554932
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 471665
+	Voluntary context switches: 2092
+	Involuntary context switches: 2984
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 40
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+=== verify iteration 3 ===
+Dorian Verifying (Curve25519), no external commitment
+Time for Process verifier input -- transforming inputs to appropriate form: 5.298µs
+  * NIZKRand::verify_commit
+    * eval_sparse_polys
+    * eval_sparse_polys 5.470977ms
+    * verify_sat_proof
+    * verify_sat_proof 16.016163ms
+  * NIZKRand::verify_commit 21.504465ms
+Time for NIZK::verify_commit: 21.50801ms
+	Command being timed: "./target/release/examples/zk_commit --action verify --verifier-key /home/kmerrill/zk-barcodes/external/circ/../../zokrates/bin/bench_check_error_correction_V --pp /home/kmerrill/zk-barcodes/external/circ/../../zokrates/bin/bench_check_error_correction_PP --inputs /home/kmerrill/zk-barcodes/test-witness/witness_r21_c13_e0_640x480.vin --proof /home/kmerrill/zk-barcodes/external/circ/../../zokrates/bin/bench_check_error_correction.pi"
+	User time (seconds): 0.02
+	System time (seconds): 0.05
+	Percent of CPU this job got: 202%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.03
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 16224
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 4560
+	Voluntary context switches: 375
+	Involuntary context switches: 15
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 0
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+=== prove iteration 4 ===
+Dorian Proving (Curve25519), no external commitment
+Time for inputs_to_wit0 inner 0: 466.626906ms
+Time for inputs_to_wit0 inner 1: 1.846169ms
+Time for inputs_to_wit0: 468.501208ms
+  * NIZKRand::prove00
+  * NIZKRand::prove00 17.266µs
+  * NIZKRand::prove01_commit
+  * NIZKRand::prove01_commit 2.581366ms
+Time for r1cs_to_spartan1,2 (commit): 2.88235ms
+  * NIZKRand::prove1_commit
+    * IR1CSProof::prove1_commit
+      * polycommit
+      * polycommit 1.960141ms
+      * prove_sc_phase_one
+      * prove_sc_phase_one 7.725371ms
+      * prove_sc_phase_two
+        * prove_phase_two inner
+        * prove_phase_two inner 14.664267ms
+      * prove_sc_phase_two 17.01768ms
+      * polyeval
+        * prove_poly_eval_inner2
+          * prove_poly_eval_inner2
+            * prove_poly_eval_inner2
+            * polyeval 16.762936ms
+          * IR1CSProof::prove1_commit 44.526725ms
+          * len_r1cs_sat_proof 16072
+        * NIZKRand::prove1_commit 44.560836ms
+Time for whole prove (commit): 990.559436ms
+Time for Proving (commit): 1.073123695s
+	Command being timed: "./target/release/examples/zk_commit --action prove --prover-key /home/kmerrill/zk-barcodes/external/circ/../../zokrates/bin/bench_check_error_correction_P --pp /home/kmerrill/zk-barcodes/external/circ/../../zokrates/bin/bench_check_error_correction_PP --inputs /home/kmerrill/zk-barcodes/test-witness/witness_r21_c13_e0_640x480.pin --proof /home/kmerrill/zk-barcodes/external/circ/../../zokrates/bin/bench_check_error_correction.pi"
+	User time (seconds): 4.36
+	System time (seconds): 1.08
+	Percent of CPU this job got: 113%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:04.80
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 1554684
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 472564
+	Voluntary context switches: 2152
+	Involuntary context switches: 3138
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 40
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+=== verify iteration 4 ===
+Dorian Verifying (Curve25519), no external commitment
+Time for Process verifier input -- transforming inputs to appropriate form: 5.298µs
+  * NIZKRand::verify_commit
+    * eval_sparse_polys
+    * eval_sparse_polys 5.376444ms
+    * verify_sat_proof
+    * verify_sat_proof 15.963363ms
+  * NIZKRand::verify_commit 21.361861ms
+Time for NIZK::verify_commit: 21.365475ms
+	Command being timed: "./target/release/examples/zk_commit --action verify --verifier-key /home/kmerrill/zk-barcodes/external/circ/../../zokrates/bin/bench_check_error_correction_V --pp /home/kmerrill/zk-barcodes/external/circ/../../zokrates/bin/bench_check_error_correction_PP --inputs /home/kmerrill/zk-barcodes/test-witness/witness_r21_c13_e0_640x480.vin --proof /home/kmerrill/zk-barcodes/external/circ/../../zokrates/bin/bench_check_error_correction.pi"
+	User time (seconds): 0.04
+	System time (seconds): 0.02
+	Percent of CPU this job got: 191%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.03
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 17264
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 4561
+	Voluntary context switches: 346
+	Involuntary context switches: 9
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 0
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+=== prove iteration 5 ===
+Dorian Proving (Curve25519), no external commitment
+Time for inputs_to_wit0 inner 0: 480.721445ms
+Time for inputs_to_wit0 inner 1: 1.76057ms
+Time for inputs_to_wit0: 482.503448ms
+  * NIZKRand::prove00
+  * NIZKRand::prove00 10.256µs
+  * NIZKRand::prove01_commit
+  * NIZKRand::prove01_commit 3.143152ms
+Time for r1cs_to_spartan1,2 (commit): 3.132596ms
+  * NIZKRand::prove1_commit
+    * IR1CSProof::prove1_commit
+      * polycommit
+      * polycommit 2.434976ms
+      * prove_sc_phase_one
+      * prove_sc_phase_one 7.522896ms
+      * prove_sc_phase_two
+        * prove_phase_two inner
+        * prove_phase_two inner 14.430535ms
+      * prove_sc_phase_two 16.640602ms
+      * polyeval
+        * prove_poly_eval_inner2
+          * prove_poly_eval_inner2
+            * prove_poly_eval_inner2
+            * polyeval 16.775625ms
+          * IR1CSProof::prove1_commit 44.401036ms
+          * len_r1cs_sat_proof 16072
+        * NIZKRand::prove1_commit 44.435157ms
+Time for whole prove (commit): 1.008157979s
+Time for Proving (commit): 1.094251974s
+	Command being timed: "./target/release/examples/zk_commit --action prove --prover-key /home/kmerrill/zk-barcodes/external/circ/../../zokrates/bin/bench_check_error_correction_P --pp /home/kmerrill/zk-barcodes/external/circ/../../zokrates/bin/bench_check_error_correction_PP --inputs /home/kmerrill/zk-barcodes/test-witness/witness_r21_c13_e0_640x480.pin --proof /home/kmerrill/zk-barcodes/external/circ/../../zokrates/bin/bench_check_error_correction.pi"
+	User time (seconds): 4.31
+	System time (seconds): 1.19
+	Percent of CPU this job got: 112%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:04.87
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 1555028
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 472157
+	Voluntary context switches: 2194
+	Involuntary context switches: 2303
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 40
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+=== verify iteration 5 ===
+Dorian Verifying (Curve25519), no external commitment
+Time for Process verifier input -- transforming inputs to appropriate form: 6.269µs
+  * NIZKRand::verify_commit
+    * eval_sparse_polys
+    * eval_sparse_polys 5.405428ms
+    * verify_sat_proof
+    * verify_sat_proof 15.995201ms
+  * NIZKRand::verify_commit 21.417014ms
+Time for NIZK::verify_commit: 21.420438ms
+	Command being timed: "./target/release/examples/zk_commit --action verify --verifier-key /home/kmerrill/zk-barcodes/external/circ/../../zokrates/bin/bench_check_error_correction_V --pp /home/kmerrill/zk-barcodes/external/circ/../../zokrates/bin/bench_check_error_correction_PP --inputs /home/kmerrill/zk-barcodes/test-witness/witness_r21_c13_e0_640x480.vin --proof /home/kmerrill/zk-barcodes/external/circ/../../zokrates/bin/bench_check_error_correction.pi"
+	User time (seconds): 0.03
+	System time (seconds): 0.03
+	Percent of CPU this job got: 191%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.03
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 18284
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 4561
+	Voluntary context switches: 346
+	Involuntary context switches: 9
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 0
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0

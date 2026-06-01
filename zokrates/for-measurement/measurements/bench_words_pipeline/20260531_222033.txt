@@ -1,0 +1,139 @@
+host:             mentat
+timestamp:        20260531_222033
+image:            384x288
+barcode_target:   384x288
+barcode_actual:   342x280
+r_start:          4
+c_start:          21
+rows:             10
+cols:             6
+ec:               1
+max_rows:         10
+max_cols:         6
+max_ec_level:     1
+chunk_size:       9
+circuit:          bench_words_pipeline
+num_iterations:   5
+---
+bellman,r1cs,smt,spartan,zok,zokc
+warning: skipping duplicate package `dorian-t256 v0.9.0 (https://github.com/woopuiyung/Dorian.git?branch=t256#3e3f73b0)`:
+  /home/kmerrill/.cargo/git/checkouts/dorian-821625206728e344/3e3f73b/src/Cargo.toml
+in favor of /home/kmerrill/.cargo/git/checkouts/dorian-821625206728e344/3e3f73b/Cargo.toml
+
+warning: skipping duplicate package `fields v0.1.0 (https://github.com/woopuiyung/Dorian.git?branch=t256#3e3f73b0)`:
+  /home/kmerrill/.cargo/git/checkouts/dorian-821625206728e344/3e3f73b/src/fields/Cargo.toml
+in favor of /home/kmerrill/.cargo/git/checkouts/dorian-821625206728e344/3e3f73b/fields/Cargo.toml
+
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.12s
+warning: skipping duplicate package `dorian-t256 v0.9.0 (https://github.com/woopuiyung/Dorian.git?branch=t256#3e3f73b0)`:
+  /home/kmerrill/.cargo/git/checkouts/dorian-821625206728e344/3e3f73b/src/Cargo.toml
+in favor of /home/kmerrill/.cargo/git/checkouts/dorian-821625206728e344/3e3f73b/Cargo.toml
+
+warning: skipping duplicate package `fields v0.1.0 (https://github.com/woopuiyung/Dorian.git?branch=t256#3e3f73b0)`:
+  /home/kmerrill/.cargo/git/checkouts/dorian-821625206728e344/3e3f73b/src/fields/Cargo.toml
+in favor of /home/kmerrill/.cargo/git/checkouts/dorian-821625206728e344/3e3f73b/fields/Cargo.toml
+
+    Finished `release` profile [optimized + debuginfo] target(s) in 0.12s
+Running: cargo check --tests --examples --benches --bins --features zok,bellman,smt,zokc,spartan,r1cs
+Running: cargo build --release --examples --features zok,bellman,smt,zokc,spartan,r1cs
+Running frontend
+Running IR optimizations
+Running backend
+Running r1cs optimizations 
+Final r1cs: 408853 constraints, 570531 variables, 2784928 entries, 2 rounds
+Final Witext steps: 1785537, arguments: 3511101
+Running Setup
+  * number_of_constraints 524288
+  * number_of_variables 524288
+  * number_of_inputs 5589
+  * number_non-zero_entries_A 809084
+  * number_non-zero_entries_B 1496160
+  * number_non-zero_entries_C 479684
+=== prove iteration 1 ===
+Dorian Proving (Curve25519), no external commitment
+Time for inputs_to_wit0 inner 0: 198.833756ms
+Time for inputs_to_wit0 inner 1: 181.040399ms
+Time for inputs_to_wit0: 379.949438ms
+  * NIZKRand::prove00
+  * NIZKRand::prove00 1.06975ms
+  * NIZKRand::prove01_commit
+  * NIZKRand::prove01_commit 66.908024ms
+Time for r1cs_to_spartan1,2 (commit): 467.187747ms
+  * NIZKRand::prove1_commit
+    * IR1CSProof::prove1_commit
+      * polycommit
+      * polycommit 105.026898ms
+      * prove_sc_phase_one
+      * prove_sc_phase_one 346.689178ms
+      * prove_sc_phase_two
+        * prove_phase_two inner
+        * prove_phase_two inner 225.892289ms
+      * prove_sc_phase_two 438.505058ms
+      * polyeval
+        * prove_poly_eval_inner2
+          * prove_poly_eval_inner2
+            * prove_poly_eval_inner2
+            * polyeval 372.78316ms
+          * IR1CSProof::prove1_commit 1.3061733s
+          * len_r1cs_sat_proof 65096
+        * NIZKRand::prove1_commit 1.314901139s
+Time for whole prove (commit): 2.579846705s
+Time for Proving (commit): 2.655227583s
+	Command being timed: "./target/release/examples/zk_commit --action prove --prover-key /home/kmerrill/zk-barcodes/external/circ/../../zokrates/bin/bench_words_pipeline_P --pp /home/kmerrill/zk-barcodes/external/circ/../../zokrates/bin/bench_words_pipeline_PP --inputs /home/kmerrill/zk-barcodes/test-witness/witness_r10_c6_e1_384x288.pin --proof /home/kmerrill/zk-barcodes/external/circ/../../zokrates/bin/bench_words_pipeline.pi"
+	User time (seconds): 18.02
+	System time (seconds): 2.79
+	Percent of CPU this job got: 238%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:08.71
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 2145420
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 1119907
+	Voluntary context switches: 3509
+	Involuntary context switches: 3137
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 136
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+=== verify iteration 1 ===
+Dorian Verifying (Curve25519), no external commitment
+Time for Process verifier input -- transforming inputs to appropriate form: 3.841623ms
+  * NIZKRand::verify_commit
+    * eval_sparse_polys
+    * eval_sparse_polys 164.564706ms
+    * verify_sat_proof
+
+thread 'main' panicked at src/target/r1cs/spartan/curve25519_rand_commit.rs:179:5:
+assertion failed: proof.verify_commit(inst, &mut inputs, &mut verifier_transcript, gens).is_ok()
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+Command exited with non-zero status 101
+	Command being timed: "./target/release/examples/zk_commit --action verify --verifier-key /home/kmerrill/zk-barcodes/external/circ/../../zokrates/bin/bench_words_pipeline_V --pp /home/kmerrill/zk-barcodes/external/circ/../../zokrates/bin/bench_words_pipeline_PP --inputs /home/kmerrill/zk-barcodes/test-witness/witness_r10_c6_e1_384x288.vin --proof /home/kmerrill/zk-barcodes/external/circ/../../zokrates/bin/bench_words_pipeline.pi"
+	User time (seconds): 0.44
+	System time (seconds): 0.33
+	Percent of CPU this job got: 120%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.64
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 304008
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 143558
+	Voluntary context switches: 372
+	Involuntary context switches: 14
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 0
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 101
