@@ -15,7 +15,7 @@ IMAGE_SIZES=(
 
 # Format: "MAX_ROWSxMAX_COLS"
 MAX_ROW_COL_SETS=(
-    "3x2"
+    "3x3"
     "10x6"
     "21x13"
     "60x20"
