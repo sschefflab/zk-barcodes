@@ -62,13 +62,17 @@ echo "✓ Barcode generated: $BARCODE_FILE"
 echo ""
 
 # ── Compute chunk size ────────────────────────────────────────────────────────
-CHUNK_SIZE=1
+CHUNK_SIZE=""
 for f in 10 9 11 8 12 7 13 6 5 4 3 2; do
     if (( REAL_BARCODE_W % f == 0 )); then
         CHUNK_SIZE=$f
         break
     fi
 done
+if [[ -z "$CHUNK_SIZE" ]]; then
+    echo "Error: No suitable chunk size found for REAL_BARCODE_W=${REAL_BARCODE_W} (tried 2-13, excluding 1)"
+    exit 1
+fi
 echo "Chunk size              : $CHUNK_SIZE (factor of REAL_BARCODE_W=${REAL_BARCODE_W})"
 echo ""
 
