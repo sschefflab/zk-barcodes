@@ -168,8 +168,70 @@ if [[ "$DRY_RUN" == "1" ]]; then
     exit 0
 fi
 
-# ── Steps 4–5: Per-circuit setup, prove, verify ───────────────────────────────
+# Tag that namespaces key files per sweep combination so sequential sweep runs don't overwrite each other.
+KEY_TAG="${IMG_WIDTH}x${IMG_HEIGHT}_r${MAX_ROWS}c${MAX_COLS}e${MAX_EC_LEVEL}"
+
+# ── Step 4a: Build CirC once ──────────────────────────────────────────────────
+echo "Step 4: Building CirC..."
+(
+    cd external/circ
+    ./driver.py -F zok zokc r1cs spartan bellman smt
+    ./driver.py -b
+)
+echo "✓ CirC build complete"
+echo ""
+
+# ── Step 4b: Run trusted setup for all circuits in parallel ───────────────────
+# Use parallel indexed arrays (bash 3 compatible — no declare -A).
+echo "Step 4 (setup): Launching parallel trusted setup for all circuits..."
+SETUP_NAMES=()
+SETUP_PIDS=()
+SETUP_LOGS=()
 for ZOK_BASENAME in "${CIRCUITS[@]}"; do
+    ZOK_FILE="$(cd zokrates/for-measurement && pwd)/${ZOK_BASENAME}.zok"
+    SETUP_LOG=$(mktemp)
+    SETUP_NAMES+=("$ZOK_BASENAME")
+    SETUP_LOGS+=("$SETUP_LOG")
+    (
+        cd external/circ
+        ./target/release/examples/circ "$ZOK_FILE" --language zsharp-curly r1cs \
+            --action setup \
+            --proof-impl dorian \
+            --pfcurve curve25519 \
+            --prover-key  "$(pwd)/../../zokrates/bin/${ZOK_BASENAME}_${KEY_TAG}_P" \
+            --verifier-key "$(pwd)/../../zokrates/bin/${ZOK_BASENAME}_${KEY_TAG}_V" \
+            --pp           "$(pwd)/../../zokrates/bin/${ZOK_BASENAME}_${KEY_TAG}_PP"
+    ) >"$SETUP_LOG" 2>&1 &
+    SETUP_PIDS+=($!)
+    echo "  Launched setup for $ZOK_BASENAME (pid $!)"
+done
+
+echo "  Waiting for all setups to finish..."
+SETUP_FAILED=0
+for idx in "${!SETUP_NAMES[@]}"; do
+    if wait "${SETUP_PIDS[$idx]}"; then
+        echo "  ✓ Setup done: ${SETUP_NAMES[$idx]}"
+    else
+        echo "  ✗ Setup FAILED: ${SETUP_NAMES[$idx]}"
+        SETUP_FAILED=1
+    fi
+done
+
+if [[ "$SETUP_FAILED" == "1" ]]; then
+    echo "One or more setups failed. Logs:"
+    for idx in "${!SETUP_NAMES[@]}"; do
+        echo "--- ${SETUP_NAMES[$idx]} ---"
+        cat "${SETUP_LOGS[$idx]}"
+    done
+    rm -f "${SETUP_LOGS[@]}"
+    exit 1
+fi
+echo "✓ All setups complete"
+echo ""
+
+# ── Step 5: Per-circuit prove and verify ──────────────────────────────────────
+for idx in "${!CIRCUITS[@]}"; do
+    ZOK_BASENAME="${CIRCUITS[$idx]}"
     ZOK_FILE="$(cd zokrates/for-measurement && pwd)/${ZOK_BASENAME}.zok"
     MEASUREMENT_DIR="zokrates/for-measurement/measurements/${ZOK_BASENAME}"
     mkdir -p "$MEASUREMENT_DIR"
@@ -179,7 +241,7 @@ for ZOK_BASENAME in "${CIRCUITS[@]}"; do
     echo "Circuit: $ZOK_BASENAME"
     echo "========================================"
 
-    # Write params header to measurement file
+    # Write params header and setup log to measurement file
     {
         echo "host:             $(hostname)"
         echo "timestamp:        $TIMESTAMP"
@@ -198,36 +260,22 @@ for ZOK_BASENAME in "${CIRCUITS[@]}"; do
         echo "circuit:          $ZOK_BASENAME"
         echo "num_iterations:   $NUM_ITERATIONS"
         echo "---"
+        echo "=== setup ==="
+        cat "${SETUP_LOGS[$idx]}"
     } > "$MEASUREMENT_FILE"
+    rm -f "${SETUP_LOGS[$idx]}"
 
-    # ── Step 4: Compile circuit and run trusted setup ─────────────────────────
-    echo "Step 4: Compiling circuit and running trusted setup..."
-    (
-        cd external/circ
-        ./driver.py -F zok zokc r1cs spartan bellman smt
-        ./driver.py -b
-        ./target/release/examples/circ "$ZOK_FILE" --language zsharp-curly r1cs \
-            --action setup \
-            --proof-impl dorian \
-            --pfcurve curve25519 \
-            --prover-key  "$(pwd)/../../zokrates/bin/${ZOK_BASENAME}_P" \
-            --verifier-key "$(pwd)/../../zokrates/bin/${ZOK_BASENAME}_V" \
-            --pp           "$(pwd)/../../zokrates/bin/${ZOK_BASENAME}_PP"
-    ) 2>&1 | tee -a "$MEASUREMENT_FILE"
-    echo "✓ Setup complete"
-    echo ""
-
-    # ── Step 5: Prove and verify (repeated NUM_ITERATIONS times) ─────────────
+    # ── Prove and verify (repeated NUM_ITERATIONS times) ─────────────────────
     for i in $(seq 1 "$NUM_ITERATIONS"); do
         echo "Step 5 (iteration $i/$NUM_ITERATIONS): Generating proof..."
         echo "=== prove iteration $i ===" >> "$MEASUREMENT_FILE"
         (
             cd external/circ
             gnu-time ./target/release/examples/zk_commit --action prove \
-                --prover-key  "$(pwd)/../../zokrates/bin/${ZOK_BASENAME}_P" \
-                --pp           "$(pwd)/../../zokrates/bin/${ZOK_BASENAME}_PP" \
+                --prover-key  "$(pwd)/../../zokrates/bin/${ZOK_BASENAME}_${KEY_TAG}_P" \
+                --pp           "$(pwd)/../../zokrates/bin/${ZOK_BASENAME}_${KEY_TAG}_PP" \
                 --inputs      "$WITNESS_PIN" \
-                --proof        "$(pwd)/../../zokrates/bin/${ZOK_BASENAME}.pi"
+                --proof        "$(pwd)/../../zokrates/bin/${ZOK_BASENAME}_${KEY_TAG}.pi"
         ) 2>&1 | tee -a "$MEASUREMENT_FILE"
         echo "✓ Proof generated"
         echo ""
@@ -237,10 +285,10 @@ for ZOK_BASENAME in "${CIRCUITS[@]}"; do
         (
             cd external/circ
             gnu-time ./target/release/examples/zk_commit --action verify \
-                --verifier-key "$(pwd)/../../zokrates/bin/${ZOK_BASENAME}_V" \
-                --pp           "$(pwd)/../../zokrates/bin/${ZOK_BASENAME}_PP" \
+                --verifier-key "$(pwd)/../../zokrates/bin/${ZOK_BASENAME}_${KEY_TAG}_V" \
+                --pp           "$(pwd)/../../zokrates/bin/${ZOK_BASENAME}_${KEY_TAG}_PP" \
                 --inputs      "$WITNESS_VIN" \
-                --proof        "$(pwd)/../../zokrates/bin/${ZOK_BASENAME}.pi"
+                --proof        "$(pwd)/../../zokrates/bin/${ZOK_BASENAME}_${KEY_TAG}.pi"
         ) 2>&1 | tee -a "$MEASUREMENT_FILE"
         echo "✓ Proof verified"
         echo ""
