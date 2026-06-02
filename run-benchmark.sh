@@ -137,14 +137,14 @@ if [[ -n "${CIRCUIT:-}" ]]; then
     CIRCUITS=("$CIRCUIT")
 else
     CIRCUITS=(
-        bench_binarize
-        bench_block_measurement
+        # bench_binarize
+        # bench_block_measurement
         bench_words_pipeline
         bench_check_barcode_stats
         bench_check_error_correction
         bench_check_num_cw
         bench_codewords_to_chars
-        bench_full_circuit
+        # bench_full_circuit
     )
 fi
 
