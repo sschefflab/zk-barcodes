@@ -29,6 +29,9 @@ python-scripts/__pycache__/
 python-scripts/*.png
 tests/__pycache__
 
+# Benchmark plots
+zokrates/for-measurement/plots/
+
 # SP1 test images and big proofs
 sp1-pdf417/script/test-images
 sp1-pdf417/script/proof-runs/*.bin
