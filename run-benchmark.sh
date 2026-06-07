@@ -187,14 +187,20 @@ echo "Step 4 (setup): Launching parallel trusted setup for all circuits..."
 SETUP_NAMES=()
 SETUP_PIDS=()
 SETUP_LOGS=()
+SETUP_COMMIT_FLAGS=()
 for ZOK_BASENAME in "${CIRCUITS[@]}"; do
     ZOK_FILE="$(cd zokrates/for-measurement && pwd)/${ZOK_BASENAME}.zok"
     SETUP_LOG=$(mktemp)
     SETUP_NAMES+=("$ZOK_BASENAME")
     SETUP_LOGS+=("$SETUP_LOG")
+    case "$ZOK_BASENAME" in
+        bench_binarize|bench_full_circuit) COMMIT_FLAG="--r1cs-commit-input image" ;;
+        *) COMMIT_FLAG="" ;;
+    esac
+    SETUP_COMMIT_FLAGS+=("$COMMIT_FLAG")
     (
         cd external/circ
-        ./target/release/examples/circ "$ZOK_FILE" --language zsharp-curly r1cs \
+        ./target/release/examples/circ "$ZOK_FILE" --language zsharp-curly $COMMIT_FLAG r1cs \
             --action setup \
             --proof-impl dorian \
             --pfcurve curve25519 \
@@ -258,12 +264,15 @@ for idx in "${!CIRCUITS[@]}"; do
         echo "max_ec_level:     $MAX_EC_LEVEL"
         echo "chunk_size:       $CHUNK_SIZE"
         echo "circuit:          $ZOK_BASENAME"
+        echo "commit_input:     ${CIRCUIT_COMMIT_FLAG:-none}"
         echo "num_iterations:   $NUM_ITERATIONS"
         echo "---"
         echo "=== setup ==="
         cat "${SETUP_LOGS[$idx]}"
     } > "$MEASUREMENT_FILE"
     rm -f "${SETUP_LOGS[$idx]}"
+
+    CIRCUIT_COMMIT_FLAG="${SETUP_COMMIT_FLAGS[$idx]}"
 
     # ── Prove and verify (repeated NUM_ITERATIONS times) ─────────────────────
     for i in $(seq 1 "$NUM_ITERATIONS"); do
@@ -272,6 +281,7 @@ for idx in "${!CIRCUITS[@]}"; do
         (
             cd external/circ
             gnu-time ./target/release/examples/zk_commit --action prove \
+                $CIRCUIT_COMMIT_FLAG \
                 --prover-key  "$(pwd)/../../zokrates/bin/${ZOK_BASENAME}_${KEY_TAG}_P" \
                 --pp           "$(pwd)/../../zokrates/bin/${ZOK_BASENAME}_${KEY_TAG}_PP" \
                 --inputs      "$WITNESS_PIN" \
@@ -285,6 +295,7 @@ for idx in "${!CIRCUITS[@]}"; do
         (
             cd external/circ
             gnu-time ./target/release/examples/zk_commit --action verify \
+                $CIRCUIT_COMMIT_FLAG \
                 --verifier-key "$(pwd)/../../zokrates/bin/${ZOK_BASENAME}_${KEY_TAG}_V" \
                 --pp           "$(pwd)/../../zokrates/bin/${ZOK_BASENAME}_${KEY_TAG}_PP" \
                 --inputs      "$WITNESS_VIN" \
