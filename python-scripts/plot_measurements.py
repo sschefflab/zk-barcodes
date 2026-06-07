@@ -115,12 +115,20 @@ img_pixels = {img: int(img.split("x")[0]) * int(img.split("x")[1]) for img in IM
 
 if by_combo:
     fig, ax = plt.subplots(figsize=(7, 5))
+    all_xs, all_ys = [], []
     for combo, img_times in sorted(by_combo.items()):
         imgs = [img for img in IMAGE_ORDER if img in img_times]
         xs = [img_pixels[img] for img in imgs]
         ys = [img_times[img] for img in imgs]
         label = f"max={combo[0]}x{combo[1]} ec={combo[2]}"
-        ax.plot(xs, ys, "o-", label=label)
+        ax.plot(xs, ys, "o", label=label)
+        all_xs.extend(xs)
+        all_ys.extend(ys)
+
+    # Linear trendline across all data points
+    coeffs = np.polyfit(all_xs, all_ys, 1)
+    trend_x = np.linspace(min(all_xs), max(all_xs), 200)
+    ax.plot(trend_x, np.polyval(coeffs, trend_x), "k--", linewidth=1.5, label="linear trend")
 
     ax.set_xlabel("Image pixels (width × height)")
     ax.set_ylabel("Prover time (ms)")
@@ -203,7 +211,7 @@ else:
 
 
 # ---------------------------------------------------------------------------
-# Plot 5: check_* + codewords_to_chars vs EC level at 384x288, max=60x20
+# Plot 5: check_* + codewords_to_chars vs EC level at 384x288, max=90x30
 # ---------------------------------------------------------------------------
 
 CHECK_CIRCUITS = ["check_barcode_stats", "check_num_cw", "check_error_correction", "codewords_to_chars"]
@@ -212,8 +220,8 @@ CHECK_COLORS = {c: COLORS[c] for c in CHECK_CIRCUITS}
 plot5_rows = [
     r for r in rows
     if r["image_cols"] + "x" + r["image_rows"] == "384x288"
-    and r["max_rows"] == "60"
-    and r["max_cols"] == "20"
+    and r["max_rows"] == "90"
+    and r["max_cols"] == "30"
     and r["circuit"] in CHECK_CIRCUITS
 ]
 
@@ -231,14 +239,14 @@ if by_circuit_ec:
         ax.plot(xs, ys, "o-", label=circuit, color=CHECK_COLORS[circuit])
     ax.set_xlabel("max_ec_level")
     ax.set_ylabel("Prover time (ms)")
-    ax.set_title("Check circuit times vs EC level\n(384x288, max=60x20)")
+    ax.set_title("Check circuit times vs EC level\n(384x288, max=90x30)")
     ax.legend(fontsize=8)
     fig.tight_layout()
     fig.savefig(os.path.join(OUTPUT_DIR, "plot5_check_vs_ec.png"), dpi=150)
     plt.close(fig)
     print("Saved plot5_check_vs_ec.png")
 else:
-    print("Plot 5: no data for 384x288 max=60x20, skipping")
+    print("Plot 5: no data for 384x288 max=90x30, skipping")
 
 
 # ---------------------------------------------------------------------------
@@ -256,12 +264,20 @@ for r in fc_rows:
 
 if by_combo_ram:
     fig, ax = plt.subplots(figsize=(7, 5))
+    all_xs_ram, all_ys_ram = [], []
     for combo, img_rams in sorted(by_combo_ram.items()):
         imgs = [img for img in IMAGE_ORDER if img in img_rams]
         xs = [img_pixels[img] for img in imgs]
         ys = [img_rams[img] / 1e6 for img in imgs]  # convert kB to GB
         label = f"max={combo[0]}x{combo[1]} ec={combo[2]}"
-        ax.plot(xs, ys, "o-", label=label)
+        ax.plot(xs, ys, "o", label=label)
+        all_xs_ram.extend(xs)
+        all_ys_ram.extend(ys)
+
+    # Linear trendline across all data points
+    coeffs_ram = np.polyfit(all_xs_ram, all_ys_ram, 1)
+    trend_x_ram = np.linspace(min(all_xs_ram), max(all_xs_ram), 200)
+    ax.plot(trend_x_ram, np.polyval(coeffs_ram, trend_x_ram), "k--", linewidth=1.5, label="linear trend")
 
     ax.set_xlabel("Image pixels (width × height)")
     ax.set_ylabel("Prover RAM (GB)")
