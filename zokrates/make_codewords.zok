@@ -46,8 +46,6 @@ def check_codewords<R, RW, CW, W>(
 
     field[N] mut garbage = [ KNOWN_GARBAGE; N ];
 
-
-    field mut logical_row_num = 0;
     for u32 i in 0..R {
         bool mut found_stop = false;
         for u32 j in 0..CW {
@@ -76,26 +74,17 @@ def check_codewords<R, RW, CW, W>(
             garbage[cw_idx] = garbage[cw_idx] + to_add_to_garbage;
             
             // this always returns true, but it does an assert inside
-            bool lookup1 = lookup_codeword(curr_word_or_dummy, ext_cw);
-            bool lookup2 = lookup_lri_row_num(lri_ext[i], lri_row_nums[i]);
-            bool start_ok = if (j == 0) {
-                (curr_word_or_dummy == START || curr_word_or_dummy == ZERO) 
+            bool lookup = lookup_codeword(curr_word_or_dummy, ext_cw);
+            bool cw_ok = if (j == 0) {
+                (curr_word_or_dummy == START || curr_word_or_dummy == ZERO)
             } else {
-                true
+                if (found_stop) {
+                    curr_word_or_dummy == ZERO // all codewords after STOP should be garbage
+                } else {
+                    true
+                }
             };
 
-            bool lri_ok = if (j == 1) {
-                curr_word_or_dummy != ZERO // since this is the wb image, require all left row indicators decode
-            }
-
-            bool pads_ok = if (found_stop) {
-                curr_word_or_dummy == ZERO
-            } else {
-                true
-            };
-
-
-            bool cw_ok = start_ok && lri_ok && pads_ok;
             assert(cw_ok);
 
             // set found_stop flag appropriately
