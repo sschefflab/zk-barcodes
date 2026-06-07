@@ -40,8 +40,14 @@ def parse_file(path):
     max_ec_level = meta("max_ec_level")
     chunk_size = meta("chunk_size")
 
-    prover_times = re.findall(r"Time for Proving \(commit\): ([\d.]+)ms", text)
-    verifier_times = re.findall(r"Time for NIZK::verify_commit: ([\d.]+)ms", text)
+    def parse_duration_ms(s, unit):
+        v = float(s)
+        return v * 1000 if unit == "s" else v
+
+    prover_times = [parse_duration_ms(v, u) for v, u in
+                    re.findall(r"Time for Proving \(commit\): ([\d.]+)(ms|s)", text)]
+    verifier_times = [parse_duration_ms(v, u) for v, u in
+                      re.findall(r"Time for NIZK::verify_commit: ([\d.]+)(ms|s)", text)]
 
     prove_rams = []
     verify_rams = []
@@ -76,11 +82,11 @@ def parse_file(path):
         "chunk_size": chunk_size,
     }
     for i, v in enumerate(prover_times, 1):
-        row[f"prover_time_{i}"] = round(float(v), 2)
+        row[f"prover_time_{i}"] = round(v, 2)
     for i, v in enumerate(prove_rams, 1):
         row[f"prover_ram_{i}"] = v
     for i, v in enumerate(verifier_times, 1):
-        row[f"verifier_time_{i}"] = round(float(v), 2)
+        row[f"verifier_time_{i}"] = round(v, 2)
     for i, v in enumerate(verify_rams, 1):
         row[f"verifier_ram_{i}"] = v
 
