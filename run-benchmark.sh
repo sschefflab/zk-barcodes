@@ -248,6 +248,9 @@ for idx in "${!CIRCUITS[@]}"; do
     echo "Circuit: $ZOK_BASENAME"
     echo "========================================"
 
+    CIRCUIT_COMMIT_FLAG="${SETUP_COMMIT_FLAGS[$idx]}"
+    COMMIT_INPUT_VALUE=$(echo "$CIRCUIT_COMMIT_FLAG" | grep -oP '(?<=--r1cs-commit-input )\S+' || echo "none")
+
     # Write params header and setup log to measurement file
     {
         echo "host:             $(hostname)"
@@ -265,15 +268,13 @@ for idx in "${!CIRCUITS[@]}"; do
         echo "max_ec_level:     $MAX_EC_LEVEL"
         echo "chunk_size:       $CHUNK_SIZE"
         echo "circuit:          $ZOK_BASENAME"
-        echo "commit_input:     ${CIRCUIT_COMMIT_FLAG:-none}"
+        echo "commit_input:     $COMMIT_INPUT_VALUE"
         echo "num_iterations:   $NUM_ITERATIONS"
         echo "---"
         echo "=== setup ==="
         cat "${SETUP_LOGS[$idx]}"
     } > "$MEASUREMENT_FILE"
     rm -f "${SETUP_LOGS[$idx]}"
-
-    CIRCUIT_COMMIT_FLAG="${SETUP_COMMIT_FLAGS[$idx]}"
 
     # ── Prove and verify (repeated NUM_ITERATIONS times) ─────────────────────
     for i in $(seq 1 "$NUM_ITERATIONS"); do

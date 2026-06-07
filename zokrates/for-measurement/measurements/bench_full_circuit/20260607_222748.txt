@@ -13,7 +13,7 @@ max_cols:         3
 max_ec_level:     1
 chunk_size:       10
 circuit:          bench_full_circuit
-commit_input:     none
+commit_input:     image
 num_iterations:   5
 ---
 === setup ===
