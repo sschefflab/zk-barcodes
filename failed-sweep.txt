@@ -1,0 +1,459 @@
+========================================
+Sweep: image=144x48 max_rows=3 max_cols=3 max_ec=0 rows=3 cols=3 ec=0
+========================================
+Step 1: Generating barcode...
+Generating PDF417 barcode:
+  Rows: 3
+  Columns: 3
+  Error Correction Level: 0
+  Text style: mixed
+  Generated data length: 9 characters
+  Estimated data codewords: 6
+  Sample data: PDF417 ba...
+  Scale: 1, Ratio: 16
+  Rendered barcode size: 120x48 pixels
+  Canvas size: 144x48 pixels
+  Barcode offset: (12, 0)
+  Circuit crop coordinates:
+    R_START=0, R_END=48
+    C_START=12, C_END=132
+
+Barcode saved to: test-witness/barcode_r3_c3_e0_144x48.png
+Image size: 144x48 pixels
+
+✓ Success!
+
+Real barcode dimensions : 120x48 pixels
+Crop offset             : R_START=0, C_START=12
+✓ Barcode generated: test-witness/barcode_r3_c3_e0_144x48.png
+
+Chunk size              : 10 (factor of REAL_BARCODE_W=120)
+
+Step 2: Generating params.zok...
+Written: ../../test-witness/params.zok
+✓ params.zok written: test-witness/params.zok
+
+Step 3: Decoding barcode and generating witness JSON...
+Witness data saved to '../../test-witness/witness_r3_c3_e0_144x48.json'
+Detection result: 
+(pdf 417) PDF417 ba
+✓ Witness JSON written: test-witness/witness_r3_c3_e0_144x48.json
+
+Step 3b: Converting witness JSON to .pin and .vin...
+Generated test-witness/witness_r3_c3_e0_144x48.pin (43944 entries)
+Generated test-witness/witness_r3_c3_e0_144x48.vin (5578 entries)
+
+Usage with CirC:
+  cd external/circ
+  ./target/release/examples/zk --field-custom-modulus 7237005577332262213973186563042994240857116359379907606001950938285454250989 \
+      --pin ../../test-witness/witness_r3_c3_e0_144x48.pin --vin ../../test-witness/witness_r3_c3_e0_144x48.vin --action spartan
+✓ Witness files written
+
+Step 4: Building CirC...
+bellman,r1cs,smt,spartan,zok,zokc
+Running: cargo check --tests --examples --benches --bins --features smt,zokc,bellman,zok,spartan,r1cs
+Running: cargo build --release --examples --features smt,zokc,bellman,zok,spartan,r1cs
+✓ CirC build complete
+
+Step 4 (setup): Launching parallel trusted setup for all circuits...
+  Launched setup for bench_binarize (pid 702204)
+  Waiting for all setups to finish...
+  ✗ Setup FAILED: bench_binarize
+One or more setups failed. Logs:
+--- bench_binarize ---
+Running frontend
+Running IR optimizations
+Running backend
+Running r1cs optimizations 
+Final r1cs: 11650 constraints, 29187 variables, 58241 entries, 2 rounds
+Final Witext steps: 58248, arguments: 87298
+Running Setup
+
+thread 'main' panicked at examples/circ.rs:437:26:
+called `Result::unwrap()` on an `Err` value: Os { code: 2, kind: NotFound, message: "No such file or directory" }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+FAILED: image=144x48 max_rows=3 max_cols=3 max_ec=0 rows=3 cols=3 ec=0
+========================================
+Sweep: image=144x48 max_rows=3 max_cols=3 max_ec=1 rows=3 cols=3 ec=1
+========================================
+Step 1: Generating barcode...
+Generating PDF417 barcode:
+  Rows: 3
+  Columns: 3
+  Error Correction Level: 1
+  Text style: mixed
+  Generated data length: 6 characters
+  Estimated data codewords: 4
+  Sample data: PDF417...
+  Scale: 1, Ratio: 16
+  Rendered barcode size: 120x48 pixels
+  Canvas size: 144x48 pixels
+  Barcode offset: (12, 0)
+  Circuit crop coordinates:
+    R_START=0, R_END=48
+    C_START=12, C_END=132
+
+Barcode saved to: test-witness/barcode_r3_c3_e1_144x48.png
+Image size: 144x48 pixels
+
+✓ Success!
+
+Real barcode dimensions : 120x48 pixels
+Crop offset             : R_START=0, C_START=12
+✓ Barcode generated: test-witness/barcode_r3_c3_e1_144x48.png
+
+Chunk size              : 10 (factor of REAL_BARCODE_W=120)
+
+Step 2: Generating params.zok...
+Written: ../../test-witness/params.zok
+✓ params.zok written: test-witness/params.zok
+
+Step 3: Decoding barcode and generating witness JSON...
+Witness data saved to '../../test-witness/witness_r3_c3_e1_144x48.json'
+Detection result: 
+(pdf 417) PDF417
+✓ Witness JSON written: test-witness/witness_r3_c3_e1_144x48.json
+
+Step 3b: Converting witness JSON to .pin and .vin...
+Generated test-witness/witness_r3_c3_e1_144x48.pin (43950 entries)
+Generated test-witness/witness_r3_c3_e1_144x48.vin (5578 entries)
+
+Usage with CirC:
+  cd external/circ
+  ./target/release/examples/zk --field-custom-modulus 7237005577332262213973186563042994240857116359379907606001950938285454250989 \
+      --pin ../../test-witness/witness_r3_c3_e1_144x48.pin --vin ../../test-witness/witness_r3_c3_e1_144x48.vin --action spartan
+✓ Witness files written
+
+Step 4: Building CirC...
+bellman,r1cs,smt,spartan,zok,zokc
+Running: cargo check --tests --examples --benches --bins --features smt,r1cs,zokc,zok,spartan,bellman
+Running: cargo build --release --examples --features smt,r1cs,zokc,zok,spartan,bellman
+✓ CirC build complete
+
+Step 4 (setup): Launching parallel trusted setup for all circuits...
+  Launched setup for bench_binarize (pid 702276)
+  Waiting for all setups to finish...
+  ✗ Setup FAILED: bench_binarize
+One or more setups failed. Logs:
+--- bench_binarize ---
+Running frontend
+Running IR optimizations
+Running backend
+Running r1cs optimizations 
+Final r1cs: 11650 constraints, 29187 variables, 58241 entries, 2 rounds
+Final Witext steps: 58248, arguments: 87298
+Running Setup
+
+thread 'main' panicked at examples/circ.rs:437:26:
+called `Result::unwrap()` on an `Err` value: Os { code: 2, kind: NotFound, message: "No such file or directory" }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+FAILED: image=144x48 max_rows=3 max_cols=3 max_ec=1 rows=3 cols=3 ec=1
+Skipping: image=144x48 max_rows=3 max_cols=3 max_ec=5
+Skipping: image=144x48 max_rows=3 max_cols=3 max_ec=8
+========================================
+Sweep: image=192x144 max_rows=3 max_cols=3 max_ec=0 rows=3 cols=3 ec=0
+========================================
+Step 1: Generating barcode...
+Generating PDF417 barcode:
+  Rows: 3
+  Columns: 3
+  Error Correction Level: 0
+  Text style: mixed
+  Generated data length: 9 characters
+  Estimated data codewords: 6
+  Sample data: PDF417 ba...
+  Scale: 1, Ratio: 48
+  Rendered barcode size: 120x144 pixels
+  Canvas size: 192x144 pixels
+  Barcode offset: (36, 0)
+  Circuit crop coordinates:
+    R_START=0, R_END=144
+    C_START=36, C_END=156
+
+Barcode saved to: test-witness/barcode_r3_c3_e0_192x144.png
+Image size: 192x144 pixels
+
+✓ Success!
+
+Real barcode dimensions : 120x144 pixels
+Crop offset             : R_START=0, C_START=36
+✓ Barcode generated: test-witness/barcode_r3_c3_e0_192x144.png
+
+Chunk size              : 10 (factor of REAL_BARCODE_W=120)
+
+Step 2: Generating params.zok...
+Written: ../../test-witness/params.zok
+✓ params.zok written: test-witness/params.zok
+
+Step 3: Decoding barcode and generating witness JSON...
+Witness data saved to '../../test-witness/witness_r3_c3_e0_192x144.json'
+Detection result: 
+(pdf 417) PDF417 ba
+✓ Witness JSON written: test-witness/witness_r3_c3_e0_192x144.json
+
+Step 3b: Converting witness JSON to .pin and .vin...
+Generated test-witness/witness_r3_c3_e0_192x144.pin (124872 entries)
+Generated test-witness/witness_r3_c3_e0_192x144.vin (5578 entries)
+
+Usage with CirC:
+  cd external/circ
+  ./target/release/examples/zk --field-custom-modulus 7237005577332262213973186563042994240857116359379907606001950938285454250989 \
+      --pin ../../test-witness/witness_r3_c3_e0_192x144.pin --vin ../../test-witness/witness_r3_c3_e0_192x144.vin --action spartan
+✓ Witness files written
+
+Step 4: Building CirC...
+bellman,r1cs,smt,spartan,zok,zokc
+Running: cargo check --tests --examples --benches --bins --features bellman,zokc,zok,r1cs,smt,spartan
+Running: cargo build --release --examples --features bellman,zokc,zok,r1cs,smt,spartan
+✓ CirC build complete
+
+Step 4 (setup): Launching parallel trusted setup for all circuits...
+  Launched setup for bench_binarize (pid 702349)
+  Waiting for all setups to finish...
+  ✗ Setup FAILED: bench_binarize
+One or more setups failed. Logs:
+--- bench_binarize ---
+Running frontend
+Running IR optimizations
+Running backend
+Running r1cs optimizations 
+Final r1cs: 34690 constraints, 86787 variables, 173441 entries, 2 rounds
+Final Witext steps: 173448, arguments: 260098
+Running Setup
+
+thread 'main' panicked at examples/circ.rs:437:26:
+called `Result::unwrap()` on an `Err` value: Os { code: 2, kind: NotFound, message: "No such file or directory" }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+FAILED: image=192x144 max_rows=3 max_cols=3 max_ec=0 rows=3 cols=3 ec=0
+========================================
+Sweep: image=192x144 max_rows=3 max_cols=3 max_ec=1 rows=3 cols=3 ec=1
+========================================
+Step 1: Generating barcode...
+Generating PDF417 barcode:
+  Rows: 3
+  Columns: 3
+  Error Correction Level: 1
+  Text style: mixed
+  Generated data length: 6 characters
+  Estimated data codewords: 4
+  Sample data: PDF417...
+  Scale: 1, Ratio: 48
+  Rendered barcode size: 120x144 pixels
+  Canvas size: 192x144 pixels
+  Barcode offset: (36, 0)
+  Circuit crop coordinates:
+    R_START=0, R_END=144
+    C_START=36, C_END=156
+
+Barcode saved to: test-witness/barcode_r3_c3_e1_192x144.png
+Image size: 192x144 pixels
+
+✓ Success!
+
+Real barcode dimensions : 120x144 pixels
+Crop offset             : R_START=0, C_START=36
+✓ Barcode generated: test-witness/barcode_r3_c3_e1_192x144.png
+
+Chunk size              : 10 (factor of REAL_BARCODE_W=120)
+
+Step 2: Generating params.zok...
+Written: ../../test-witness/params.zok
+✓ params.zok written: test-witness/params.zok
+
+Step 3: Decoding barcode and generating witness JSON...
+Witness data saved to '../../test-witness/witness_r3_c3_e1_192x144.json'
+Detection result: 
+(pdf 417) PDF417
+✓ Witness JSON written: test-witness/witness_r3_c3_e1_192x144.json
+
+Step 3b: Converting witness JSON to .pin and .vin...
+Generated test-witness/witness_r3_c3_e1_192x144.pin (124878 entries)
+Generated test-witness/witness_r3_c3_e1_192x144.vin (5578 entries)
+
+Usage with CirC:
+  cd external/circ
+  ./target/release/examples/zk --field-custom-modulus 7237005577332262213973186563042994240857116359379907606001950938285454250989 \
+      --pin ../../test-witness/witness_r3_c3_e1_192x144.pin --vin ../../test-witness/witness_r3_c3_e1_192x144.vin --action spartan
+✓ Witness files written
+
+Step 4: Building CirC...
+bellman,r1cs,smt,spartan,zok,zokc
+Running: cargo check --tests --examples --benches --bins --features smt,r1cs,zokc,bellman,spartan,zok
+Running: cargo build --release --examples --features smt,r1cs,zokc,bellman,spartan,zok
+✓ CirC build complete
+
+Step 4 (setup): Launching parallel trusted setup for all circuits...
+  Launched setup for bench_binarize (pid 702434)
+  Waiting for all setups to finish...
+  ✗ Setup FAILED: bench_binarize
+One or more setups failed. Logs:
+--- bench_binarize ---
+Running frontend
+Running IR optimizations
+Running backend
+Running r1cs optimizations 
+Final r1cs: 34690 constraints, 86787 variables, 173441 entries, 2 rounds
+Final Witext steps: 173448, arguments: 260098
+Running Setup
+
+thread 'main' panicked at examples/circ.rs:437:26:
+called `Result::unwrap()` on an `Err` value: Os { code: 2, kind: NotFound, message: "No such file or directory" }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+FAILED: image=192x144 max_rows=3 max_cols=3 max_ec=1 rows=3 cols=3 ec=1
+Skipping: image=192x144 max_rows=3 max_cols=3 max_ec=5
+Skipping: image=192x144 max_rows=3 max_cols=3 max_ec=8
+========================================
+Sweep: image=384x288 max_rows=3 max_cols=3 max_ec=0 rows=3 cols=3 ec=0
+========================================
+Step 1: Generating barcode...
+Generating PDF417 barcode:
+  Rows: 3
+  Columns: 3
+  Error Correction Level: 0
+  Text style: mixed
+  Generated data length: 9 characters
+  Estimated data codewords: 6
+  Sample data: PDF417 ba...
+  Scale: 3, Ratio: 32
+  Rendered barcode size: 360x288 pixels
+  Canvas size: 384x288 pixels
+  Barcode offset: (12, 0)
+  Circuit crop coordinates:
+    R_START=0, R_END=288
+    C_START=12, C_END=372
+
+Barcode saved to: test-witness/barcode_r3_c3_e0_384x288.png
+Image size: 384x288 pixels
+
+✓ Success!
+
+Real barcode dimensions : 360x288 pixels
+Crop offset             : R_START=0, C_START=12
+✓ Barcode generated: test-witness/barcode_r3_c3_e0_384x288.png
+
+Chunk size              : 10 (factor of REAL_BARCODE_W=360)
+
+Step 2: Generating params.zok...
+Written: ../../test-witness/params.zok
+✓ params.zok written: test-witness/params.zok
+
+Step 3: Decoding barcode and generating witness JSON...
+Witness data saved to '../../test-witness/witness_r3_c3_e0_384x288.json'
+Detection result: 
+(pdf 417) PDF417 ba
+✓ Witness JSON written: test-witness/witness_r3_c3_e0_384x288.json
+
+Step 3b: Converting witness JSON to .pin and .vin...
+Generated test-witness/witness_r3_c3_e0_384x288.pin (576984 entries)
+Generated test-witness/witness_r3_c3_e0_384x288.vin (5578 entries)
+
+Usage with CirC:
+  cd external/circ
+  ./target/release/examples/zk --field-custom-modulus 7237005577332262213973186563042994240857116359379907606001950938285454250989 \
+      --pin ../../test-witness/witness_r3_c3_e0_384x288.pin --vin ../../test-witness/witness_r3_c3_e0_384x288.vin --action spartan
+✓ Witness files written
+
+Step 4: Building CirC...
+bellman,r1cs,smt,spartan,zok,zokc
+Running: cargo check --tests --examples --benches --bins --features spartan,zokc,bellman,r1cs,zok,smt
+Running: cargo build --release --examples --features spartan,zokc,bellman,r1cs,zok,smt
+✓ CirC build complete
+
+Step 4 (setup): Launching parallel trusted setup for all circuits...
+  Launched setup for bench_binarize (pid 702508)
+  Waiting for all setups to finish...
+  ✗ Setup FAILED: bench_binarize
+One or more setups failed. Logs:
+--- bench_binarize ---
+Running frontend
+Running IR optimizations
+Running backend
+Running r1cs optimizations 
+Final r1cs: 207490 constraints, 518787 variables, 1037441 entries, 2 rounds
+Final Witext steps: 933896, arguments: 1348994
+Running Setup
+
+thread 'main' panicked at examples/circ.rs:437:26:
+called `Result::unwrap()` on an `Err` value: Os { code: 2, kind: NotFound, message: "No such file or directory" }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+FAILED: image=384x288 max_rows=3 max_cols=3 max_ec=0 rows=3 cols=3 ec=0
+========================================
+Sweep: image=384x288 max_rows=3 max_cols=3 max_ec=1 rows=3 cols=3 ec=1
+========================================
+Step 1: Generating barcode...
+Generating PDF417 barcode:
+  Rows: 3
+  Columns: 3
+  Error Correction Level: 1
+  Text style: mixed
+  Generated data length: 6 characters
+  Estimated data codewords: 4
+  Sample data: PDF417...
+  Scale: 3, Ratio: 32
+  Rendered barcode size: 360x288 pixels
+  Canvas size: 384x288 pixels
+  Barcode offset: (12, 0)
+  Circuit crop coordinates:
+    R_START=0, R_END=288
+    C_START=12, C_END=372
+
+Barcode saved to: test-witness/barcode_r3_c3_e1_384x288.png
+Image size: 384x288 pixels
+
+✓ Success!
+
+Real barcode dimensions : 360x288 pixels
+Crop offset             : R_START=0, C_START=12
+✓ Barcode generated: test-witness/barcode_r3_c3_e1_384x288.png
+
+Chunk size              : 10 (factor of REAL_BARCODE_W=360)
+
+Step 2: Generating params.zok...
+Written: ../../test-witness/params.zok
+✓ params.zok written: test-witness/params.zok
+
+Step 3: Decoding barcode and generating witness JSON...
+Witness data saved to '../../test-witness/witness_r3_c3_e1_384x288.json'
+Detection result: 
+(pdf 417) PDF417
+✓ Witness JSON written: test-witness/witness_r3_c3_e1_384x288.json
+
+Step 3b: Converting witness JSON to .pin and .vin...
+Generated test-witness/witness_r3_c3_e1_384x288.pin (576990 entries)
+Generated test-witness/witness_r3_c3_e1_384x288.vin (5578 entries)
+
+Usage with CirC:
+  cd external/circ
+  ./target/release/examples/zk --field-custom-modulus 7237005577332262213973186563042994240857116359379907606001950938285454250989 \
+      --pin ../../test-witness/witness_r3_c3_e1_384x288.pin --vin ../../test-witness/witness_r3_c3_e1_384x288.vin --action spartan
+✓ Witness files written
+
+Step 4: Building CirC...
+bellman,r1cs,smt,spartan,zok,zokc
+Running: cargo check --tests --examples --benches --bins --features spartan,smt,zokc,bellman,r1cs,zok
+Running: cargo build --release --examples --features spartan,smt,zokc,bellman,r1cs,zok
+✓ CirC build complete
+
+Step 4 (setup): Launching parallel trusted setup for all circuits...
+  Launched setup for bench_binarize (pid 702592)
+  Waiting for all setups to finish...
+  ✗ Setup FAILED: bench_binarize
+One or more setups failed. Logs:
+--- bench_binarize ---
+Running frontend
+Running IR optimizations
+Running backend
+Running r1cs optimizations 
+Final r1cs: 207490 constraints, 518787 variables, 1037441 entries, 2 rounds
+Final Witext steps: 933896, arguments: 1348994
+Running Setup
+
+thread 'main' panicked at examples/circ.rs:437:26:
+called `Result::unwrap()` on an `Err` value: Os { code: 2, kind: NotFound, message: "No such file or directory" }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+FAILED: image=384x288 max_rows=3 max_cols=3 max_ec=1 rows=3 cols=3 ec=1
+Skipping: image=384x288 max_rows=3 max_cols=3 max_ec=5
+Skipping: image=384x288 max_rows=3 max_cols=3 max_ec=8
+========================================
+Sweep complete: 0 succeeded, 6 failed, 6 skipped.
+========================================
