@@ -34,6 +34,7 @@ fi
 PYTHON_BIN=$(python -c 'import sys; print(sys.executable)')
 
 mkdir -p "$OUTPUT_DIR"
+mkdir -p zokrates/bin
 
 BARCODE_FILE="$OUTPUT_DIR/barcode_r${ROWS}_c${COLS}_e${EC}_${IMG_WIDTH}x${IMG_HEIGHT}.png"
 WITNESS_JSON="$OUTPUT_DIR/witness_r${ROWS}_c${COLS}_e${EC}_${IMG_WIDTH}x${IMG_HEIGHT}.json"
