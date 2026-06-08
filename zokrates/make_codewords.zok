@@ -5,7 +5,7 @@
 
 from "EMBED" import sample_challenge, u32_to_field;
 from "./utils.zok" import flatten_array;
-from "./codeword_lookup.zok" import lookup_codeword, START, STOP, ZERO, VALID_WORDS;
+from "./codeword_lookup.zok" import lookup_codeword, START, STOP, ZERO, VALID_WORDS, lookup_lri;
 from "./not_in_table.zok" import disjoint_sets;
 
 const field DUMMY = 919;
@@ -32,6 +32,7 @@ def check_codewords<R, RW, CW, W>(
     field[T] disjoint_set_poly_f,
     field[R*CW] disjoint_set_poly_g,
     field[R][CW] ext_codewords,
+    field[R] ext_row_num,
     field[W] codewords, // expected to be left-padded with zeros to meet length W
     field[RW] left_row_inds
 ) -> bool {
@@ -46,8 +47,10 @@ def check_codewords<R, RW, CW, W>(
 
     field[N] mut garbage = [ KNOWN_GARBAGE; N ];
 
+    field mut next_row_num = 0;
     for u32 i in 0..R {
         bool mut found_stop = false;
+        bool mut found_lri = false;
         for u32 j in 0..CW {
             u32 cw_idx = i * CW + j;
 
@@ -72,20 +75,50 @@ def check_codewords<R, RW, CW, W>(
             };
 
             garbage[cw_idx] = garbage[cw_idx] + to_add_to_garbage;
+
+            // CHECK THE CURRENT CODEWORD //
             
             // this always returns true, but it does an assert inside
-            bool lookup = lookup_codeword(curr_word_or_dummy, ext_cw);
-            bool cw_ok = if (j == 0) {
+            bool cw_lookup = lookup_codeword(curr_word_or_dummy, ext_cw);
+            bool start_ok = if (j == 0) {
                 (curr_word_or_dummy == START || curr_word_or_dummy == ZERO)
             } else {
-                if (found_stop) {
-                    curr_word_or_dummy == ZERO // all codewords after STOP should be garbage
-                } else {
-                    true
-                }
+                true
             };
 
+            bool stop_ok = if (found_stop) {
+                curr_word_or_dummy == ZERO  // all codewords after STOP should be garbage
+            } else {
+                true
+            };
+
+            bool lri_ok = if (j <= 1 || found_lri) {
+                true
+            } else {
+                curr_word_or_dummy == ZERO // if the lri did not decode, the whole row should be zero'd out
+            };
+
+            bool cw_ok = start_ok && stop_ok && lri_ok;
             assert(cw_ok);
+
+
+            // SET ACCUMULATORS //
+
+            (bool, field, field, field, field) lri_acc = if (j== 1) { // found_lri_acc, lri_lookup0, lri_lookup1, to_compare, next_row_num_acc
+                if (ext_row_num[i] == -1) {
+                    (false, 0, 0, next_row_num, 0) // This lri does not decode - this whole row should be garbage. Pass a pair that will definitely look up and an equality that will definitely hold, and don't increment the row number
+                } else {
+                    (true, curr_word_or_dummy, ext_row_num[i], ext_row_num[i], 1) // The real deal! Mark the lri as found, pass the current word to lookup against the row number, pass the row number to compare against next_row_num, and increment next_row_num by 1
+                }
+            } else {
+                (false, 0, 0, next_row_num, 0) // This is not an lri. Pass a pair that will definitely lookup and an equality that will definitely hold, and don't increment the row number
+            };
+            // always returns true, but does an assert inside
+            bool lri_lookup = lookup_lri(lri_acc.1, lri_acc.2);
+            assert(lri_acc.3 == next_row_num);
+            next_row_num = next_row_num + lri_acc.4;
+            found_lri = found_lri || lri_acc.0;
+
 
             // set found_stop flag appropriately
             bool acc_found_stop = if (curr_word_or_dummy == STOP) {
@@ -94,6 +127,8 @@ def check_codewords<R, RW, CW, W>(
                 false
             };
             found_stop = found_stop || acc_found_stop;
+
+            // FILL ARRAYS //
 
             // only some columns are left row indicators - only modify the row indicators if so
             field to_add_row_ind = if (j == 1) {
@@ -234,6 +269,7 @@ def check_codewords_and_garbage<WB_R, WB_RW, WB_CW, G_R, G_CW, W>(
     field[T] wb_disjoint_set_poly_f,
     field[WB_R*WB_CW] wb_disjoint_set_poly_g,
     field[WB_R][WB_CW] ext_codewords,
+    field[WB_R] ext_row_num,
     field[W] codewords,
     field[WB_RW] left_row_inds,
     field[G_R][G_CW] garbage_rows,
@@ -242,7 +278,7 @@ def check_codewords_and_garbage<WB_R, WB_RW, WB_CW, G_R, G_CW, W>(
     field[T] garbage_disjoint_set_poly_f,
     field[G_R] garbage_disjoint_set_poly_g
 ) -> bool {
-    bool wb_ok = check_codewords(words, words_with_dummies, wb_disjoint_set_poly_f, wb_disjoint_set_poly_g, ext_codewords, codewords, left_row_inds);
+    bool wb_ok = check_codewords(words, words_with_dummies, wb_disjoint_set_poly_f, wb_disjoint_set_poly_g, ext_codewords, ext_row_num, codewords, left_row_inds);
     bool garbage_ok = check_garbage(garbage_rows, garbage_words, garbage_word_index, garbage_disjoint_set_poly_f, garbage_disjoint_set_poly_g);
     return(wb_ok && garbage_ok);
 }
@@ -261,6 +297,7 @@ def main(
     field[T] wb_disjoint_set_poly_f,
     private field[R*CW] wb_disjoint_set_poly_g,
     private field[R][CW] ext_codewords,
+    private field[R] ext_row_num,
     private field[W] codewords,
     private field[RW] left_row_inds,
     field[G_R][G_CW] garbage_rows,
@@ -275,6 +312,7 @@ def main(
         wb_disjoint_set_poly_f,
         wb_disjoint_set_poly_g,
         ext_codewords,
+        ext_row_num,
         codewords,
         left_row_inds,
         garbage_rows,

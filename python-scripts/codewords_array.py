@@ -2826,6 +2826,38 @@ def make_encoded_pairs_array():
     return encoded_pairs
 
 
+def get_digits(pattern_base10):
+    digits = []
+    p = pattern_base10
+    for _ in range(8):
+        digits.append(p % 10)
+        p //= 10
+    digits.reverse()
+    return digits
+
+
+def pattern_cluster(pattern_base10):
+    d = get_digits(pattern_base10)
+    bar1, bar2, bar3, bar4 = d[0], d[2], d[4], d[6]
+    return (bar1 - bar2 + bar3 - bar4) % 9
+
+
+def make_lri_lookup_array():
+    """Return [[encoded_pattern_base18, row_num], ...] for all 2787 valid codeword patterns."""
+    result = []
+    for i in range(2787):
+        pattern = PATTERNS[i]
+        base18 = pattern_to_base18(pattern)
+        cw = i % 929
+        cluster = pattern_cluster(pattern)
+        row_num = (cw // 30) * 3 + cluster // 3
+        result.append([base18, row_num])
+    result.append([0, 0])  # sentinel: dummy pair used when no LRI is present
+    return result
+
+
 if __name__ == "__main__":
     result = make_encoded_pairs_array()
     print(result)
+    lri_result = make_lri_lookup_array()
+    print(lri_result)
