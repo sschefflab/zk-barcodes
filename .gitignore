@@ -30,7 +30,7 @@ python-scripts/*.png
 tests/__pycache__
 
 # Benchmark plots
-zokrates/for-measurement/plots/
+measurements/plots/
 
 # SP1 test images and big proofs
 sp1-pdf417/script/test-images
