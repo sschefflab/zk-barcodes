@@ -88,7 +88,7 @@ cd external/circ
 
 ## Running a proof for a circuit
 
-The quickest way to run a proof is to edit the top of run-sweep.sh to just have the parameters you want and then run that. This will generate all necessary witness files, compile the right thing, run the proof, and verify it.
+The quickest way to run a proof is to edit the top of `run-sweep.sh` to have the parameters you want and then run that. This will generate all necessary witness files, compile the right thing, run the proof, and verify it.
 
 For more fine-tuned parameter control, there is a two-step process: generate params and a witness, then compile, prove, and verify.
 
