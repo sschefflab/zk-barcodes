@@ -14,13 +14,11 @@ usage() {
     echo "  --max-rows N         Max rows passed to rxing decoder (default: same as --rows)"
     echo "  --max-cols N         Max cols passed to rxing decoder (default: same as --cols)"
     echo "  --max-ec N           Max EC level passed to rxing decoder (default: same as --ec)"
-    echo "  --chunk-size N       Block chunk size in pixels passed to rxing decoder (custom mode only)"
-    echo "  -W, --image-width N      Canvas image width in pixels (mutually exclusive with --image-mode)"
-    echo "  -H, --image-height N     Canvas image height in pixels (mutually exclusive with --image-mode)"
+    echo "  --chunk-size N       Block chunk size in pixels passed to rxing decoder"
+    echo "  -W, --image-width N      Canvas image width in pixels"
+    echo "  -H, --image-height N     Canvas image height in pixels"
     echo "  --barcode-width N        Target barcode width in pixels within canvas (requires -W/-H)"
     echo "  --barcode-height N       Target barcode height in pixels within canvas (requires -W/-H)"
-    echo "  --image-mode MODE        Image mode: hd (1080x720, default), sd (640x480), or small (192x144)"
-    echo "                           Implies --image-width and --image-height; mutually exclusive with -W/-H"
     echo "  -h, --help               Show this help"
     echo ""
     echo "Examples:"
@@ -28,7 +26,6 @@ usage() {
     echo "  $0 --rows 10 --cols 5 --ec 2"
     echo "  $0 --rows 15 --cols 8 --ec 2 --image-width 1080 --image-height 720 --barcode-width 900 --barcode-height 600"
     echo "  $0 -r 10 -c 5 -e 2 -W 1920 -H 1080 --barcode-width 1600 --barcode-height 900 -d my-witness"
-    echo "  $0 --image-mode sd"
 }
 
 # Defaults
@@ -44,7 +41,6 @@ IMG_WIDTH=""
 IMG_HEIGHT=""
 BARCODE_WIDTH=""
 BARCODE_HEIGHT=""
-IMAGE_MODE=""
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
@@ -61,33 +57,15 @@ while [[ $# -gt 0 ]]; do
         -H|--image-height)   IMG_HEIGHT="$2";     shift 2 ;;
         --barcode-width)     BARCODE_WIDTH="$2";  shift 2 ;;
         --barcode-height)    BARCODE_HEIGHT="$2"; shift 2 ;;
-        --image-mode)        IMAGE_MODE="$2";     shift 2 ;;
         -h|--help)           usage; exit 0 ;;
         *) echo "Unknown option: $1"; usage; exit 1 ;;
     esac
 done
 
-# Validate mutual exclusivity of --image-mode and --image-width/--image-height
-if [ -n "$IMAGE_MODE" ] && { [ -n "$IMG_WIDTH" ] || [ -n "$IMG_HEIGHT" ]; }; then
-    echo "Error: --image-mode is mutually exclusive with --image-width/--image-height"
-    echo "Use --image-mode to set both dimensions, or set them manually with --image-width/--image-height"
-    exit 1
-fi
-
 # Validate that barcode dimensions require canvas dimensions
-if { [ -n "$BARCODE_WIDTH" ] || [ -n "$BARCODE_HEIGHT" ]; } && [ -z "$IMAGE_MODE" ] && { [ -z "$IMG_WIDTH" ] || [ -z "$IMG_HEIGHT" ]; }; then
-    echo "Error: --barcode-width/--barcode-height require --image-width and --image-height (or --image-mode)"
+if { [ -n "$BARCODE_WIDTH" ] || [ -n "$BARCODE_HEIGHT" ]; } && { [ -z "$IMG_WIDTH" ] || [ -z "$IMG_HEIGHT" ]; }; then
+    echo "Error: --barcode-width/--barcode-height require --image-width and --image-height"
     exit 1
-fi
-
-# Derive width/height from image mode
-if [ -n "$IMAGE_MODE" ]; then
-    case "$IMAGE_MODE" in
-        hd)    IMG_WIDTH=1080; IMG_HEIGHT=720 ;;
-        sd)    IMG_WIDTH=640;  IMG_HEIGHT=480 ;;
-        small) IMG_WIDTH=192;  IMG_HEIGHT=144 ;;
-        *)  echo "Error: Unknown image mode '$IMAGE_MODE'. Valid modes: hd, sd, small"; exit 1 ;;
-    esac
 fi
 
 # Build filename suffix for image dimensions
@@ -100,23 +78,17 @@ elif [ -n "$IMG_HEIGHT" ]; then
     IMG_SUFFIX="_h${IMG_HEIGHT}"
 fi
 
-# Build filename suffix for image mode
-MODE_SUFFIX=""
-[ -n "$IMAGE_MODE" ] && MODE_SUFFIX="_${IMAGE_MODE}"
-
-BARCODE_FILE="$WITNESS_DIR/pdf417_r${ROWS}_c${COLS}_e${EC}${IMG_SUFFIX}${MODE_SUFFIX}.png"
-WITNESS_FILE="$WITNESS_DIR/witness_r${ROWS}_c${COLS}_e${EC}${IMG_SUFFIX}${MODE_SUFFIX}.json"
-WITNESS_PIN="$WITNESS_DIR/witness_r${ROWS}_c${COLS}_e${EC}${IMG_SUFFIX}${MODE_SUFFIX}.pin"
-WITNESS_VIN="$WITNESS_DIR/witness_r${ROWS}_c${COLS}_e${EC}${IMG_SUFFIX}${MODE_SUFFIX}.vin"
+BARCODE_FILE="$WITNESS_DIR/pdf417_r${ROWS}_c${COLS}_e${EC}${IMG_SUFFIX}.png"
+WITNESS_FILE="$WITNESS_DIR/witness_r${ROWS}_c${COLS}_e${EC}${IMG_SUFFIX}.json"
+WITNESS_PIN="$WITNESS_DIR/witness_r${ROWS}_c${COLS}_e${EC}${IMG_SUFFIX}.pin"
+WITNESS_VIN="$WITNESS_DIR/witness_r${ROWS}_c${COLS}_e${EC}${IMG_SUFFIX}.vin"
 
 MOD=7237005577332262213973186563042994240857116359379907606001950938285454250989
 
 echo "Test Witness Generation"
 echo "======================"
 echo "Parameters: ROWS=$ROWS, COLS=$COLS, EC=$EC, WITNESS_DIR=$WITNESS_DIR"
-if [ -n "$IMAGE_MODE" ]; then
-    echo "Image mode: $IMAGE_MODE (${IMG_WIDTH}x${IMG_HEIGHT})"
-elif [ -n "$IMG_WIDTH" ] || [ -n "$IMG_HEIGHT" ]; then
+if [ -n "$IMG_WIDTH" ] || [ -n "$IMG_HEIGHT" ]; then
     echo "Image size: ${IMG_WIDTH:-auto}x${IMG_HEIGHT:-auto}"
 fi
 echo ""
@@ -153,15 +125,12 @@ echo ""
 # Step 2: Decode barcode and generate witness
 echo "Step 2: Decoding barcode and generating witness..."
 cd external/rxing
-if [ -n "$IMAGE_MODE" ]; then
-    RXING_MODE_ARG="--image-mode $IMAGE_MODE"
-elif [ -n "$IMG_WIDTH" ] && [ -n "$IMG_HEIGHT" ]; then
+RXING_MODE_ARG=""
+if [ -n "$IMG_WIDTH" ] && [ -n "$IMG_HEIGHT" ]; then
     RXING_MODE_ARG="--image-mode custom --image-width $IMG_WIDTH --image-height $IMG_HEIGHT --max-rows ${MAX_ROWS:-$ROWS} --max-cols ${MAX_COLS:-$COLS} --max-ec-level ${MAX_EC:-$EC}"
     [ -n "$CHUNK_SIZE" ] && RXING_MODE_ARG="$RXING_MODE_ARG --chunk-size $CHUNK_SIZE"
     [ -n "$BARCODE_WIDTH" ]  && RXING_MODE_ARG="$RXING_MODE_ARG --barcode-width $BARCODE_WIDTH"
     [ -n "$BARCODE_HEIGHT" ] && RXING_MODE_ARG="$RXING_MODE_ARG --barcode-height $BARCODE_HEIGHT"
-else
-    RXING_MODE_ARG=""
 fi
 cargo run --release -p rxing-cli -- "../../$BARCODE_FILE" decode --save-witness "../../$WITNESS_FILE" --barcode-types PDF_417 $RXING_MODE_ARG
 if [ $? -ne 0 ]; then

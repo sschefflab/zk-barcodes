@@ -22,12 +22,9 @@ usage() {
     echo "  -d, --dir DIR          Output directory (default: witness-out)"
     echo "  -p, --params FILE      Output path for params.zok (default: DIR/params.zok)"
     echo ""
-    echo "Image dimensions — pick one:"
-    echo "  --image-mode MODE      Preset: hd (1080x720), sd (640x480), small (192x144)"
-    echo "                         When generating, also sets the target image size."
-    echo "                         Mutually exclusive with -W/-H."
-    echo "  -W, --width N          Image width in pixels (mutually exclusive with --image-mode)"
-    echo "  -H, --height N         Image height in pixels (mutually exclusive with --image-mode)"
+    echo "Image dimensions:"
+    echo "  -W, --width N          Image width in pixels"
+    echo "  -H, --height N         Image height in pixels"
     echo "  (omit both)            Auto-read from image file via Pillow (existing image only)"
     echo ""
     echo "Barcode structure hints (for params.zok):"
@@ -42,14 +39,8 @@ usage() {
     echo "  --text-style STYLE     Data style: mixed, upper, lower, alpha, alnum (default: mixed)"
     echo ""
     echo "Examples:"
-    echo "  # Generate a barcode at HD resolution, then witness it"
-    echo "  $0 -r 10 -c 5 -e 2 --image-mode hd"
-    echo ""
-    echo "  # Generate at a custom size"
-    echo "  $0 -r 10 -c 5 -e 2 -W 1920 -H 1080"
-    echo ""
-    echo "  # Use an existing image with a preset"
-    echo "  $0 -i barcode.png --image-mode hd"
+    echo "  # Generate a barcode and witness at 1080x720"
+    echo "  $0 -r 10 -c 5 -e 2 -W 1080 -H 720"
     echo ""
     echo "  # Use an existing image, auto-detect dimensions via Pillow"
     echo "  $0 -i barcode.png --chunk-size 15 --max-rows 30 --max-cols 10 --max-ec-level 2"
@@ -70,7 +61,6 @@ MAX_ROWS=90
 MAX_COLS=30
 MAX_EC_LEVEL=8
 CHUNK_SIZE=10
-IMAGE_MODE=""
 IMG_WIDTH=""
 IMG_HEIGHT=""
 SCALE=3
@@ -91,7 +81,6 @@ while [[ $# -gt 0 ]]; do
         --max-cols)       MAX_COLS="$2";     shift 2 ;;
         --max-ec-level)   MAX_EC_LEVEL="$2"; shift 2 ;;
         --chunk-size)     CHUNK_SIZE="$2";   shift 2 ;;
-        --image-mode)     IMAGE_MODE="$2";   shift 2 ;;
         -W|--width)       IMG_WIDTH="$2";    shift 2 ;;
         -H|--height)      IMG_HEIGHT="$2";   shift 2 ;;
         --scale)          SCALE="$2";        shift 2 ;;
@@ -127,21 +116,6 @@ else
     [ "$MAX_EC_LEVEL" -lt "$EC" ] && MAX_EC_LEVEL="$EC"
 fi
 
-# ── Validate --image-mode vs -W/-H ───────────────────────────────────────────
-if [ -n "$IMAGE_MODE" ] && { [ -n "$IMG_WIDTH" ] || [ -n "$IMG_HEIGHT" ]; }; then
-    echo "Error: --image-mode is mutually exclusive with --width/--height"
-    exit 1
-fi
-
-if [ -n "$IMAGE_MODE" ]; then
-    case "$IMAGE_MODE" in
-        hd)    IMG_WIDTH=1080; IMG_HEIGHT=720 ;;
-        sd)    IMG_WIDTH=640;  IMG_HEIGHT=480 ;;
-        small) IMG_WIDTH=192;  IMG_HEIGHT=144 ;;
-        *) echo "Error: Unknown --image-mode '$IMAGE_MODE'. Valid: hd, sd, small"; exit 1 ;;
-    esac
-fi
-
 # ── Python venv check ─────────────────────────────────────────────────────────
 if ! python -c 'import sys; exit(0 if sys.prefix != sys.base_prefix else 1)'; then
     echo "Error: Not inside a virtual environment; exiting."
@@ -156,9 +130,7 @@ mkdir -p "$OUTPUT_DIR"
 if $GENERATING; then
     DIM_SUFFIX=""
     [ -n "$IMG_WIDTH" ] && [ -n "$IMG_HEIGHT" ] && DIM_SUFFIX="_${IMG_WIDTH}x${IMG_HEIGHT}"
-    MODE_SUFFIX=""
-    [ -n "$IMAGE_MODE" ] && MODE_SUFFIX="_${IMAGE_MODE}"
-    BARCODE_FILE="$OUTPUT_DIR/pdf417_r${ROWS}_c${COLS}_e${EC}${DIM_SUFFIX}${MODE_SUFFIX}.png"
+    BARCODE_FILE="$OUTPUT_DIR/pdf417_r${ROWS}_c${COLS}_e${EC}${DIM_SUFFIX}.png"
 
     echo "Step 1: Generating barcode..."
     BARCODE_ARGS="-r $ROWS -c $COLS -e $EC -o $BARCODE_FILE --padding $PADDING --text-style $TEXT_STYLE"
@@ -247,25 +219,17 @@ echo ""
 echo "Step 3: Decoding barcode and generating witness JSON..."
 (
     cd external/rxing
-    if [ -n "$IMAGE_MODE" ]; then
-        cargo run --release -p rxing-cli -- \
-            "../../$INPUT_IMAGE" decode \
-            --barcode-types PDF_417 \
-            --save-witness "../../$WITNESS_JSON" \
-            --image-mode "$IMAGE_MODE"
-    else
-        cargo run --release -p rxing-cli -- \
-            "../../$INPUT_IMAGE" decode \
-            --barcode-types PDF_417 \
-            --save-witness "../../$WITNESS_JSON" \
-            --image-mode custom \
-            --image-width  "$IMG_WIDTH" \
-            --image-height "$IMG_HEIGHT" \
-            --max-rows     "$MAX_ROWS" \
-            --max-cols     "$MAX_COLS" \
-            --max-ec-level "$MAX_EC_LEVEL" \
-            --chunk-size   "$CHUNK_SIZE"
-    fi
+    cargo run --release -p rxing-cli -- \
+        "../../$INPUT_IMAGE" decode \
+        --barcode-types PDF_417 \
+        --save-witness "../../$WITNESS_JSON" \
+        --image-mode custom \
+        --image-width  "$IMG_WIDTH" \
+        --image-height "$IMG_HEIGHT" \
+        --max-rows     "$MAX_ROWS" \
+        --max-cols     "$MAX_COLS" \
+        --max-ec-level "$MAX_EC_LEVEL" \
+        --chunk-size   "$CHUNK_SIZE"
 )
 echo "✓ Witness JSON written: $WITNESS_JSON"
 echo ""
