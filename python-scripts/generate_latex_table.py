@@ -3,8 +3,8 @@ import os
 import statistics
 from collections import defaultdict
 
-CSV_PATH = os.path.join(os.path.dirname(__file__), "../zokrates/for-measurement/measurements.csv")
-OUTPUT_PATH = os.path.join(os.path.dirname(__file__), "../zokrates/for-measurement/benchmark_table.tex")
+CSV_PATH = os.path.join(os.path.dirname(__file__), "../measurements/measurements.csv")
+OUTPUT_PATH = os.path.join(os.path.dirname(__file__), "../measurements/benchmark_table.tex")
 
 rows = [r for r in csv.DictReader(open(CSV_PATH)) if r["circuit"] == "full_circuit"]
 

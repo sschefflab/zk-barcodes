@@ -240,7 +240,7 @@ echo ""
 for idx in "${!CIRCUITS[@]}"; do
     ZOK_BASENAME="${CIRCUITS[$idx]}"
     ZOK_FILE="$(cd zokrates/for-measurement && pwd)/${ZOK_BASENAME}.zok"
-    MEASUREMENT_DIR="zokrates/for-measurement/measurements/${ZOK_BASENAME}"
+    MEASUREMENT_DIR="measurements/raw/${ZOK_BASENAME}"
     mkdir -p "$MEASUREMENT_DIR"
     MEASUREMENT_FILE="$MEASUREMENT_DIR/${TIMESTAMP}.txt"
 

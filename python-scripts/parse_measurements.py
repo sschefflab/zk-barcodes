@@ -2,8 +2,8 @@ import os
 import re
 import csv
 
-MEASUREMENTS_DIR = os.path.join(os.path.dirname(__file__), "../zokrates/for-measurement/measurements")
-OUTPUT_CSV = os.path.join(os.path.dirname(__file__), "../zokrates/for-measurement/measurements.csv")
+MEASUREMENTS_DIR = os.path.join(os.path.dirname(__file__), "../measurements/raw")
+OUTPUT_CSV = os.path.join(os.path.dirname(__file__), "../measurements/measurements.csv")
 
 COLUMNS = [
     "circuit", "image_rows", "image_cols", "barcode_rows", "barcode_cols",

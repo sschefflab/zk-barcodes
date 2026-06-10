@@ -9,8 +9,8 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import numpy as np
 
-CSV_PATH = os.path.join(os.path.dirname(__file__), "../zokrates/for-measurement/measurements.csv")
-OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "../zokrates/for-measurement/plots")
+CSV_PATH = os.path.join(os.path.dirname(__file__), "../measurements/measurements.csv")
+OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "../measurements/plots")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 rows = list(csv.DictReader(open(CSV_PATH)))
