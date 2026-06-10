@@ -1,3 +1,5 @@
+# Generate zokrates codeword lookup tables
+
 START = 81111113
 STOP = 71131112
 ZERO = 0

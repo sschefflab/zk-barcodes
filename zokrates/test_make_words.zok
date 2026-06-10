@@ -1,3 +1,5 @@
+// Test file for make_words that compares its outputs to extra, for-testing witness elements.
+
 from "./make_words.zok" import compute_words;
 from "./const_range_check.zok" import RANGE_0_78, RANGE_0_384;
 

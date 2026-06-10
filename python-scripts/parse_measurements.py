@@ -1,18 +1,44 @@
+# Parse numbers out of the log files in measurements/raw.
+
+import csv
 import os
 import re
-import csv
 
 MEASUREMENTS_DIR = os.path.join(os.path.dirname(__file__), "../measurements/raw")
 OUTPUT_CSV = os.path.join(os.path.dirname(__file__), "../measurements/measurements.csv")
 
 COLUMNS = [
-    "circuit", "image_rows", "image_cols", "barcode_rows", "barcode_cols",
-    "max_rows", "max_cols", "max_ec_level", "chunk_size",
-    "prover_time_1", "prover_time_2", "prover_time_3", "prover_time_4", "prover_time_5",
-    "prover_ram_1", "prover_ram_2", "prover_ram_3", "prover_ram_4", "prover_ram_5",
-    "verifier_time_1", "verifier_time_2", "verifier_time_3", "verifier_time_4", "verifier_time_5",
-    "verifier_ram_1", "verifier_ram_2", "verifier_ram_3", "verifier_ram_4", "verifier_ram_5",
+    "circuit",
+    "image_rows",
+    "image_cols",
+    "barcode_rows",
+    "barcode_cols",
+    "max_rows",
+    "max_cols",
+    "max_ec_level",
+    "chunk_size",
+    "prover_time_1",
+    "prover_time_2",
+    "prover_time_3",
+    "prover_time_4",
+    "prover_time_5",
+    "prover_ram_1",
+    "prover_ram_2",
+    "prover_ram_3",
+    "prover_ram_4",
+    "prover_ram_5",
+    "verifier_time_1",
+    "verifier_time_2",
+    "verifier_time_3",
+    "verifier_time_4",
+    "verifier_time_5",
+    "verifier_ram_1",
+    "verifier_ram_2",
+    "verifier_ram_3",
+    "verifier_ram_4",
+    "verifier_ram_5",
 ]
+
 
 def parse_file(path):
     with open(path) as f:
@@ -44,10 +70,14 @@ def parse_file(path):
         v = float(s)
         return v * 1000 if unit == "s" else v
 
-    prover_times = [parse_duration_ms(v, u) for v, u in
-                    re.findall(r"Time for Proving \(commit\): ([\d.]+)(ms|s)", text)]
-    verifier_times = [parse_duration_ms(v, u) for v, u in
-                      re.findall(r"Time for NIZK::verify_commit: ([\d.]+)(ms|s)", text)]
+    prover_times = [
+        parse_duration_ms(v, u)
+        for v, u in re.findall(r"Time for Proving \(commit\): ([\d.]+)(ms|s)", text)
+    ]
+    verifier_times = [
+        parse_duration_ms(v, u)
+        for v, u in re.findall(r"Time for NIZK::verify_commit: ([\d.]+)(ms|s)", text)
+    ]
 
     prove_rams = []
     verify_rams = []
@@ -66,8 +96,12 @@ def parse_file(path):
                 verify_rams.append(ram)
         i += 2
 
-    if (len(prover_times) != 5 or len(verifier_times) != 5 or
-            len(prove_rams) != 5 or len(verify_rams) != 5):
+    if (
+        len(prover_times) != 5
+        or len(verifier_times) != 5
+        or len(prove_rams) != 5
+        or len(verify_rams) != 5
+    ):
         return None
 
     row = {

@@ -1,3 +1,5 @@
+// Combination of make_words and make_codewords for testing, since the output of make_words goes into make_codewords.
+
 from "./make_words.zok" import compute_words;
 from "./make_codewords.zok" import check_codewords_and_garbage, T;
 from "./block_measurement_const.zok" import WB_B, G_B;

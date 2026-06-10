@@ -1,3 +1,5 @@
+# Make plots.
+
 import csv
 import os
 import re
@@ -26,20 +28,20 @@ SUB_CIRCUITS = [
 ]
 
 COLORS = {
-    "binarize":              "#4e79a7",
-    "block_measurement":     "#f28e2b",
-    "check_barcode_stats":   "#59a14f",
-    "check_num_cw":          "#76b7b2",
-    "check_error_correction":"#e15759",
-    "codewords_to_chars":    "#b07aa1",
-    "words_pipeline":        "#ff9da7",
+    "binarize": "#4e79a7",
+    "block_measurement": "#f28e2b",
+    "check_barcode_stats": "#59a14f",
+    "check_num_cw": "#76b7b2",
+    "check_error_correction": "#e15759",
+    "codewords_to_chars": "#b07aa1",
+    "words_pipeline": "#ff9da7",
 }
 
 LABELS = {
-    "check_barcode_stats":    "barcode_metadata",
+    "check_barcode_stats": "barcode_metadata",
     "check_error_correction": "error_correction",
-    "check_num_cw":           "barcode_size",
-    "codewords_to_chars":     "character_interpretation",
+    "check_num_cw": "barcode_size",
+    "codewords_to_chars": "character_interpretation",
 }
 
 
@@ -49,12 +51,12 @@ def avg_prover(row):
 
 def se_prover(row):
     vals = [float(row[f"prover_time_{i}"]) for i in range(1, 6)]
-    return statistics.stdev(vals) / len(vals)**0.5
+    return statistics.stdev(vals) / len(vals) ** 0.5
 
 
 def se_prover_ram(row):
     vals = [float(row[f"prover_ram_{i}"]) for i in range(1, 6)]
-    return statistics.stdev(vals) / len(vals)**0.5
+    return statistics.stdev(vals) / len(vals) ** 0.5
 
 
 def param_label(key):
@@ -75,6 +77,7 @@ for r in rows:
 # Only keep combos with all sub-circuits present
 complete = {k: v for k, v in by_params.items() if all(c in v for c in SUB_CIRCUITS)}
 
+
 def sort_key(k):
     img, max_r, max_c, ec, _chunk = k
     w, h = map(int, img.split("x"))
@@ -85,7 +88,7 @@ if complete:
     keys = sorted(complete.keys(), key=sort_key)
     n = len(keys)
     bar_width = 0.18
-    bar_gap   = 0.10
+    bar_gap = 0.10
     x = np.arange(n) * (bar_width + bar_gap)
 
     fig, ax = plt.subplots(figsize=(max(4, n * 0.55 + 2), 5))
@@ -94,7 +97,14 @@ if complete:
     for circuit in SUB_CIRCUITS:
         totals = np.array([sum(complete[k][c] for c in SUB_CIRCUITS) for k in keys])
         vals = np.array([complete[k][circuit] / totals[i] for i, k in enumerate(keys)])
-        ax.bar(x, vals, bar_width, bottom=bottoms, label=LABELS.get(circuit, circuit), color=COLORS[circuit])
+        ax.bar(
+            x,
+            vals,
+            bar_width,
+            bottom=bottoms,
+            label=LABELS.get(circuit, circuit),
+            color=COLORS[circuit],
+        )
         bottoms += vals
 
     # full_circuit line as fraction of sub-circuit sum
@@ -110,7 +120,9 @@ if complete:
     #     ax.plot(fc_x, fc_y, "ko--", linewidth=1.5, markersize=6, label="full_circuit / sum", zorder=5)
 
     ax.set_xticks(x)
-    ax.set_xticklabels([param_label(k) for k in keys], fontsize=7, rotation=45, ha="right")
+    ax.set_xticklabels(
+        [param_label(k) for k in keys], fontsize=7, rotation=45, ha="right"
+    )
     ax.set_ylabel("Fraction of total sub-circuit time")
     ax.set_ylim(0, 1.05)
     ax.set_title("Sub-circuit time proportions (mean over 5 runs)")
@@ -130,16 +142,18 @@ else:
 
 fc_rows = [r for r in rows if r["circuit"] == "full_circuit"]
 
-by_combo    = defaultdict(dict)
+by_combo = defaultdict(dict)
 by_combo_se = defaultdict(dict)
 for r in fc_rows:
     img = r["image_cols"] + "x" + r["image_rows"]
     combo = (r["max_rows"], r["max_cols"], r["max_ec_level"], r["chunk_size"])
-    by_combo[combo][img]    = avg_prover(r)
+    by_combo[combo][img] = avg_prover(r)
     by_combo_se[combo][img] = se_prover(r)
 
 IMAGE_ORDER = ["144x48", "192x144", "384x288", "640x480", "1080x720"]
-img_pixels = {img: int(img.split("x")[0]) * int(img.split("x")[1]) for img in IMAGE_ORDER}
+img_pixels = {
+    img: int(img.split("x")[0]) * int(img.split("x")[1]) for img in IMAGE_ORDER
+}
 
 target_combo = next(
     (c for c in by_combo if c[0] == "3" and c[1] == "3" and c[2] == "1"),
@@ -149,8 +163,8 @@ target_combo = next(
 if target_combo:
     img_times = by_combo[target_combo]
     imgs = [img for img in IMAGE_ORDER if img in img_times]
-    xs  = [img_pixels[img] for img in imgs]
-    ys  = [img_times[img] / 1000 for img in imgs]
+    xs = [img_pixels[img] for img in imgs]
+    ys = [img_times[img] / 1000 for img in imgs]
     ses = [by_combo_se[target_combo][img] / 1000 for img in imgs]
 
     fig, ax = plt.subplots(figsize=(7, 5))
@@ -176,13 +190,15 @@ else:
 
 IMAGE_FOR_PLOT3 = "384x288"
 
-fc_img = [r for r in fc_rows if r["image_cols"] + "x" + r["image_rows"] == IMAGE_FOR_PLOT3]
-by_ec    = defaultdict(dict)
+fc_img = [
+    r for r in fc_rows if r["image_cols"] + "x" + r["image_rows"] == IMAGE_FOR_PLOT3
+]
+by_ec = defaultdict(dict)
 by_ec_se = defaultdict(dict)
 for r in fc_img:
     barcode_cells = int(r["max_rows"]) * int(r["max_cols"])
     ec = r["max_ec_level"]
-    by_ec[ec][barcode_cells]    = avg_prover(r)
+    by_ec[ec][barcode_cells] = avg_prover(r)
     by_ec_se[ec][barcode_cells] = se_prover(r)
 
 if any(len(v) >= 2 for v in by_ec.values()):
@@ -191,7 +207,7 @@ if any(len(v) >= 2 for v in by_ec.values()):
         if len(cell_times) < 2:
             continue
         xs, ys = zip(*sorted(cell_times.items()))
-        ys  = [y / 1000 for y in ys]
+        ys = [y / 1000 for y in ys]
         ses = [by_ec_se[ec][x] / 1000 for x in xs]
         ax.errorbar(xs, ys, yerr=ses, fmt="o-", capsize=4, label=f"ec={ec}")
     ax.set_xlabel("max_rows × max_cols (logical)")
@@ -200,7 +216,9 @@ if any(len(v) >= 2 for v in by_ec.values()):
     ax.set_ylim(bottom=0)
     ax.legend(fontsize=8)
     fig.tight_layout()
-    fig.savefig(os.path.join(OUTPUT_DIR, "plot3_fullcircuit_vs_barcodesize.png"), dpi=150)
+    fig.savefig(
+        os.path.join(OUTPUT_DIR, "plot3_fullcircuit_vs_barcodesize.png"), dpi=150
+    )
     plt.close(fig)
     print("Saved plot3_fullcircuit_vs_barcodesize.png")
 else:
@@ -245,21 +263,27 @@ else:
 # Plot 5: check_* + codewords_to_chars vs EC level at 384x288, max=90x30
 # ---------------------------------------------------------------------------
 
-CHECK_CIRCUITS = ["check_barcode_stats", "check_num_cw", "check_error_correction", "codewords_to_chars"]
+CHECK_CIRCUITS = [
+    "check_barcode_stats",
+    "check_num_cw",
+    "check_error_correction",
+    "codewords_to_chars",
+]
 CHECK_COLORS = {c: COLORS[c] for c in CHECK_CIRCUITS}
 
 plot5_rows = [
-    r for r in rows
+    r
+    for r in rows
     if r["image_cols"] + "x" + r["image_rows"] == "384x288"
     and r["max_rows"] == "90"
     and r["max_cols"] == "30"
     and r["circuit"] in CHECK_CIRCUITS
 ]
 
-by_circuit_ec    = defaultdict(dict)
+by_circuit_ec = defaultdict(dict)
 by_circuit_ec_se = defaultdict(dict)
 for r in plot5_rows:
-    by_circuit_ec[r["circuit"]][int(r["max_ec_level"])]    = avg_prover(r)
+    by_circuit_ec[r["circuit"]][int(r["max_ec_level"])] = avg_prover(r)
     by_circuit_ec_se[r["circuit"]][int(r["max_ec_level"])] = se_prover(r)
 
 if by_circuit_ec:
@@ -269,9 +293,17 @@ if by_circuit_ec:
             continue
         ec_times = by_circuit_ec[circuit]
         xs, ys = zip(*sorted(ec_times.items()))
-        ys  = [y / 1000 for y in ys]
+        ys = [y / 1000 for y in ys]
         ses = [by_circuit_ec_se[circuit][x] / 1000 for x in xs]
-        ax.errorbar(xs, ys, yerr=ses, fmt="o-", capsize=4, label=LABELS.get(circuit, circuit), color=CHECK_COLORS[circuit])
+        ax.errorbar(
+            xs,
+            ys,
+            yerr=ses,
+            fmt="o-",
+            capsize=4,
+            label=LABELS.get(circuit, circuit),
+            color=CHECK_COLORS[circuit],
+        )
     ax.set_xlabel("max_ec_level")
     ax.set_ylabel("Prover time (s)")
     ax.set_title("Check circuit times vs EC level\n(384x288, max=90x30)")
@@ -288,15 +320,17 @@ else:
 # Plot 6: full_circuit prover RAM vs image size
 # ---------------------------------------------------------------------------
 
+
 def avg_prover_ram(row):
     return statistics.mean(float(row[f"prover_ram_{i}"]) for i in range(1, 6))
 
-by_combo_ram    = defaultdict(dict)
+
+by_combo_ram = defaultdict(dict)
 by_combo_ram_se = defaultdict(dict)
 for r in fc_rows:
     img = r["image_cols"] + "x" + r["image_rows"]
     combo = (r["max_rows"], r["max_cols"], r["max_ec_level"], r["chunk_size"])
-    by_combo_ram[combo][img]    = avg_prover_ram(r)
+    by_combo_ram[combo][img] = avg_prover_ram(r)
     by_combo_ram_se[combo][img] = se_prover_ram(r)
 
 target_combo_ram = next(
@@ -307,8 +341,8 @@ target_combo_ram = next(
 if target_combo_ram:
     img_rams = by_combo_ram[target_combo_ram]
     imgs = [img for img in IMAGE_ORDER if img in img_rams]
-    xs  = [img_pixels[img] for img in imgs]
-    ys  = [img_rams[img] / 1e6 for img in imgs]
+    xs = [img_pixels[img] for img in imgs]
+    ys = [img_rams[img] / 1e6 for img in imgs]
     ses = [by_combo_ram_se[target_combo_ram][img] / 1e6 for img in imgs]
 
     fig, ax = plt.subplots(figsize=(7, 5))
@@ -320,7 +354,9 @@ if target_combo_ram:
     ax.set_ylim(bottom=0)
     ax.xaxis.set_major_formatter(ticker.FuncFormatter(lambda v, _: f"{int(v):,}"))
     fig.tight_layout()
-    fig.savefig(os.path.join(OUTPUT_DIR, "plot6_fullcircuit_ram_vs_imagesize.png"), dpi=150)
+    fig.savefig(
+        os.path.join(OUTPUT_DIR, "plot6_fullcircuit_ram_vs_imagesize.png"), dpi=150
+    )
     plt.close(fig)
     print("Saved plot6_fullcircuit_ram_vs_imagesize.png")
 else:
@@ -337,17 +373,21 @@ for r in rows:
     key = (img, r["max_rows"], r["max_cols"], r["max_ec_level"], r["chunk_size"])
     by_params_ram[key][r["circuit"]] = avg_prover_ram(r)
 
-complete_ram = {k: v for k, v in by_params_ram.items() if all(c in v for c in SUB_CIRCUITS)}
+complete_ram = {
+    k: v for k, v in by_params_ram.items() if all(c in v for c in SUB_CIRCUITS)
+}
 
 if complete_ram:
     # Order circuits by mean RAM across all complete combos, most to least
-    mean_ram = {c: statistics.mean(v[c] for v in complete_ram.values()) for c in SUB_CIRCUITS}
+    mean_ram = {
+        c: statistics.mean(v[c] for v in complete_ram.values()) for c in SUB_CIRCUITS
+    }
     ram_order = sorted(SUB_CIRCUITS, key=lambda c: mean_ram[c], reverse=True)
 
     keys = sorted(complete_ram.keys(), key=sort_key)
     n = len(keys)
     bar_width = 0.18
-    bar_gap   = 0.10
+    bar_gap = 0.10
     x = np.arange(n) * (bar_width + bar_gap)
 
     fig, ax = plt.subplots(figsize=(max(4, n * 0.55 + 2), 5))
@@ -355,8 +395,17 @@ if complete_ram:
     bottoms = np.zeros(n)
     for circuit in ram_order:
         totals = np.array([sum(complete_ram[k][c] for c in SUB_CIRCUITS) for k in keys])
-        vals = np.array([complete_ram[k][circuit] / totals[i] for i, k in enumerate(keys)])
-        ax.bar(x, vals, bar_width, bottom=bottoms, label=LABELS.get(circuit, circuit), color=COLORS[circuit])
+        vals = np.array(
+            [complete_ram[k][circuit] / totals[i] for i, k in enumerate(keys)]
+        )
+        ax.bar(
+            x,
+            vals,
+            bar_width,
+            bottom=bottoms,
+            label=LABELS.get(circuit, circuit),
+            color=COLORS[circuit],
+        )
         bottoms += vals
 
     # full_circuit RAM line as fraction of sub-circuit sum
@@ -372,7 +421,9 @@ if complete_ram:
     #     ax.plot(fc_x, fc_y, "ko--", linewidth=1.5, markersize=6, label="full_circuit / sum", zorder=5)
 
     ax.set_xticks(x)
-    ax.set_xticklabels([param_label(k) for k in keys], fontsize=7, rotation=45, ha="right")
+    ax.set_xticklabels(
+        [param_label(k) for k in keys], fontsize=7, rotation=45, ha="right"
+    )
     ax.set_ylabel("Fraction of total sub-circuit RAM")
     ax.set_ylim(0, 1.05)
     ax.set_title("Sub-circuit RAM proportions (mean over 5 runs)")
@@ -391,14 +442,15 @@ else:
 
 SP1_DIR = os.path.join(os.path.dirname(__file__), "../sp1-pdf417/proof-runs")
 
+
 def parse_elapsed_ms(s):
     """Parse '/usr/bin/time --verbose' elapsed string to milliseconds."""
     s = s.strip()
     if ":" in s:
         parts = s.split(":")
-        if len(parts) == 2:           # m:ss.cc
+        if len(parts) == 2:  # m:ss.cc
             return (int(parts[0]) * 60 + float(parts[1])) * 1000
-        else:                          # h:mm:ss
+        else:  # h:mm:ss
             return (int(parts[0]) * 3600 + int(parts[1]) * 60 + float(parts[2])) * 1000
     return float(s) * 1000
 
@@ -421,10 +473,13 @@ def parse_sp1_log(path):
 
 # Build SP1 data keyed by (img, max_rows, max_cols, ec)
 # Filename pattern: prove-output-barcode_r{R}_c{C}_e{E}_{W}x{H}-*.log
-sp1_data = {}   # key -> {"times": [...], "rams": [...]}
+sp1_data = {}  # key -> {"times": [...], "rams": [...]}
 if os.path.isdir(SP1_DIR):
     for fname in os.listdir(SP1_DIR):
-        m = re.match(r"prove-output-barcode_r(\d+)_c(\d+)_e(\d+)_(\d+x\d+)-\d{8}-\d{6}\.log", fname)
+        m = re.match(
+            r"prove-output-barcode_r(\d+)_c(\d+)_e(\d+)_(\d+x\d+)-\d{8}-\d{6}\.log",
+            fname,
+        )
         if not m:
             continue
         max_r, max_c, ec, img = m.group(1), m.group(2), m.group(3), m.group(4)
@@ -453,8 +508,14 @@ def sp1_label(k):
 # We look up the SP1 run keyed on (img, actual_r, actual_c, actual_e).
 # ---------------------------------------------------------------------------
 
+
 def fc_to_sp1_key(img, max_r, max_c, max_e):
-    return (img, str(min(21, int(max_r))), str(min(13, int(max_c))), str(min(5, int(max_e))))
+    return (
+        img,
+        str(min(21, int(max_r))),
+        str(min(13, int(max_c))),
+        str(min(5, int(max_e))),
+    )
 
 
 def fc_sort_key(fc_key):
@@ -469,21 +530,21 @@ def fc_label(fc_key):
 
 
 # Collect all full_circuit runs that have a matching SP1 run
-fc_time_map     = {}  # (img, max_r, max_c, max_e) -> avg prover time ms
+fc_time_map = {}  # (img, max_r, max_c, max_e) -> avg prover time ms
 fc_time_raw_map = {}  # (img, max_r, max_c, max_e) -> [5 prover times ms]
-fc_ram_map      = {}  # (img, max_r, max_c, max_e) -> avg prover ram kB
-fc_ram_raw_map  = {}  # (img, max_r, max_c, max_e) -> [5 prover rams kB]
+fc_ram_map = {}  # (img, max_r, max_c, max_e) -> avg prover ram kB
+fc_ram_raw_map = {}  # (img, max_r, max_c, max_e) -> [5 prover rams kB]
 for r in rows:
     if r["circuit"] != "full_circuit":
         continue
     img = r["image_cols"] + "x" + r["image_rows"]
     fc_key = (img, r["max_rows"], r["max_cols"], r["max_ec_level"])
     times = [float(r[f"prover_time_{i}"]) for i in range(1, 6)]
-    rams  = [float(r[f"prover_ram_{i}"]) for i in range(1, 6)]
-    fc_time_map[fc_key]     = statistics.mean(times)
+    rams = [float(r[f"prover_ram_{i}"]) for i in range(1, 6)]
+    fc_time_map[fc_key] = statistics.mean(times)
     fc_time_raw_map[fc_key] = times
-    fc_ram_map[fc_key]      = statistics.mean(rams)
-    fc_ram_raw_map[fc_key]  = rams
+    fc_ram_map[fc_key] = statistics.mean(rams)
+    fc_ram_raw_map[fc_key] = rams
 
 matched_fc_keys = sorted(
     [k for k in fc_time_map if fc_to_sp1_key(*k) in sp1_data],
@@ -496,23 +557,51 @@ matched_fc_keys = sorted(
 
 if matched_fc_keys:
     bar_width = 0.18
-    bar_gap   = 0.02
+    bar_gap = 0.02
     group_gap = 0.12  # space between groups
-    group_w   = bar_width * 2 + bar_gap
-    step      = group_w + group_gap
+    group_w = bar_width * 2 + bar_gap
+    step = group_w + group_gap
     x = np.arange(len(matched_fc_keys)) * step
 
     fig, ax = plt.subplots(figsize=(max(4, len(matched_fc_keys) * step * 1.8), 5))
 
-    zkvm_times    = [statistics.mean(sp1_data[fc_to_sp1_key(*k)]["times"]) / 1000 for k in matched_fc_keys]
-    zkvm_times_se = [statistics.stdev(sp1_data[fc_to_sp1_key(*k)]["times"]) / 1000 / len(sp1_data[fc_to_sp1_key(*k)]["times"])**0.5 for k in matched_fc_keys]
-    fc_times      = [fc_time_map[k] / 1000 for k in matched_fc_keys]
-    fc_times_se   = [statistics.stdev(fc_time_raw_map[k]) / 1000 / len(fc_time_raw_map[k])**0.5 for k in matched_fc_keys]
+    zkvm_times = [
+        statistics.mean(sp1_data[fc_to_sp1_key(*k)]["times"]) / 1000
+        for k in matched_fc_keys
+    ]
+    zkvm_times_se = [
+        statistics.stdev(sp1_data[fc_to_sp1_key(*k)]["times"])
+        / 1000
+        / len(sp1_data[fc_to_sp1_key(*k)]["times"]) ** 0.5
+        for k in matched_fc_keys
+    ]
+    fc_times = [fc_time_map[k] / 1000 for k in matched_fc_keys]
+    fc_times_se = [
+        statistics.stdev(fc_time_raw_map[k]) / 1000 / len(fc_time_raw_map[k]) ** 0.5
+        for k in matched_fc_keys
+    ]
 
-    ax.bar(x - bar_width / 2 - bar_gap / 2, zkvm_times, bar_width, label="zkvm", color="#4e79a7",
-           yerr=zkvm_times_se, capsize=4, error_kw={"elinewidth": 1.2})
-    ax.bar(x + bar_width / 2 + bar_gap / 2, fc_times,   bar_width, label="full_circuit", color="#f28e2b", hatch="///",
-           yerr=fc_times_se, capsize=4, error_kw={"elinewidth": 1.2})
+    ax.bar(
+        x - bar_width / 2 - bar_gap / 2,
+        zkvm_times,
+        bar_width,
+        label="zkvm",
+        color="#4e79a7",
+        yerr=zkvm_times_se,
+        capsize=4,
+        error_kw={"elinewidth": 1.2},
+    )
+    ax.bar(
+        x + bar_width / 2 + bar_gap / 2,
+        fc_times,
+        bar_width,
+        label="full_circuit",
+        color="#f28e2b",
+        hatch="///",
+        yerr=fc_times_se,
+        capsize=4,
+        error_kw={"elinewidth": 1.2},
+    )
 
     ax.set_xticks(x)
     ax.set_xticklabels([fc_label(k) for k in matched_fc_keys], fontsize=8)
@@ -533,23 +622,51 @@ else:
 
 if matched_fc_keys:
     bar_width = 0.18
-    bar_gap   = 0.02
+    bar_gap = 0.02
     group_gap = 0.12
-    group_w   = bar_width * 2 + bar_gap
-    step      = group_w + group_gap
+    group_w = bar_width * 2 + bar_gap
+    step = group_w + group_gap
     x = np.arange(len(matched_fc_keys)) * step
 
     fig, ax = plt.subplots(figsize=(max(4, len(matched_fc_keys) * step * 1.8), 5))
 
-    zkvm_rams    = [statistics.mean(sp1_data[fc_to_sp1_key(*k)]["rams"]) / 1e6 for k in matched_fc_keys]
-    zkvm_rams_se = [statistics.stdev(sp1_data[fc_to_sp1_key(*k)]["rams"]) / 1e6 / len(sp1_data[fc_to_sp1_key(*k)]["rams"])**0.5 for k in matched_fc_keys]
-    fc_rams      = [fc_ram_map[k] / 1e6 for k in matched_fc_keys]
-    fc_rams_se   = [statistics.stdev(fc_ram_raw_map[k]) / 1e6 / len(fc_ram_raw_map[k])**0.5 for k in matched_fc_keys]
+    zkvm_rams = [
+        statistics.mean(sp1_data[fc_to_sp1_key(*k)]["rams"]) / 1e6
+        for k in matched_fc_keys
+    ]
+    zkvm_rams_se = [
+        statistics.stdev(sp1_data[fc_to_sp1_key(*k)]["rams"])
+        / 1e6
+        / len(sp1_data[fc_to_sp1_key(*k)]["rams"]) ** 0.5
+        for k in matched_fc_keys
+    ]
+    fc_rams = [fc_ram_map[k] / 1e6 for k in matched_fc_keys]
+    fc_rams_se = [
+        statistics.stdev(fc_ram_raw_map[k]) / 1e6 / len(fc_ram_raw_map[k]) ** 0.5
+        for k in matched_fc_keys
+    ]
 
-    ax.bar(x - bar_width / 2 - bar_gap / 2, zkvm_rams, bar_width, label="zkvm", color="#4e79a7",
-           yerr=zkvm_rams_se, capsize=4, error_kw={"elinewidth": 1.2})
-    ax.bar(x + bar_width / 2 + bar_gap / 2, fc_rams,   bar_width, label="full_circuit", color="#f28e2b", hatch="///",
-           yerr=fc_rams_se, capsize=4, error_kw={"elinewidth": 1.2})
+    ax.bar(
+        x - bar_width / 2 - bar_gap / 2,
+        zkvm_rams,
+        bar_width,
+        label="zkvm",
+        color="#4e79a7",
+        yerr=zkvm_rams_se,
+        capsize=4,
+        error_kw={"elinewidth": 1.2},
+    )
+    ax.bar(
+        x + bar_width / 2 + bar_gap / 2,
+        fc_rams,
+        bar_width,
+        label="full_circuit",
+        color="#f28e2b",
+        hatch="///",
+        yerr=fc_rams_se,
+        capsize=4,
+        error_kw={"elinewidth": 1.2},
+    )
 
     ax.set_xticks(x)
     ax.set_xticklabels([fc_label(k) for k in matched_fc_keys], fontsize=8)
@@ -570,40 +687,85 @@ else:
 
 from itertools import cycle
 
-LINE_COLORS = ["#4e79a7", "#f28e2b", "#59a14f", "#e15759", "#b07aa1", "#76b7b2", "#ff9da7"]
-FC_MARKER   = "o"
+LINE_COLORS = [
+    "#4e79a7",
+    "#f28e2b",
+    "#59a14f",
+    "#e15759",
+    "#b07aa1",
+    "#76b7b2",
+    "#ff9da7",
+]
+FC_MARKER = "o"
 ZKVM_MARKER = "s"
 
+
 def scatter_lines(ax, metric_fn_fc, metric_fn_zkvm, ylabel):
-    by_combo = defaultdict(list)  # (max_r, max_c, max_e) -> [(img_pixels, fc_val, zkvm_val)]
+    by_combo = defaultdict(
+        list
+    )  # (max_r, max_c, max_e) -> [(img_pixels, fc_val, zkvm_val)]
     for k in matched_fc_keys:
         img, max_r, max_c, max_e = k
         w, h = map(int, img.split("x"))
         px = w * h
         sp1_key = fc_to_sp1_key(*k)
-        by_combo[(max_r, max_c, max_e)].append((px, metric_fn_fc(k), metric_fn_zkvm(sp1_key)))
+        by_combo[(max_r, max_c, max_e)].append(
+            (px, metric_fn_fc(k), metric_fn_zkvm(sp1_key))
+        )
 
     color_cycle = cycle(LINE_COLORS)
     fc_handle = zkvm_handle = None
-    for combo, points in sorted(by_combo.items(), key=lambda x: (int(x[0][0])*int(x[0][1]), int(x[0][2]))):
+    for combo, points in sorted(
+        by_combo.items(), key=lambda x: (int(x[0][0]) * int(x[0][1]), int(x[0][2]))
+    ):
         points.sort()
         xs, fc_ys, zkvm_ys = zip(*points)
         max_r, max_c, max_e = combo
         color = next(color_cycle)
-        ax.plot(xs, fc_ys,   FC_MARKER + "-",    color=color, label=f"max={max_r}x{max_c} ec={max_e}")
-        ax.plot(xs, zkvm_ys, ZKVM_MARKER + "--",  color=color)
+        ax.plot(
+            xs,
+            fc_ys,
+            FC_MARKER + "-",
+            color=color,
+            label=f"max={max_r}x{max_c} ec={max_e}",
+        )
+        ax.plot(xs, zkvm_ys, ZKVM_MARKER + "--", color=color)
         if fc_handle is None:
-            fc_handle   = mlines.Line2D([0], [0], marker=FC_MARKER,   color="k", linestyle="-",  label="full_circuit")
-            zkvm_handle = mlines.Line2D([0], [0], marker=ZKVM_MARKER, color="k", linestyle="--", label="zkvm")
+            fc_handle = mlines.Line2D(
+                [0],
+                [0],
+                marker=FC_MARKER,
+                color="k",
+                linestyle="-",
+                label="full_circuit",
+            )
+            zkvm_handle = mlines.Line2D(
+                [0], [0], marker=ZKVM_MARKER, color="k", linestyle="--", label="zkvm"
+            )
 
     color_cycle = cycle(LINE_COLORS)
-    combo_handles = [mlines.Line2D([0], [0], marker=FC_MARKER, color=next(color_cycle), linestyle="-", label=f"max={r}x{c_} ec={e}")
-                     for r, c_, e in sorted(by_combo.keys(), key=lambda x: (int(x[0])*int(x[1]), int(x[2])))]
+    combo_handles = [
+        mlines.Line2D(
+            [0],
+            [0],
+            marker=FC_MARKER,
+            color=next(color_cycle),
+            linestyle="-",
+            label=f"max={r}x{c_} ec={e}",
+        )
+        for r, c_, e in sorted(
+            by_combo.keys(), key=lambda x: (int(x[0]) * int(x[1]), int(x[2]))
+        )
+    ]
     shape_handles = [fc_handle, zkvm_handle] if fc_handle else []
 
-    leg1 = ax.legend(handles=shape_handles, fontsize=7, loc="upper left", title="System")
+    leg1 = ax.legend(
+        handles=shape_handles, fontsize=7, loc="upper left", title="System"
+    )
     ax.add_artist(leg1)
-    ax.legend(handles=combo_handles, fontsize=7, loc="upper right", title="Config", ncol=1)
+    ax.legend(
+        handles=combo_handles, fontsize=7, loc="upper right", title="Config", ncol=1
+    )
     ax.set_xlabel("Image pixels (width × height)")
     ax.set_ylabel(ylabel)
     ax.set_ylim(bottom=0)
@@ -618,13 +780,16 @@ if matched_fc_keys:
     fig, ax = plt.subplots(figsize=(8, 5))
     scatter_lines(
         ax,
-        metric_fn_fc   = lambda k: fc_time_map[k] / 1000,
-        metric_fn_zkvm = lambda sp1_key: statistics.mean(sp1_data[sp1_key]["times"]) / 1000,
+        metric_fn_fc=lambda k: fc_time_map[k] / 1000,
+        metric_fn_zkvm=lambda sp1_key: statistics.mean(sp1_data[sp1_key]["times"])
+        / 1000,
         ylabel="Prover time (s)",
     )
     ax.set_title("zkvm vs full_circuit prover time")
     fig.tight_layout()
-    fig.savefig(os.path.join(OUTPUT_DIR, "plot10_zkvm_vs_fullcircuit_time_scatter.png"), dpi=150)
+    fig.savefig(
+        os.path.join(OUTPUT_DIR, "plot10_zkvm_vs_fullcircuit_time_scatter.png"), dpi=150
+    )
     plt.close(fig)
     print("Saved plot10_zkvm_vs_fullcircuit_time_scatter.png")
 else:
@@ -639,13 +804,15 @@ if matched_fc_keys:
     fig, ax = plt.subplots(figsize=(8, 5))
     scatter_lines(
         ax,
-        metric_fn_fc   = lambda k: fc_ram_map[k] / 1e6,
-        metric_fn_zkvm = lambda sp1_key: statistics.mean(sp1_data[sp1_key]["rams"]) / 1e6,
+        metric_fn_fc=lambda k: fc_ram_map[k] / 1e6,
+        metric_fn_zkvm=lambda sp1_key: statistics.mean(sp1_data[sp1_key]["rams"]) / 1e6,
         ylabel="Prover RAM (GB)",
     )
     ax.set_title("zkvm vs full_circuit prover RAM")
     fig.tight_layout()
-    fig.savefig(os.path.join(OUTPUT_DIR, "plot11_zkvm_vs_fullcircuit_ram_scatter.png"), dpi=150)
+    fig.savefig(
+        os.path.join(OUTPUT_DIR, "plot11_zkvm_vs_fullcircuit_ram_scatter.png"), dpi=150
+    )
     plt.close(fig)
     print("Saved plot11_zkvm_vs_fullcircuit_ram_scatter.png")
 else:
