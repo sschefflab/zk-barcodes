@@ -1,7 +1,0 @@
-[package]
-name = "zk-barcodes"
-version = "0.1.0"
-edition = "2024"
-
-# [dependencies]
-# circ = { path = "external/circ" }
