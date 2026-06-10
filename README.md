@@ -106,14 +106,14 @@ source python-scripts/venv/bin/activate
 ./param-generation.sh -i path/to/barcode.png --chunk-size 10 --max-rows 30 --max-cols 10 --max-ec-level 2
 ```
 
-Output lands in `test-witness/` by default (`-d DIR` to override). The generated `params.zok` must be copied into `zokrates/` before compiling the circuit.
+Output lands in `test-witness/` by default (`-d DIR` to override).
 
 ### Step 2 — Compile, prove, and verify
 
-`generate-proof.sh` handles circuit compilation, proof generation, and verification in one step:
+`generate-proof.sh` handles circuit compilation, proof generation, and verification in one step. Use the corresponding `bench_` wrapper in `zokrates/for-measurement/` rather than the circuit directly — the bench files import `params.zok` from `test-witness/`:
 
 ```bash
-./generate-proof.sh test-witness/<witness>.json zokrates/full_circuit.zok
+./generate-proof.sh test-witness/<witness>.json zokrates/for-measurement/bench_full_circuit.zok
 ```
 
 Pass `--commit-input image` if the circuit has image as an input to generate an external commitment to the image.
