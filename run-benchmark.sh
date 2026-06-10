@@ -138,14 +138,14 @@ if [[ -n "${CIRCUIT:-}" ]]; then
     CIRCUITS=("$CIRCUIT")
 else
     CIRCUITS=(
-        # bench_binarize
-        # bench_block_measurement
+        bench_binarize
+        bench_block_measurement
         bench_words_pipeline
         bench_check_barcode_stats
         bench_check_error_correction
         bench_check_num_cw
         bench_codewords_to_chars
-        # bench_full_circuit
+        bench_full_circuit
     )
 fi
 
@@ -182,9 +182,9 @@ echo "Step 4: Building CirC..."
 echo "✓ CirC build complete"
 echo ""
 
-# ── Step 4b: Run trusted setup for all circuits in parallel ───────────────────
+# ── Step 4b: Run setup for all circuits in parallel ───────────────────
 # Use parallel indexed arrays (bash 3 compatible — no declare -A).
-echo "Step 4 (setup): Launching parallel trusted setup for all circuits..."
+echo "Step 4 (setup): Launching parallel setup for all circuits..."
 SETUP_NAMES=()
 SETUP_PIDS=()
 SETUP_LOGS=()
