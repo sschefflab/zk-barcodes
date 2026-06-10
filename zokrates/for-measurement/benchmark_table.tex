@@ -1,0 +1,22 @@
+\begin{table*}[tb]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lrrrrrrrrr}
+\toprule
+ & \textbf{1} & \textbf{2} & \textbf{3} & \textbf{4} & \textbf{5} & \textbf{6} & \textbf{7} & \textbf{8} & \textbf{9} \\
+\midrule
+\textrm{Image size} & 144x48 & 144x48 & 192x144 & 192x144 & 192x144 & 192x144 & 384x288 & 384x288 & 384x288 \\
+\textrm{Barcode size (px)} & 120x48 & 120x48 & 120x144 & 120x144 & 171x140 & 171x140 & 360x288 & 360x288 & 290x273 \\
+\textrm{Max barcode (logical)} & 3$\times$3 & 3$\times$3 & 3$\times$3 & 3$\times$3 & 10$\times$6 & 10$\times$6 & 3$\times$3 & 3$\times$3 & 90$\times$30 \\
+\textrm{Max EC level} & 0 & 1 & 0 & 1 & 0 & 1 & 0 & 1 & 8 \\
+\textrm{Chunk size} & 10 & 10 & 10 & 10 & 9 & 9 & 10 & 10 & 10 \\
+\midrule
+\textrm{Prover time (s)} & 0.99 & 0.98 & 1.90 & 1.93 & 2.74 & 2.75 & 6.15 & 6.23 & 13.55 \\
+\textrm{Prover RAM (GB)} & 0.68 & 0.69 & 1.51 & 1.52 & 2.36 & 2.37 & 5.42 & 5.45 & 15.11 \\
+\textrm{Verifier time (s)} & 0.14 & 0.14 & 0.23 & 0.23 & 0.37 & 0.37 & 0.75 & 0.77 & 2.07 \\
+\bottomrule
+\end{tabular}
+\caption{full circuit benchmark results (mean over 5 runs)}
+\label{tab:benchmark_full_circuit}
+\end{table*}
