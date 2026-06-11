@@ -125,10 +125,22 @@ if complete:
     )
     ax.set_ylabel("Fraction of total sub-circuit time")
     ax.set_ylim(0, 1.05)
-    ax.set_title("Sub-circuit time proportions (mean over 5 runs)")
-    ax.legend(loc="upper right", fontsize=7, ncol=2)
+    ax.set_title("Sub-Circuit Time Proportions (Mean over 5 Runs)")
+    handles, labels = ax.get_legend_handles_labels()
+    # Matplotlib fills legends column-by-column. To display as:
+    #   Row 1: binarize, block_measurement, words_pipeline, (blank)
+    #   Row 2: barcode_metadata, error_correction, barcode_size, character_interpretation
+    # reorder into column-major order: col1=[0,3], col2=[1,4], col3=[2,5], col4=[blank,6]
+    blank = mlines.Line2D([], [], linewidth=0, label="")
+    row1 = handles[:3]
+    row2 = handles[3:]
+    ordered_h = [row1[0], row2[0], row1[1], row2[1], row1[2], row2[2], blank, row2[3]]
+    ordered_l = [row1[0].get_label() if hasattr(row1[0], 'get_label') else labels[0],
+                 labels[3], labels[1], labels[4], labels[2], labels[5], "", labels[6]]
+    ax.legend(handles=ordered_h, labels=ordered_l, loc="upper center",
+              bbox_to_anchor=(0.5, -0.22), fontsize=7, ncol=4)
     fig.tight_layout()
-    fig.savefig(os.path.join(OUTPUT_DIR, "plot1_stacked_proportions.png"), dpi=150)
+    fig.savefig(os.path.join(OUTPUT_DIR, "plot1_stacked_proportions.png"), dpi=150, bbox_inches="tight")
     plt.close(fig)
     print("Saved plot1_stacked_proportions.png")
 else:
@@ -558,10 +570,18 @@ matched_fc_keys = sorted(
 if matched_fc_keys:
     bar_width = 0.18
     bar_gap = 0.02
-    group_gap = 0.12  # space between groups
+    group_gap = 0.12   # space between adjacent bar groups
+    img_gap = 0.30     # extra space between different image sizes
     group_w = bar_width * 2 + bar_gap
     step = group_w + group_gap
-    x = np.arange(len(matched_fc_keys)) * step
+    x = []
+    pos = 0.0
+    for i, k in enumerate(matched_fc_keys):
+        if i > 0 and k[0] != matched_fc_keys[i - 1][0]:
+            pos += img_gap
+        x.append(pos)
+        pos += step
+    x = np.array(x)
 
     fig, ax = plt.subplots(figsize=(max(4, len(matched_fc_keys) * step * 1.8), 5))
 
@@ -624,9 +644,17 @@ if matched_fc_keys:
     bar_width = 0.18
     bar_gap = 0.02
     group_gap = 0.12
+    img_gap = 0.30
     group_w = bar_width * 2 + bar_gap
     step = group_w + group_gap
-    x = np.arange(len(matched_fc_keys)) * step
+    x = []
+    pos = 0.0
+    for i, k in enumerate(matched_fc_keys):
+        if i > 0 and k[0] != matched_fc_keys[i - 1][0]:
+            pos += img_gap
+        x.append(pos)
+        pos += step
+    x = np.array(x)
 
     fig, ax = plt.subplots(figsize=(max(4, len(matched_fc_keys) * step * 1.8), 5))
 
@@ -768,7 +796,7 @@ def scatter_lines(ax, metric_fn_fc, metric_fn_zkvm, ylabel):
     )
     ax.set_xlabel("Image pixels (width × height)")
     ax.set_ylabel(ylabel)
-    ax.set_ylim(bottom=0)
+    ax.set_yscale("log")
     ax.xaxis.set_major_formatter(ticker.FuncFormatter(lambda v, _: f"{int(v):,}"))
 
 
