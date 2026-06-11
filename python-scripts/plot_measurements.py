@@ -583,22 +583,22 @@ if matched_fc_keys:
 
     ax.bar(
         x - bar_width / 2 - bar_gap / 2,
-        zkvm_times,
+        fc_times,
         bar_width,
-        label="zkvm",
-        color="#4e79a7",
-        yerr=zkvm_times_se,
+        label="Our System",
+        color="#f28e2b",
+        hatch="///",
+        yerr=fc_times_se,
         capsize=4,
         error_kw={"elinewidth": 1.2},
     )
     ax.bar(
         x + bar_width / 2 + bar_gap / 2,
-        fc_times,
+        zkvm_times,
         bar_width,
-        label="full_circuit",
-        color="#f28e2b",
-        hatch="///",
-        yerr=fc_times_se,
+        label="zkVM",
+        color="#4e79a7",
+        yerr=zkvm_times_se,
         capsize=4,
         error_kw={"elinewidth": 1.2},
     )
@@ -606,7 +606,7 @@ if matched_fc_keys:
     ax.set_xticks(x)
     ax.set_xticklabels([fc_label(k) for k in matched_fc_keys], fontsize=8)
     ax.set_ylabel("Prover time (s)")
-    ax.set_title("zkvm vs full_circuit prover time")
+    ax.set_title("Our System vs zkVM: Prover Time")
     ax.legend(fontsize=8)
     fig.tight_layout()
     fig.savefig(os.path.join(OUTPUT_DIR, "plot8_zkvm_vs_fullcircuit_time.png"), dpi=150)
@@ -648,22 +648,22 @@ if matched_fc_keys:
 
     ax.bar(
         x - bar_width / 2 - bar_gap / 2,
-        zkvm_rams,
+        fc_rams,
         bar_width,
-        label="zkvm",
-        color="#4e79a7",
-        yerr=zkvm_rams_se,
+        label="Our System",
+        color="#f28e2b",
+        hatch="///",
+        yerr=fc_rams_se,
         capsize=4,
         error_kw={"elinewidth": 1.2},
     )
     ax.bar(
         x + bar_width / 2 + bar_gap / 2,
-        fc_rams,
+        zkvm_rams,
         bar_width,
-        label="full_circuit",
-        color="#f28e2b",
-        hatch="///",
-        yerr=fc_rams_se,
+        label="zkVM",
+        color="#4e79a7",
+        yerr=zkvm_rams_se,
         capsize=4,
         error_kw={"elinewidth": 1.2},
     )
@@ -671,7 +671,7 @@ if matched_fc_keys:
     ax.set_xticks(x)
     ax.set_xticklabels([fc_label(k) for k in matched_fc_keys], fontsize=8)
     ax.set_ylabel("Prover RAM (GB)")
-    ax.set_title("zkvm vs full_circuit prover RAM")
+    ax.set_title("Our System vs zkVM: Prover RAM")
     ax.legend(fontsize=8)
     fig.tight_layout()
     fig.savefig(os.path.join(OUTPUT_DIR, "plot9_zkvm_vs_fullcircuit_ram.png"), dpi=150)
@@ -737,10 +737,10 @@ def scatter_lines(ax, metric_fn_fc, metric_fn_zkvm, ylabel):
                 marker=FC_MARKER,
                 color="k",
                 linestyle="-",
-                label="full_circuit",
+                label="Our System",
             )
             zkvm_handle = mlines.Line2D(
-                [0], [0], marker=ZKVM_MARKER, color="k", linestyle="--", label="zkvm"
+                [0], [0], marker=ZKVM_MARKER, color="k", linestyle="--", label="zkVM"
             )
 
     color_cycle = cycle(LINE_COLORS)
@@ -785,7 +785,7 @@ if matched_fc_keys:
         / 1000,
         ylabel="Prover time (s)",
     )
-    ax.set_title("zkvm vs full_circuit prover time")
+    ax.set_title("Our System vs zkVM: Prover Time")
     fig.tight_layout()
     fig.savefig(
         os.path.join(OUTPUT_DIR, "plot10_zkvm_vs_fullcircuit_time_scatter.png"), dpi=150
@@ -808,7 +808,7 @@ if matched_fc_keys:
         metric_fn_zkvm=lambda sp1_key: statistics.mean(sp1_data[sp1_key]["rams"]) / 1e6,
         ylabel="Prover RAM (GB)",
     )
-    ax.set_title("zkvm vs full_circuit prover RAM")
+    ax.set_title("Our System vs zkVM: Prover RAM")
     fig.tight_layout()
     fig.savefig(
         os.path.join(OUTPUT_DIR, "plot11_zkvm_vs_fullcircuit_ram_scatter.png"), dpi=150
