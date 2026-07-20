@@ -1,0 +1,43 @@
+from "EMBED" import sample_challenge, u32_to_field;
+
+def filter<L,DUMMY>(field[L] A, bool[L] f, field[L] C) -> bool {
+    field[L] mut B = [0; L];
+    for u32 i in 0..L {
+        field to_write = if f[i] {
+            A[i]
+        } else {
+            u32_to_field(DUMMY)
+        };
+        
+        B[i] = to_write;   
+    }
+
+    field beta = sample_challenge([...B, ...C]);
+
+    field mut pow = 1;
+    field mut b = 0;
+    for u32 i in 0..L {
+        (field, field) acc = if (B[i] == u32_to_field(DUMMY)) {
+            (0, 1)
+        } else {
+            (B[i], beta)
+        };
+        b = b + acc.0  * pow;
+        pow = pow * acc.1;
+    }
+
+    pow = 1;
+    field mut c = 0;
+    for u32 i in 0..L {
+        c = c + C[i] * pow;
+        pow = pow * beta;
+    }
+    return(b == c);
+}
+
+const u32 L = 20;
+const u32 DUMMY = 0;
+
+def main(private field[L] A, private bool[L] f, public field[L] C) {
+    assert(filter::<L,DUMMY>(A, f, C));
+}
