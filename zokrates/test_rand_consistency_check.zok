@@ -49,10 +49,15 @@ def filter<L,DUMMY>(field[L] A, bool[L] f, field[L] C) -> bool {
     return(b == c);
 }
 
-const u32 L = 100;
+const u32 L = 1000;
 const u32 DUMMY = 0;
 
-def main(private field[L] A, private bool[L] f, public field[L] C) {
-    assert(filter::<L,DUMMY>(A, f, C));
-    // assert(filter_naive(A, f, C));
+// def main(private field[L] A, private bool[L] f, public field[L] C) {
+//     assert(filter::<L,DUMMY>(A, f, C));
+//     // assert(filter_naive(A, f, C));
+// }
+
+
+def main(private field[L] A, private bool[L] f, transcript public field[L] C) {
+    assert(filter_naive(A, f, C));
 }
