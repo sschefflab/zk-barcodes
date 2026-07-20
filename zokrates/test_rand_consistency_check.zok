@@ -1,5 +1,19 @@
 from "EMBED" import sample_challenge, u32_to_field;
 
+def filter_naive<L>(field[L] A, bool[L] f, field[L] C) -> bool {
+    u32 mut ind = 0;
+    for u32 i in 0..L {
+        (field, u32) acc = if f[i] {
+            (A[i], 1)
+        } else {
+            (C[ind], 0)
+        };
+        assert(C[ind] == acc.0);
+        ind = ind + acc.1;
+    }
+    return(true);
+}
+
 def filter<L,DUMMY>(field[L] A, bool[L] f, field[L] C) -> bool {
     field[L] mut B = [0; L];
     for u32 i in 0..L {
@@ -35,9 +49,10 @@ def filter<L,DUMMY>(field[L] A, bool[L] f, field[L] C) -> bool {
     return(b == c);
 }
 
-const u32 L = 20;
+const u32 L = 100;
 const u32 DUMMY = 0;
 
 def main(private field[L] A, private bool[L] f, public field[L] C) {
     assert(filter::<L,DUMMY>(A, f, C));
+    // assert(filter_naive(A, f, C));
 }
