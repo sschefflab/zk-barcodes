@@ -38,3 +38,6 @@ sp1-pdf417/script/proof-runs/*.bin
 
 # MacOS
 .DS_Store
+
+# Big compressed files
+*.tar.zst
